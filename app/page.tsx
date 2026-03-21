@@ -54,8 +54,21 @@ async function getContributionDays(username: string): Promise<ContributionDay[]>
   }
 
   const html = await response.text();
-  const matches = [...html.matchAll(/data-date="([^"]+)"[^>]*data-count="(\d+)"/g)];
-  const counts = new Map(matches.map((match) => [match[1], Number(match[2])]));
+  const matches = [
+    ...html.matchAll(/<(?:td|rect)[^>]*data-date="([^"]+)"[^>]*data-count="(\d+)"[^>]*>/g),
+    ...html.matchAll(/<(?:td|rect)[^>]*data-count="(\d+)"[^>]*data-date="([^"]+)"[^>]*>/g),
+  ];
+
+  const counts = new Map<string, number>();
+
+  for (const match of matches) {
+    const date = match[1]?.includes("-") ? match[1] : match[2];
+    const count = Number(match[1]?.includes("-") ? match[2] : match[1]);
+
+    if (date) {
+      counts.set(date, count);
+    }
+  }
 
   return dates.map((date) => {
     const count = counts.get(date) ?? 0;
