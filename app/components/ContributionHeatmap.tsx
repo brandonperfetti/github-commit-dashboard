@@ -65,8 +65,8 @@ export default function ContributionHeatmap({ days }: { days: ContributionDay[] 
         </div>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto">
-        <div className="grid grid-rows-7 gap-2 pt-1 text-[11px] text-zinc-500">
+      <div className="flex gap-3 overflow-x-auto py-2">
+        <div className="grid grid-rows-7 gap-3 pt-1 text-[11px] text-zinc-500">
           {WEEKDAY_LABELS.map((label) => (
             <div key={label} className="flex h-5 items-center pr-2 md:h-6">
               {label}
@@ -75,13 +75,13 @@ export default function ContributionHeatmap({ days }: { days: ContributionDay[] 
         </div>
 
         <div
-          className="grid min-w-0 flex-1 gap-2"
+          className="grid min-w-0 flex-1 gap-3"
           style={{
             gridTemplateColumns: `repeat(${weeks.length}, minmax(48px, 1fr))`,
           }}
         >
           {weeks.map((week, weekIndex) => (
-            <div key={`week-${weekIndex}`} className="grid gap-2" style={{ gridTemplateRows: 'repeat(7, minmax(0, 1fr))' }}>
+            <div key={`week-${weekIndex}`} className="grid gap-3" style={{ gridTemplateRows: 'repeat(7, minmax(0, 1fr))' }}>
               {week.map((day, dayIndex) => {
                 if (!day) {
                   return (
