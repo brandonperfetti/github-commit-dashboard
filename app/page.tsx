@@ -8,6 +8,7 @@ type ContributionDay = {
 
 const USERNAME = "brandonperfetti";
 const DAYS = 30;
+const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function formatDate(date: Date) {
   return date.toISOString().slice(0, 10);
@@ -115,12 +116,22 @@ function prettyDay(date: string) {
   });
 }
 
+function buildCalendarCells(days: ContributionDay[]) {
+  const firstDayIndex = new Date(`${days[0].date}T00:00:00`).getDay();
+  const lastDayIndex = new Date(`${days[days.length - 1].date}T00:00:00`).getDay();
+
+  const leading = Array.from({ length: firstDayIndex }, () => null as ContributionDay | null);
+  const trailing = Array.from({ length: 6 - lastDayIndex }, () => null as ContributionDay | null);
+
+  return [...leading, ...days, ...trailing];
+}
+
 const levelClasses = [
-  "bg-zinc-200",
-  "bg-emerald-200",
-  "bg-emerald-400",
-  "bg-emerald-500",
-  "bg-emerald-700",
+  "bg-white/[0.06] border-white/5",
+  "bg-emerald-900/80 border-emerald-700/30",
+  "bg-emerald-700/85 border-emerald-500/40",
+  "bg-emerald-500/90 border-emerald-300/40",
+  "bg-emerald-300 border-emerald-100/40",
 ];
 
 export default async function Home() {
@@ -128,81 +139,115 @@ export default async function Home() {
   const total = days.reduce((sum, day) => sum + day.count, 0);
   const activeDays = days.filter((day) => day.count > 0).length;
   const bestDay = days.reduce((best, day) => (day.count > best.count ? day : best), days[0]);
+  const calendarCells = buildCalendarCells(days);
 
   return (
-    <main className="min-h-screen bg-zinc-950 px-6 py-10 text-zinc-100">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.18),_transparent_35%),linear-gradient(180deg,#07110f_0%,#0a0f1a_45%,#050816_100%)] px-6 py-10 text-zinc-100">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
-        <section className="rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl shadow-black/20 backdrop-blur">
-          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-sm uppercase tracking-[0.2em] text-emerald-300/80">GitHub activity</p>
-              <h1 className="mt-2 text-4xl font-semibold tracking-tight">{USERNAME}</h1>
-              <p className="mt-3 max-w-2xl text-sm text-zinc-400 md:text-base">
-                Public commit contribution activity for the last {DAYS} days. Data is pulled live from GitHub.
-              </p>
-            </div>
-            <a
-              className="inline-flex items-center rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-sm font-medium text-emerald-200 transition hover:border-emerald-300/60 hover:bg-emerald-400/20"
-              href={`https://github.com/${USERNAME}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              View GitHub profile
-            </a>
-          </div>
-        </section>
-
-        <section className="grid gap-4 md:grid-cols-4">
-          {[
-            { label: "Total contributions", value: total },
-            { label: "Active days", value: `${activeDays}/${DAYS}` },
-            { label: "Current streak", value: `${currentStreak(days)} days` },
-            { label: "Best streak", value: `${longestStreak(days)} days` },
-          ].map((card) => (
-            <div key={card.label} className="rounded-2xl border border-white/10 bg-white/5 p-5">
-              <p className="text-sm text-zinc-400">{card.label}</p>
-              <p className="mt-2 text-3xl font-semibold tracking-tight">{card.value}</p>
-            </div>
-          ))}
-        </section>
-
-        <section className="rounded-3xl border border-white/10 bg-white/5 p-8">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-semibold">30-day heatmap</h2>
-              <p className="mt-1 text-sm text-zinc-400">Each square is one day. Darker means more contributions.</p>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-zinc-400">
-              <span>Less</span>
-              {levelClasses.map((levelClass) => (
-                <span key={levelClass} className={`h-3 w-3 rounded-sm ${levelClass}`} />
-              ))}
-              <span>More</span>
+        <section className="overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.04] shadow-[0_20px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl">
+          <div className="border-b border-white/10 bg-gradient-to-r from-emerald-400/12 via-cyan-400/10 to-transparent px-8 py-8">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.35em] text-emerald-300/80">GitHub activity</p>
+                <h1 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">{USERNAME}</h1>
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-zinc-300/80 md:text-base">
+                  Last {DAYS} days of public contribution activity, styled like a proper heatmap instead of a pile of chunky boxes.
+                </p>
+              </div>
+              <a
+                className="inline-flex items-center rounded-full border border-emerald-300/25 bg-emerald-400/10 px-4 py-2 text-sm font-medium text-emerald-100 transition hover:border-emerald-200/50 hover:bg-emerald-400/20"
+                href={`https://github.com/${USERNAME}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                View GitHub profile
+              </a>
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6">
-            {days.map((day) => (
-              <div key={day.date} className="flex flex-col gap-2 rounded-2xl border border-white/5 bg-black/20 p-3">
-                <div
-                  className={`h-16 rounded-xl ${levelClasses[day.level]}`}
-                  title={`${day.count} contributions on ${day.date}`}
-                />
-                <div>
-                  <p className="text-sm font-medium">{day.count}</p>
-                  <p className="text-xs text-zinc-500">{prettyDay(day.date)}</p>
-                </div>
+          <div className="grid gap-4 px-8 py-6 md:grid-cols-4">
+            {[
+              { label: "Total contributions", value: total },
+              { label: "Active days", value: `${activeDays}/${DAYS}` },
+              { label: "Current streak", value: `${currentStreak(days)} days` },
+              { label: "Best streak", value: `${longestStreak(days)} days` },
+            ].map((card) => (
+              <div key={card.label} className="rounded-2xl border border-white/10 bg-black/20 p-5 shadow-inner shadow-white/[0.02]">
+                <p className="text-sm text-zinc-400">{card.label}</p>
+                <p className="mt-2 text-3xl font-semibold tracking-tight text-white">{card.value}</p>
               </div>
             ))}
           </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-[2fr_1fr]">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
+        <section className="rounded-[28px] border border-white/10 bg-white/[0.04] p-8 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold tracking-tight">30-day heatmap</h2>
+              <p className="mt-1 text-sm text-zinc-400">Seven-row tiled layout, closer to GitHub’s contribution calendar.</p>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-zinc-400">
+              <span>Less</span>
+              {levelClasses.map((levelClass) => (
+                <span key={levelClass} className={`h-3.5 w-3.5 rounded-[4px] border ${levelClass}`} />
+              ))}
+              <span>More</span>
+            </div>
+          </div>
+
+          <div className="mt-6 overflow-x-auto">
+            <div className="inline-flex gap-3 rounded-2xl border border-white/10 bg-black/20 p-4">
+              <div className="grid grid-rows-7 gap-2 pt-1 text-[11px] text-zinc-500">
+                {WEEKDAY_LABELS.map((label) => (
+                  <div key={label} className="flex h-4 items-center">
+                    {label}
+                  </div>
+                ))}
+              </div>
+
+              <div
+                className="grid gap-2"
+                style={{
+                  gridAutoFlow: "column",
+                  gridTemplateRows: "repeat(7, minmax(0, 1fr))",
+                }}
+              >
+                {calendarCells.map((day, index) => {
+                  if (!day) {
+                    return <div key={`empty-${index}`} className="h-4 w-4 rounded-[4px] bg-transparent" />;
+                  }
+
+                  return (
+                    <div
+                      key={day.date}
+                      className={`h-4 w-4 rounded-[4px] border transition-transform hover:scale-110 ${levelClasses[day.level]}`}
+                      title={`${day.count} contributions on ${day.date}`}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 flex flex-wrap gap-3 text-sm text-zinc-400">
+            <div className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5">
+              Best day: <span className="font-medium text-zinc-100">{prettyDay(bestDay.date)}</span> · {bestDay.count}
+            </div>
+            <div className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5">
+              Average/day: <span className="font-medium text-zinc-100">{(total / DAYS).toFixed(1)}</span>
+            </div>
+            <div className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5">
+              Activity rate: <span className="font-medium text-zinc-100">{Math.round((activeDays / DAYS) * 100)}%</span>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-4 md:grid-cols-[1.6fr_1fr]">
+          <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl">
             <h2 className="text-xl font-semibold">Daily breakdown</h2>
-            <div className="mt-5 overflow-hidden rounded-2xl border border-white/10">
+            <div className="mt-5 overflow-hidden rounded-2xl border border-white/10 bg-black/20">
               <table className="min-w-full divide-y divide-white/10 text-left text-sm">
-                <thead className="bg-white/5 text-zinc-400">
+                <thead className="bg-white/[0.04] text-zinc-400">
                   <tr>
                     <th className="px-4 py-3 font-medium">Date</th>
                     <th className="px-4 py-3 font-medium">Contributions</th>
@@ -214,9 +259,9 @@ export default async function Home() {
                     .slice()
                     .reverse()
                     .map((day) => (
-                      <tr key={day.date} className="bg-black/10">
+                      <tr key={day.date} className="bg-black/10 transition hover:bg-white/[0.03]">
                         <td className="px-4 py-3">{day.date}</td>
-                        <td className="px-4 py-3">{day.count}</td>
+                        <td className="px-4 py-3 font-medium text-zinc-100">{day.count}</td>
                         <td className="px-4 py-3 text-zinc-400">
                           {day.count === 0 ? "Quiet" : day.count < 4 ? "Active" : "Heavy"}
                         </td>
@@ -227,24 +272,19 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-            <h2 className="text-xl font-semibold">Highlights</h2>
-            <dl className="mt-5 space-y-5 text-sm">
-              <div>
-                <dt className="text-zinc-400">Best day</dt>
-                <dd className="mt-1 text-lg font-semibold">
-                  {prettyDay(bestDay.date)} <span className="text-zinc-400">· {bestDay.count} contributions</span>
-                </dd>
-              </div>
-              <div>
-                <dt className="text-zinc-400">Average per day</dt>
-                <dd className="mt-1 text-lg font-semibold">{(total / DAYS).toFixed(1)}</dd>
-              </div>
-              <div>
-                <dt className="text-zinc-400">Activity rate</dt>
-                <dd className="mt-1 text-lg font-semibold">{Math.round((activeDays / DAYS) * 100)}%</dd>
-              </div>
-            </dl>
+          <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl">
+            <h2 className="text-xl font-semibold">Read on the data</h2>
+            <div className="mt-5 space-y-4 text-sm leading-7 text-zinc-300">
+              <p>
+                The profile looks bursty: a few heavy days, then quiet gaps. That usually means focused shipping windows rather than constant low-grade churn.
+              </p>
+              <p>
+                The visual weight is now where it should be — in the grid itself — instead of making each day fight for attention like a separate widget.
+              </p>
+              <p className="rounded-2xl border border-cyan-300/15 bg-cyan-400/5 px-4 py-3 text-cyan-100/90">
+                If we keep iterating, I’d probably add weekly totals and a tiny trend sparkline next. No need yet, but that’s the obvious next move.
+              </p>
+            </div>
           </div>
         </section>
       </div>
