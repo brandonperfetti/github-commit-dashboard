@@ -230,35 +230,38 @@ export default async function Home() {
           </div>
 
           <div className="mt-6 overflow-x-auto">
-            <div className="inline-flex gap-3 rounded-2xl border border-white/10 bg-black/20 p-4">
+            <div className="flex min-w-[720px] gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 md:min-w-0">
               <div className="grid grid-rows-7 gap-2 pt-1 text-[11px] text-zinc-500">
                 {WEEKDAY_LABELS.map((label) => (
-                  <div key={label} className="flex h-4 items-center">
+                  <div key={label} className="flex min-h-5 items-center pr-2">
                     {label}
                   </div>
                 ))}
               </div>
 
               <div
-                className="grid gap-2"
+                className="grid flex-1 gap-2"
                 style={{
-                  gridAutoFlow: "column",
-                  gridTemplateRows: "repeat(7, minmax(0, 1fr))",
+                  gridTemplateColumns: `repeat(${weeks.length}, minmax(0, 1fr))`,
                 }}
               >
-                {calendarCells.map((day, index) => {
-                  if (!day) {
-                    return <div key={`empty-${index}`} className="h-4 w-4 rounded-[4px] bg-transparent" />;
-                  }
+                {weeks.map((week, weekIndex) => (
+                  <div key={`week-${weekIndex}`} className="grid gap-2" style={{ gridTemplateRows: 'repeat(7, minmax(0, 1fr))' }}>
+                    {week.map((day, dayIndex) => {
+                      if (!day) {
+                        return <div key={`empty-${weekIndex}-${dayIndex}`} className="aspect-square w-full rounded-[6px] bg-transparent" />;
+                      }
 
-                  return (
-                    <div
-                      key={day.date}
-                      className={`h-4 w-4 rounded-[4px] border transition-transform hover:scale-110 ${levelClasses[day.level]}`}
-                      title={`${day.count} contributions on ${day.date}`}
-                    />
-                  );
-                })}
+                      return (
+                        <div
+                          key={day.date}
+                          className={`aspect-square w-full rounded-[6px] border transition-transform hover:scale-[1.04] ${levelClasses[day.level]}`}
+                          title={`${day.count} contributions on ${day.date}`}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
