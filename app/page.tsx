@@ -1,3 +1,5 @@
+import ContributionHeatmap from './components/ContributionHeatmap'
+
 export const dynamic = "force-dynamic";
 
 type ContributionDay = {
@@ -8,7 +10,6 @@ type ContributionDay = {
 
 const USERNAME = "brandonperfetti";
 const DAYS = 30;
-const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function formatDate(date: Date) {
   return date.toISOString().slice(0, 10);
@@ -229,76 +230,7 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="mt-6 overflow-x-auto md:hidden">
-            <div className="inline-flex gap-3 rounded-2xl border border-white/10 bg-black/20 p-4">
-              <div className="grid grid-rows-7 gap-2 pt-1 text-[11px] text-zinc-500">
-                {WEEKDAY_LABELS.map((label) => (
-                  <div key={label} className="flex h-5 items-center pr-2">
-                    {label}
-                  </div>
-                ))}
-              </div>
-
-              <div
-                className="grid gap-2"
-                style={{
-                  gridAutoFlow: 'column',
-                  gridTemplateRows: 'repeat(7, minmax(0, 1fr))',
-                }}
-              >
-                {calendarCells.map((day, index) => {
-                  if (!day) {
-                    return <div key={`mobile-empty-${index}`} className="h-[18px] w-[18px] rounded-[5px] bg-transparent" />;
-                  }
-
-                  return (
-                    <div
-                      key={day.date}
-                      className={`h-[18px] w-[18px] rounded-[5px] border ${levelClasses[day.level]}`}
-                      title={`${day.count} contributions on ${day.date}`}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6 hidden md:block">
-            <div className="flex gap-4 rounded-2xl border border-white/10 bg-black/20 p-4">
-              <div className="grid grid-rows-7 gap-2 pt-1 text-[11px] text-zinc-500">
-                {WEEKDAY_LABELS.map((label) => (
-                  <div key={label} className="flex h-7 items-center pr-2">
-                    {label}
-                  </div>
-                ))}
-              </div>
-
-              <div
-                className="grid gap-3"
-                style={{
-                  gridTemplateColumns: `repeat(${weeks.length}, 56px)`,
-                }}
-              >
-                {weeks.map((week, weekIndex) => (
-                  <div key={`week-${weekIndex}`} className="grid gap-3" style={{ gridTemplateRows: 'repeat(7, 28px)' }}>
-                    {week.map((day, dayIndex) => {
-                      if (!day) {
-                        return <div key={`desktop-empty-${weekIndex}-${dayIndex}`} className="h-7 w-14 rounded-[6px] bg-transparent" />;
-                      }
-
-                      return (
-                        <div
-                          key={day.date}
-                          className={`h-7 w-14 rounded-[6px] border ${levelClasses[day.level]}`}
-                          title={`${day.count} contributions on ${day.date}`}
-                        />
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <ContributionHeatmap days={days} />
 
           <div className="mt-6 flex flex-wrap gap-3 text-sm text-zinc-400">
             <div className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5">
