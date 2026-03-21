@@ -126,6 +126,31 @@ function buildCalendarCells(days: ContributionDay[]) {
   return [...leading, ...days, ...trailing];
 }
 
+function chunkWeeks(cells: Array<ContributionDay | null>) {
+  const weeks: Array<Array<ContributionDay | null>> = [];
+
+  for (let i = 0; i < cells.length; i += 7) {
+    weeks.push(cells.slice(i, i + 7));
+  }
+
+  return weeks;
+}
+
+function buildSparklinePoints(days: ContributionDay[]) {
+  const width = 260;
+  const height = 72;
+  const padding = 6;
+  const max = Math.max(...days.map((day) => day.count), 1);
+
+  return days
+    .map((day, index) => {
+      const x = padding + (index / Math.max(days.length - 1, 1)) * (width - padding * 2);
+      const y = height - padding - (day.count / max) * (height - padding * 2);
+      return `${x},${y}`;
+    })
+    .join(" ");
+}
+
 const levelClasses = [
   "bg-white/[0.06] border-white/5",
   "bg-emerald-900/80 border-emerald-700/30",
@@ -140,6 +165,15 @@ export default async function Home() {
   const activeDays = days.filter((day) => day.count > 0).length;
   const bestDay = days.reduce((best, day) => (day.count > best.count ? day : best), days[0]);
   const calendarCells = buildCalendarCells(days);
+  const weeks = chunkWeeks(calendarCells);
+  const weeklyTotals = weeks.map((week, index) => ({
+    label: `Week ${index + 1}`,
+    total: week.reduce((sum, day) => sum + (day?.count ?? 0), 0),
+    range: `${prettyDay(week.find((day) => day)?.date ?? days[0].date)} – ${prettyDay(
+      [...week].reverse().find((day) => day)?.date ?? days[days.length - 1].date,
+    )}`,
+  }));
+  const sparklinePoints = buildSparklinePoints(days);
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.18),_transparent_35%),linear-gradient(180deg,#07110f_0%,#0a0f1a_45%,#050816_100%)] px-6 py-10 text-zinc-100">
@@ -240,6 +274,16 @@ export default async function Home() {
               Activity rate: <span className="font-medium text-zinc-100">{Math.round((activeDays / DAYS) * 100)}%</span>
             </div>
           </div>
+
+          <div className="mt-8 grid gap-3 md:grid-cols-5">
+            {weeklyTotals.map((week) => (
+              <div key={week.label} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">{week.label}</p>
+                <p className="mt-2 text-2xl font-semibold text-white">{week.total}</p>
+                <p className="mt-1 text-xs text-zinc-400">{week.range}</p>
+              </div>
+            ))}
+          </div>
         </section>
 
         <section className="grid gap-4 md:grid-cols-[1.6fr_1fr]">
@@ -273,16 +317,33 @@ export default async function Home() {
           </div>
 
           <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl">
-            <h2 className="text-xl font-semibold">Read on the data</h2>
+            <h2 className="text-xl font-semibold">Trend</h2>
+            <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
+              <svg viewBox="0 0 260 72" className="h-[72px] w-full overflow-visible">
+                <defs>
+                  <linearGradient id="spark-fill" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor="rgba(52, 211, 153, 0.35)" />
+                    <stop offset="100%" stopColor="rgba(52, 211, 153, 0)" />
+                  </linearGradient>
+                </defs>
+                <polyline
+                  fill="none"
+                  stroke="rgba(167, 243, 208, 0.95)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  points={sparklinePoints}
+                />
+              </svg>
+              <p className="mt-3 text-xs text-zinc-400">Daily contribution trend across the last 30 days.</p>
+            </div>
+
             <div className="mt-5 space-y-4 text-sm leading-7 text-zinc-300">
               <p>
                 The profile looks bursty: a few heavy days, then quiet gaps. That usually means focused shipping windows rather than constant low-grade churn.
               </p>
               <p>
-                The visual weight is now where it should be — in the grid itself — instead of making each day fight for attention like a separate widget.
-              </p>
-              <p className="rounded-2xl border border-cyan-300/15 bg-cyan-400/5 px-4 py-3 text-cyan-100/90">
-                If we keep iterating, I’d probably add weekly totals and a tiny trend sparkline next. No need yet, but that’s the obvious next move.
+                Weekly totals make that pattern easier to read fast; the sparkline shows whether activity is clustering or tapering without making the page busier.
               </p>
             </div>
           </div>
