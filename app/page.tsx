@@ -185,7 +185,7 @@ export default async function Home() {
                 <p className="text-xs uppercase tracking-[0.35em] text-emerald-300/80">GitHub activity</p>
                 <h1 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">{USERNAME}</h1>
                 <p className="mt-3 max-w-2xl text-sm leading-7 text-zinc-300/80 md:text-base">
-                  Last {DAYS} days of public contribution activity, styled like a proper heatmap instead of a pile of chunky boxes.
+                  Public GitHub contribution activity for the last {DAYS} days.
                 </p>
               </div>
               <a
@@ -218,7 +218,7 @@ export default async function Home() {
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-2xl font-semibold tracking-tight">30-day heatmap</h2>
-              <p className="mt-1 text-sm text-zinc-400">Seven-row tiled layout, closer to GitHub’s contribution calendar.</p>
+              <p className="mt-1 text-sm text-zinc-400">Contribution activity over the last 30 days.</p>
             </div>
             <div className="flex items-center gap-2 text-xs text-zinc-400">
               <span>Less</span>
@@ -233,7 +233,7 @@ export default async function Home() {
             <div className="inline-flex gap-3 rounded-2xl border border-white/10 bg-black/20 p-4">
               <div className="grid grid-rows-7 gap-2 pt-1 text-[11px] text-zinc-500">
                 {WEEKDAY_LABELS.map((label) => (
-                  <div key={label} className="flex h-4 items-center pr-2">
+                  <div key={label} className="flex h-5 items-center pr-2">
                     {label}
                   </div>
                 ))}
@@ -248,13 +248,13 @@ export default async function Home() {
               >
                 {calendarCells.map((day, index) => {
                   if (!day) {
-                    return <div key={`mobile-empty-${index}`} className="h-4 w-4 rounded-[4px] bg-transparent" />;
+                    return <div key={`mobile-empty-${index}`} className="h-[18px] w-[18px] rounded-[5px] bg-transparent" />;
                   }
 
                   return (
                     <div
                       key={day.date}
-                      className={`h-4 w-4 rounded-[4px] border transition-transform hover:scale-110 ${levelClasses[day.level]}`}
+                      className={`h-[18px] w-[18px] rounded-[5px] border ${levelClasses[day.level]}`}
                       title={`${day.count} contributions on ${day.date}`}
                     />
                   );
@@ -264,32 +264,32 @@ export default async function Home() {
           </div>
 
           <div className="mt-6 hidden md:block">
-            <div className="flex gap-3 rounded-2xl border border-white/10 bg-black/20 p-4">
+            <div className="flex gap-4 rounded-2xl border border-white/10 bg-black/20 p-4">
               <div className="grid grid-rows-7 gap-2 pt-1 text-[11px] text-zinc-500">
                 {WEEKDAY_LABELS.map((label) => (
-                  <div key={label} className="flex min-h-5 items-center pr-2">
+                  <div key={label} className="flex h-7 items-center pr-2">
                     {label}
                   </div>
                 ))}
               </div>
 
               <div
-                className="grid flex-1 gap-2"
+                className="grid gap-3"
                 style={{
-                  gridTemplateColumns: `repeat(${weeks.length}, minmax(0, 1fr))`,
+                  gridTemplateColumns: `repeat(${weeks.length}, 56px)`,
                 }}
               >
                 {weeks.map((week, weekIndex) => (
-                  <div key={`week-${weekIndex}`} className="grid gap-2" style={{ gridTemplateRows: 'repeat(7, minmax(0, 1fr))' }}>
+                  <div key={`week-${weekIndex}`} className="grid gap-3" style={{ gridTemplateRows: 'repeat(7, 28px)' }}>
                     {week.map((day, dayIndex) => {
                       if (!day) {
-                        return <div key={`desktop-empty-${weekIndex}-${dayIndex}`} className="aspect-square w-full rounded-[6px] bg-transparent" />;
+                        return <div key={`desktop-empty-${weekIndex}-${dayIndex}`} className="h-7 w-14 rounded-[6px] bg-transparent" />;
                       }
 
                       return (
                         <div
                           key={day.date}
-                          className={`aspect-square w-full rounded-[6px] border transition-transform hover:scale-[1.04] ${levelClasses[day.level]}`}
+                          className={`h-7 w-14 rounded-[6px] border ${levelClasses[day.level]}`}
                           title={`${day.count} contributions on ${day.date}`}
                         />
                       );
@@ -354,15 +354,9 @@ export default async function Home() {
           </div>
 
           <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl">
-            <h2 className="text-xl font-semibold">Trend</h2>
+            <h2 className="text-xl font-semibold">Activity trend</h2>
             <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
               <svg viewBox="0 0 260 72" className="h-[72px] w-full overflow-visible">
-                <defs>
-                  <linearGradient id="spark-fill" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stopColor="rgba(52, 211, 153, 0.35)" />
-                    <stop offset="100%" stopColor="rgba(52, 211, 153, 0)" />
-                  </linearGradient>
-                </defs>
                 <polyline
                   fill="none"
                   stroke="rgba(167, 243, 208, 0.95)"
@@ -372,15 +366,15 @@ export default async function Home() {
                   points={sparklinePoints}
                 />
               </svg>
-              <p className="mt-3 text-xs text-zinc-400">Daily contribution trend across the last 30 days.</p>
+              <p className="mt-3 text-xs text-zinc-400">Daily contribution totals over the last 30 days.</p>
             </div>
 
             <div className="mt-5 space-y-4 text-sm leading-7 text-zinc-300">
               <p>
-                The profile looks bursty: a few heavy days, then quiet gaps. That usually means focused shipping windows rather than constant low-grade churn.
+                Weekly totals highlight how activity is distributed from week to week.
               </p>
               <p>
-                Weekly totals make that pattern easier to read fast; the sparkline shows whether activity is clustering or tapering without making the page busier.
+                The sparkline provides a quick read on higher-activity days and quieter stretches across the month.
               </p>
             </div>
           </div>
