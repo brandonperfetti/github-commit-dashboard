@@ -20,8 +20,8 @@ export default async function Home() {
       <SectionShell className="overflow-hidden p-0">
         <div className="grid gap-6 px-4 py-5 sm:px-6 sm:py-7 lg:grid-cols-[1.25fr_0.95fr] lg:items-end lg:px-8 lg:py-8">
           <div>
-            <Badge className="bg-white/50">Overview</Badge>
-            <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-white/55 px-3 py-1 text-xs font-medium text-[var(--muted-foreground)] shadow-[0_8px_24px_rgba(15,23,42,0.06)] backdrop-blur-sm">
+            <Badge>Overview</Badge>
+            <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--card-muted)] px-3 py-1 text-xs font-medium text-[var(--muted-foreground)] shadow-[0_8px_24px_rgba(15,23,42,0.06)] backdrop-blur-sm">
               <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.12)]" />
               Live public GitHub signal
             </div>

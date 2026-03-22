@@ -1,24 +1,58 @@
 @import "tailwindcss";
 
 :root {
-  --background: #edf3f9;
-  --foreground: #122033;
-  --muted-foreground: #5b6b82;
-  --card: rgba(255, 255, 255, 0.88);
-  --card-muted: rgba(255, 255, 255, 0.74);
+  --background: #071019;
+  --foreground: #eef4ff;
+  --muted-foreground: #95a3bb;
+  --card: rgba(8, 14, 24, 0.82);
+  --card-muted: rgba(10, 18, 30, 0.66);
+  --accent-soft: rgba(148, 163, 184, 0.08);
+  --accent-soft-strong: rgba(148, 163, 184, 0.14);
+  --border: rgba(148, 163, 184, 0.14);
+  --border-strong: rgba(226, 232, 240, 0.16);
+  --shadow-card: 0 28px 80px rgba(0, 0, 0, 0.42);
+  --shadow-nav: 0 20px 60px rgba(0, 0, 0, 0.28);
+  --hero: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(59, 130, 246, 0.08) 54%, rgba(255, 255, 255, 0));
+  --page-gradient:
+    radial-gradient(circle at top left, rgba(16, 185, 129, 0.18), transparent 28%),
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.14), transparent 24%),
+    linear-gradient(180deg, #07110f 0%, #0a0f18 42%, #050814 100%);
+  --nav-surface: rgba(7, 13, 22, 0.72);
+  --nav-active-bg: rgba(255, 255, 255, 0.1);
+  --nav-active-fg: #f8fafc;
+  --button-accent: #10b981;
+  --button-accent-hover: #34d399;
+  --button-accent-foreground: #03110c;
+  --heat-0: rgba(255, 255, 255, 0.06);
+  --heat-0-border: rgba(255, 255, 255, 0.05);
+  --heat-1: rgba(6, 78, 59, 0.82);
+  --heat-1-border: rgba(16, 185, 129, 0.2);
+  --heat-2: rgba(4, 120, 87, 0.85);
+  --heat-2-border: rgba(16, 185, 129, 0.3);
+  --heat-3: rgba(16, 185, 129, 0.9);
+  --heat-3-border: rgba(110, 231, 183, 0.35);
+  --heat-4: rgba(167, 243, 208, 1);
+  --heat-4-border: rgba(209, 250, 229, 0.35);
+}
+
+.light {
+  --background: #f4f7fb;
+  --foreground: #0f172a;
+  --muted-foreground: #59677f;
+  --card: rgba(255, 255, 255, 0.84);
+  --card-muted: rgba(255, 255, 255, 0.7);
   --accent-soft: rgba(15, 23, 42, 0.04);
   --accent-soft-strong: rgba(15, 23, 42, 0.07);
   --border: rgba(15, 23, 42, 0.09);
-  --border-strong: rgba(15, 23, 42, 0.14);
+  --border-strong: rgba(15, 23, 42, 0.13);
   --shadow-card: 0 20px 60px rgba(15, 23, 42, 0.08);
-  --shadow-nav: 0 16px 48px rgba(15, 23, 42, 0.08);
-  --hero: linear-gradient(145deg, rgba(16, 185, 129, 0.16), rgba(59, 130, 246, 0.08) 46%, rgba(255, 255, 255, 0) 78%);
+  --shadow-nav: 0 16px 40px rgba(15, 23, 42, 0.08);
+  --hero: linear-gradient(145deg, rgba(16, 185, 129, 0.14), rgba(59, 130, 246, 0.06) 46%, rgba(255, 255, 255, 0) 78%);
   --page-gradient:
-    radial-gradient(circle at top left, rgba(16, 185, 129, 0.12), transparent 30%),
-    radial-gradient(circle at top right, rgba(59, 130, 246, 0.1), transparent 28%),
-    linear-gradient(180deg, #fdfefe 0%, #f4f8fc 42%, #e9f0f7 100%);
-  --nav-surface: rgba(255, 255, 255, 0.78);
-  --nav-surface-strong: rgba(255, 255, 255, 0.92);
+    radial-gradient(circle at top left, rgba(16, 185, 129, 0.1), transparent 28%),
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 24%),
+    linear-gradient(180deg, #fcfdff 0%, #f4f7fb 44%, #ecf2f8 100%);
+  --nav-surface: rgba(252, 253, 255, 0.78);
   --nav-active-bg: #0f172a;
   --nav-active-fg: #f8fafc;
   --button-accent: #059669;
@@ -36,39 +70,6 @@
   --heat-4-border: rgba(5, 150, 105, 0.92);
 }
 
-.dark {
-  --background: #091018;
-  --foreground: #eef2ff;
-  --muted-foreground: #9aa6bf;
-  --card: rgba(10, 15, 26, 0.7);
-  --card-muted: rgba(4, 10, 20, 0.56);
-  --accent-soft: rgba(255, 255, 255, 0.045);
-  --accent-soft-strong: rgba(255, 255, 255, 0.07);
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.12);
-  --shadow-card: 0 24px 80px rgba(0, 0, 0, 0.38);
-  --shadow-nav: 0 16px 52px rgba(0, 0, 0, 0.32);
-  --hero: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(59, 130, 246, 0.08) 55%, rgba(255, 255, 255, 0));
-  --page-gradient: radial-gradient(circle at top, rgba(16, 185, 129, 0.18), transparent 35%), linear-gradient(180deg, #07110f 0%, #0a0f1a 45%, #050816 100%);
-  --nav-surface: rgba(9, 16, 24, 0.8);
-  --nav-surface-strong: rgba(9, 16, 24, 0.94);
-  --nav-active-bg: rgba(16, 185, 129, 0.16);
-  --nav-active-fg: #ecfdf5;
-  --button-accent: #10b981;
-  --button-accent-hover: #34d399;
-  --button-accent-foreground: #f8fafc;
-  --heat-0: rgba(255, 255, 255, 0.06);
-  --heat-0-border: rgba(255, 255, 255, 0.05);
-  --heat-1: rgba(6, 78, 59, 0.82);
-  --heat-1-border: rgba(16, 185, 129, 0.2);
-  --heat-2: rgba(4, 120, 87, 0.85);
-  --heat-2-border: rgba(16, 185, 129, 0.3);
-  --heat-3: rgba(16, 185, 129, 0.9);
-  --heat-3-border: rgba(110, 231, 183, 0.35);
-  --heat-4: rgba(167, 243, 208, 1);
-  --heat-4-border: rgba(209, 250, 229, 0.35);
-}
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -81,11 +82,11 @@
 }
 
 html {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
-html.dark {
-  color-scheme: dark;
+html.light {
+  color-scheme: light;
 }
 
 body {

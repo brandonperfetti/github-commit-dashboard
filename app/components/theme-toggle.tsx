@@ -18,9 +18,8 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <Button variant="secondary" aria-label="Toggle theme" className="min-w-11 rounded-2xl border-[var(--border)] px-3 shadow-none sm:rounded-full sm:px-4">
+      <Button variant="secondary" aria-label="Toggle theme" className="h-10 min-w-10 rounded-full border-[var(--border)] px-3 shadow-none">
         <span aria-hidden>◐</span>
-        <span className="hidden sm:inline">Theme</span>
       </Button>
     );
   }
@@ -32,10 +31,9 @@ export function ThemeToggle() {
       variant="secondary"
       aria-label="Toggle theme"
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
-      className="min-w-11 gap-2 rounded-2xl border-[var(--border)] px-3 shadow-none sm:rounded-full sm:px-4"
+      className="h-10 min-w-10 rounded-full border-[var(--border)] px-3 shadow-none"
     >
       <span aria-hidden>{isDark ? '☀️' : '🌙'}</span>
-      <span className="hidden sm:inline">{isDark ? 'Light' : 'Dark'}</span>
     </Button>
   );
 }
