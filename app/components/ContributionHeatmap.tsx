@@ -1,48 +1,28 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-
-type ContributionDay = {
-  date: string
-  count: number
-  level: 0 | 1 | 2 | 3 | 4
-}
+import { buildCalendarCells, chunkWeeks, prettyDay, type ContributionDay } from '@/lib/github'
 
 const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 const levelClasses = [
-  'bg-white/[0.06] border-white/5',
-  'bg-emerald-900/80 border-emerald-700/30',
-  'bg-emerald-700/85 border-emerald-500/40',
-  'bg-emerald-500/90 border-emerald-300/40',
-  'bg-emerald-300 border-emerald-100/40',
+  'bg-[var(--heat-0)] border-[var(--heat-0-border)]',
+  'bg-[var(--heat-1)] border-[var(--heat-1-border)]',
+  'bg-[var(--heat-2)] border-[var(--heat-2-border)]',
+  'bg-[var(--heat-3)] border-[var(--heat-3-border)]',
+  'bg-[var(--heat-4)] border-[var(--heat-4-border)]',
 ]
 
-function prettyDay(date: string) {
-  return new Date(`${date}T00:00:00`).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  })
-}
-
-function buildCalendarCells(days: ContributionDay[]) {
-  const firstDayIndex = new Date(`${days[0].date}T00:00:00`).getDay()
-  const lastDayIndex = new Date(`${days[days.length - 1].date}T00:00:00`).getDay()
-
-  const leading = Array.from({ length: firstDayIndex }, () => null as ContributionDay | null)
-  const trailing = Array.from({ length: 6 - lastDayIndex }, () => null as ContributionDay | null)
-
-  return [...leading, ...days, ...trailing]
-}
-
-function chunkWeeks(cells: Array<ContributionDay | null>) {
-  const weeks: Array<Array<ContributionDay | null>> = []
-
-  for (let i = 0; i < cells.length; i += 7) {
-    weeks.push(cells.slice(i, i + 7))
-  }
-
-  return weeks
+export function HeatmapLegend() {
+  return (
+    <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
+      <span>Less</span>
+      {levelClasses.map((levelClass) => (
+        <span key={levelClass} className={`h-3.5 w-3.5 rounded-[4px] border ${levelClass}`} />
+      ))}
+      <span>More</span>
+    </div>
+  )
 }
 
 export default function ContributionHeatmap({ days }: { days: ContributionDay[] }) {
@@ -52,21 +32,21 @@ export default function ContributionHeatmap({ days }: { days: ContributionDay[] 
   const [selectedDay, setSelectedDay] = useState<ContributionDay>(defaultSelected)
 
   return (
-    <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4">
+    <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--card-muted)] p-4">
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="rounded-xl border border-emerald-300/15 bg-emerald-400/5 px-3 py-2 text-sm text-zinc-200">
-          <span className="font-medium text-white">{prettyDay(selectedDay.date)}</span>
-          <span className="mx-2 text-zinc-500">·</span>
+        <div className="rounded-xl border border-[var(--border-strong)] bg-[var(--accent-soft)] px-3 py-2 text-sm text-[var(--foreground)]">
+          <span className="font-medium">{prettyDay(selectedDay.date)}</span>
+          <span className="mx-2 text-[var(--muted-foreground)]">·</span>
           <span>{selectedDay.count} contributions</span>
         </div>
 
-        <div className="text-xs text-zinc-500">
+        <div className="text-xs text-[var(--muted-foreground)]">
           Hover on desktop or tap on mobile for details.
         </div>
       </div>
 
       <div className="flex gap-3 overflow-x-auto py-2">
-        <div className="grid grid-rows-7 gap-3 pt-1 text-[11px] text-zinc-500">
+        <div className="grid grid-rows-7 gap-3 pt-1 text-[11px] text-[var(--muted-foreground)]">
           {WEEKDAY_LABELS.map((label) => (
             <div key={label} className="flex h-5 items-center pr-2 md:h-6">
               {label}
@@ -102,7 +82,9 @@ export default function ContributionHeatmap({ days }: { days: ContributionDay[] 
                     onFocus={() => setSelectedDay(day)}
                     onClick={() => setSelectedDay(day)}
                     className={`h-[18px] rounded-[6px] border transition md:h-6 ${levelClasses[day.level]} ${
-                      isSelected ? 'ring-2 ring-emerald-200/70 ring-offset-1 ring-offset-[#0d1516]' : 'hover:ring-1 hover:ring-emerald-200/40'
+                      isSelected
+                        ? 'ring-2 ring-emerald-400/70 ring-offset-1 ring-offset-[var(--card-muted)]'
+                        : 'hover:ring-1 hover:ring-emerald-400/40'
                     }`}
                     aria-label={`${day.count} contributions on ${prettyDay(day.date)}`}
                   />
