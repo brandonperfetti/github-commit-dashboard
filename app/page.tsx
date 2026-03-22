@@ -45,15 +45,21 @@ export default async function Home() {
               variant="typewriter"
               className="mt-5 max-w-3xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl md:text-6xl"
             />
-            <ScrollReveal delay={0.24} y={12}>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted-foreground)] sm:text-[17px]">
+            <ScrollReveal
+              delay={0.24}
+              y={12}
+              targets="[data-hero-item]"
+              stagger={0.1}
+            >
+              <p
+                data-hero-item
+                className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted-foreground)] sm:text-[17px]"
+              >
                 A focused front-end for {USERNAME}&apos;s public GitHub output.
                 Start with the signal, then drill into activity, repos, and
                 featured work without the usual GitHub noise.
               </p>
-            </ScrollReveal>
-            <ScrollReveal delay={0.34} y={10}>
-              <div className="mt-6 flex flex-wrap gap-3">
+              <div data-hero-item className="mt-6 flex flex-wrap gap-3">
                 <ButtonLink href="/activity">Open activity</ButtonLink>
                 <ButtonLink href="/repos" variant="secondary">
                   Browse repos
