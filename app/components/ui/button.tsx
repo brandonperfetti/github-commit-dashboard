@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 const styles = {
   primary:
-    "border border-emerald-400/20 bg-[var(--button-accent)] text-white shadow-[0_16px_36px_rgba(16,185,129,0.2)] hover:bg-[var(--button-accent-hover)]",
+    "border border-emerald-400/20 bg-[var(--button-accent)] !text-white shadow-[0_16px_36px_rgba(16,185,129,0.2)] hover:bg-[var(--button-accent-hover)]",
 
   secondary:
     "border border-[var(--border-strong)] bg-[var(--card-muted)] text-[var(--foreground)] hover:bg-[var(--accent-soft-strong)]",
