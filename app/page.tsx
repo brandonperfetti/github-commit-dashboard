@@ -21,8 +21,8 @@ export default async function Home() {
         <div className="grid gap-6 px-4 py-5 sm:px-6 sm:py-7 lg:grid-cols-[1.25fr_0.95fr] lg:items-end lg:px-8 lg:py-8">
           <div>
             <Badge>Overview</Badge>
-            <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--card-muted)] px-3 py-1 text-xs font-medium text-[var(--muted-foreground)] shadow-[0_8px_24px_rgba(15,23,42,0.06)] backdrop-blur-sm">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.12)]" />
+            <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-600 shadow-[0_8px_24px_rgba(15,23,42,0.06)] backdrop-blur-sm dark:text-emerald-400">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.18)]" />
               Live public GitHub signal
             </div>
             <h1 className="mt-5 max-w-3xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl md:text-6xl">

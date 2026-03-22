@@ -53,8 +53,8 @@
     radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 24%),
     linear-gradient(180deg, #fcfdff 0%, #f4f7fb 44%, #ecf2f8 100%);
   --nav-surface: rgba(252, 253, 255, 0.78);
-  --nav-active-bg: #0f172a;
-  --nav-active-fg: #f8fafc;
+  --nav-active-bg: #059669;
+  --nav-active-fg: #ffffff;
   --button-accent: #059669;
   --button-accent-hover: #047857;
   --button-accent-foreground: #f8fafc;

@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from 'react';
 import { useTheme } from 'next-themes';
+import { Sun, Moon } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 
 function useMounted() {
@@ -18,8 +19,8 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <Button variant="secondary" aria-label="Toggle theme" className="h-10 min-w-10 rounded-full border-[var(--border)] px-3 shadow-none">
-        <span aria-hidden>◐</span>
+      <Button variant="secondary" aria-label="Toggle theme" className="h-9 w-9 rounded-full border-[var(--border)] p-0 shadow-none">
+        <Moon className="h-4 w-4" />
       </Button>
     );
   }
@@ -31,9 +32,9 @@ export function ThemeToggle() {
       variant="secondary"
       aria-label="Toggle theme"
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
-      className="h-10 min-w-10 rounded-full border-[var(--border)] px-3 shadow-none"
+      className="h-9 w-9 rounded-full border-[var(--border)] p-0 shadow-none"
     >
-      <span aria-hidden>{isDark ? '☀️' : '🌙'}</span>
+      {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
     </Button>
   );
 }
