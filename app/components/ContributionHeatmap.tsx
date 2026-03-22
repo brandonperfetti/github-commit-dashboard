@@ -104,7 +104,7 @@ export default function ContributionHeatmap({
                     className={`h-4 rounded-[5px] border transition motion-safe:transform-gpu motion-safe:transition-transform motion-safe:duration-200 sm:h-[18px] sm:rounded-[6px] md:h-6 ${levelClasses[day.level]} ${
                       isSelected
                         ? "ring-2 ring-emerald-400/70 ring-offset-1 ring-offset-[var(--card-muted)] motion-safe:scale-105"
-                        : "motion-safe:scale-100 hover:ring-1 hover:ring-emerald-400/40"
+                        : "hover:ring-1 hover:ring-emerald-400/40 motion-safe:scale-100"
                     }`}
                     aria-label={`${day.count} contributions on ${prettyDay(day.date)}`}
                   />

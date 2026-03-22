@@ -1,6 +1,8 @@
 import ContributionHeatmap, {
   HeatmapLegend,
 } from "@/app/components/ContributionHeatmap";
+import { AnimatedHeadline } from "@/app/components/motion/AnimatedHeadline";
+import { ScrollReveal } from "@/app/components/motion/ScrollReveal";
 import {
   Card,
   CardContent,
@@ -44,9 +46,11 @@ export function ActivityOverview({
               <p className="text-xs tracking-[0.35em] text-emerald-500/80 uppercase">
                 Build
               </p>
-              <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl">
-                Shipping signal, not vanity metrics.
-              </h1>
+              <AnimatedHeadline
+                text="Shipping signal, not vanity metrics."
+                variant="line"
+                className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl"
+              />
               <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted-foreground)] md:text-base">
                 Public GitHub contribution activity for the last {DAYS} days,
                 packaged as a clean daily operating view.
@@ -55,24 +59,26 @@ export function ActivityOverview({
           </div>
         </div>
 
-        <div className="grid gap-3 px-4 py-4 sm:px-6 sm:py-6 md:grid-cols-4 lg:px-8">
-          {[
-            { label: "Total contributions", value: total },
-            { label: "Active days", value: `${activeDays}/${DAYS}` },
-            { label: "Current streak", value: `${currentStreak(days)} days` },
-            { label: "Best streak", value: `${longestStreak(days)} days` },
-          ].map((card) => (
-            <Card
-              key={card.label}
-              className="rounded-2xl bg-[var(--card-muted)] p-4 shadow-none transition-all duration-300 hover:-translate-y-1 hover:bg-[var(--accent-soft)] hover:shadow-[0_14px_30px_rgba(15,23,42,0.1)] motion-reduce:hover:translate-y-0 sm:p-5"
-            >
-              <CardDescription>{card.label}</CardDescription>
-              <div className="mt-2 text-3xl font-semibold tracking-tight">
-                {card.value}
-              </div>
-            </Card>
-          ))}
-        </div>
+        <ScrollReveal y={12} delay={0.14}>
+          <div className="grid gap-3 px-4 py-4 sm:px-6 sm:py-6 md:grid-cols-4 lg:px-8">
+            {[
+              { label: "Total contributions", value: total },
+              { label: "Active days", value: `${activeDays}/${DAYS}` },
+              { label: "Current streak", value: `${currentStreak(days)} days` },
+              { label: "Best streak", value: `${longestStreak(days)} days` },
+            ].map((card) => (
+              <Card
+                key={card.label}
+                className="rounded-2xl bg-[var(--card-muted)] p-4 shadow-none transition-all duration-300 hover:-translate-y-1 hover:bg-[var(--accent-soft)] hover:shadow-[0_14px_30px_rgba(15,23,42,0.1)] motion-reduce:hover:translate-y-0 sm:p-5"
+              >
+                <CardDescription>{card.label}</CardDescription>
+                <div className="mt-2 text-3xl font-semibold tracking-tight">
+                  {card.value}
+                </div>
+              </Card>
+            ))}
+          </div>
+        </ScrollReveal>
       </SectionShell>
 
       <SectionShell>
@@ -88,7 +94,9 @@ export function ActivityOverview({
           <HeatmapLegend />
         </div>
 
-        <ContributionHeatmap days={days} />
+        <ScrollReveal y={10} delay={0.08}>
+          <ContributionHeatmap days={days} />
+        </ScrollReveal>
 
         <div className="mt-6 flex flex-wrap gap-3 text-sm text-[var(--muted-foreground)]">
           <div className="rounded-full border border-[var(--border)] bg-[var(--card-muted)] px-3 py-1.5">
