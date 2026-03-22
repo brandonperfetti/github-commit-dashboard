@@ -7,10 +7,6 @@ export function usePrefersReducedMotion() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   useIsomorphicLayoutEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     const update = () => setPrefersReducedMotion(media.matches);
 
