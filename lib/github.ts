@@ -48,7 +48,9 @@ export function buildLast30Days() {
   return dates;
 }
 
-export async function getContributionDays(username: string = USERNAME): Promise<ContributionDay[]> {
+export async function getContributionDays(
+  username: string = USERNAME,
+): Promise<ContributionDay[]> {
   const dates = buildLast30Days();
   const from = dates[0];
   const to = dates[dates.length - 1];
@@ -93,13 +95,16 @@ export async function getContributionDays(username: string = USERNAME): Promise<
 }
 
 export async function getRepos(username: string = USERNAME): Promise<Repo[]> {
-  const response = await fetch(`https://api.github.com/users/${username}/repos?per_page=100&sort=updated`, {
-    headers: {
-      Accept: "application/vnd.github+json",
-      "User-Agent": "Build Dashboard",
+  const response = await fetch(
+    `https://api.github.com/users/${username}/repos?per_page=100&sort=updated`,
+    {
+      headers: {
+        Accept: "application/vnd.github+json",
+        "User-Agent": "Build Dashboard",
+      },
+      cache: "no-store",
     },
-    cache: "no-store",
-  });
+  );
 
   if (!response.ok) {
     throw new Error(`GitHub API returned ${response.status}`);
@@ -148,10 +153,18 @@ export function prettyDay(date: string) {
 
 export function buildCalendarCells(days: ContributionDay[]) {
   const firstDayIndex = new Date(`${days[0].date}T00:00:00`).getDay();
-  const lastDayIndex = new Date(`${days[days.length - 1].date}T00:00:00`).getDay();
+  const lastDayIndex = new Date(
+    `${days[days.length - 1].date}T00:00:00`,
+  ).getDay();
 
-  const leading = Array.from({ length: firstDayIndex }, () => null as ContributionDay | null);
-  const trailing = Array.from({ length: 6 - lastDayIndex }, () => null as ContributionDay | null);
+  const leading = Array.from(
+    { length: firstDayIndex },
+    () => null as ContributionDay | null,
+  );
+  const trailing = Array.from(
+    { length: 6 - lastDayIndex },
+    () => null as ContributionDay | null,
+  );
 
   return [...leading, ...days, ...trailing];
 }
@@ -174,7 +187,9 @@ export function buildSparklinePoints(days: ContributionDay[]) {
 
   return days
     .map((day, index) => {
-      const x = padding + (index / Math.max(days.length - 1, 1)) * (width - padding * 2);
+      const x =
+        padding +
+        (index / Math.max(days.length - 1, 1)) * (width - padding * 2);
       const y = height - padding - (day.count / max) * (height - padding * 2);
       return `${x},${y}`;
     })
@@ -189,7 +204,8 @@ export function buildWeeklyTotals(days: ContributionDay[]) {
     label: `Week ${index + 1}`,
     total: week.reduce((sum, day) => sum + (day?.count ?? 0), 0),
     range: `${prettyDay(week.find((day) => day)?.date ?? days[0].date)} – ${prettyDay(
-      [...week].reverse().find((day) => day)?.date ?? days[days.length - 1].date,
+      [...week].reverse().find((day) => day)?.date ??
+        days[days.length - 1].date,
     )}`,
   }));
 }

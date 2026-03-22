@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { ThemeToggle } from '@/app/components/theme-toggle';
-import { cn } from '@/lib/utils';
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { ThemeToggle } from "@/app/components/theme-toggle";
+import { cn } from "@/lib/utils";
 
 const links = [
-  { href: '/', label: 'Overview' },
-  { href: '/activity', label: 'Activity' },
-  { href: '/repos', label: 'Repos' },
-  { href: '/featured', label: 'Featured' },
+  { href: "/", label: "Overview" },
+  { href: "/activity", label: "Activity" },
+  { href: "/repos", label: "Repos" },
+  { href: "/featured", label: "Featured" },
 ];
 
 export function SiteNav() {
@@ -26,8 +26,12 @@ export function SiteNav() {
             </span>
 
             <div className="min-w-0">
-              <div className="text-[11px] font-medium uppercase tracking-[0.3em] text-emerald-400/80">Build</div>
-              <div className="truncate text-sm font-medium text-[var(--foreground)]">GitHub shipping dashboard</div>
+              <div className="text-[11px] font-medium tracking-[0.3em] text-emerald-400/80 uppercase">
+                Build
+              </div>
+              <div className="truncate text-sm font-medium text-[var(--foreground)]">
+                GitHub shipping dashboard
+              </div>
             </div>
           </Link>
 
@@ -43,10 +47,10 @@ export function SiteNav() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  'inline-flex h-10 shrink-0 items-center justify-center rounded-full px-3.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 sm:px-4',
+                  "inline-flex h-10 shrink-0 items-center justify-center rounded-full px-3.5 text-sm font-medium transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-emerald-400/60 focus-visible:outline-none motion-safe:transform-gpu motion-safe:transition-transform motion-safe:duration-300 motion-safe:hover:-translate-y-0.5 sm:px-4",
                   active
-                    ? 'bg-[var(--nav-active-bg)] text-[var(--nav-active-fg)] shadow-[inset_0_0_0_1px_var(--border-strong)]'
-                    : 'text-[var(--muted-foreground)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]',
+                    ? "bg-[var(--nav-active-bg)] !text-white shadow-[inset_0_0_0_1px_var(--border-strong)]"
+                    : "text-[var(--muted-foreground)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]",
                 )}
               >
                 {link.label}
