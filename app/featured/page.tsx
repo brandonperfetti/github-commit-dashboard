@@ -1,5 +1,7 @@
 import { Badge } from "@/app/components/ui/badge";
 import { ButtonLink } from "@/app/components/ui/button";
+import { AnimatedHeadline } from "@/app/components/motion/AnimatedHeadline";
+import { ScrollReveal } from "@/app/components/motion/ScrollReveal";
 import { Card } from "@/app/components/ui/card";
 import { SectionShell } from "@/app/components/section-shell";
 import { formatRepoDate, getContributionDays, getRepos } from "@/lib/github";
@@ -30,9 +32,11 @@ export default async function FeaturedPage() {
             <p className="text-xs tracking-[0.3em] text-emerald-500/80 uppercase">
               Featured
             </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-              Projects to lead with
-            </h1>
+            <AnimatedHeadline
+              text="Projects to lead with"
+              variant="line"
+              className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl"
+            />
             <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted-foreground)]">
               A lightweight curation pass based on public repo signals: stars
               first, fresh pushes second.
@@ -45,45 +49,57 @@ export default async function FeaturedPage() {
         </div>
       </SectionShell>
 
-      <section className="grid gap-4 lg:grid-cols-3">
-        {featured.map((repo, index) => (
-          <Card
-            className="p-4 transition-all duration-300 hover:-translate-y-1 hover:border-[var(--border-strong)] hover:bg-[var(--accent-soft)] motion-reduce:hover:translate-y-0 sm:p-5"
-            key={repo.id}
-          >
-            <div className="flex items-center justify-between gap-4">
-              <Badge>#{index + 1}</Badge>
-              <Badge>{repo.stargazers_count}★</Badge>
-            </div>
-            <h2 className="mt-5 text-xl font-semibold tracking-tight">
-              {repo.name}
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-[var(--muted-foreground)]">
-              {repo.description ?? "No description yet."}
-            </p>
-            <div className="mt-5 flex flex-wrap gap-2 text-sm text-[var(--muted-foreground)]">
-              <span>{repo.language ?? "Unknown"}</span>
-              <span>•</span>
-              <span>Updated {formatRepoDate(repo.pushed_at)}</span>
-            </div>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <ButtonLink href={repo.html_url} target="_blank" rel="noreferrer">
-                Source
-              </ButtonLink>
-              {repo.homepage ? (
+      <ScrollReveal
+        y={14}
+        start="top 90%"
+        targets="[data-featured-card]"
+        stagger={0.06}
+      >
+        <section className="grid gap-4 lg:grid-cols-3">
+          {featured.map((repo, index) => (
+            <Card
+              className="p-4 transition-all duration-300 hover:-translate-y-1 hover:border-[var(--border-strong)] hover:bg-[var(--accent-soft)] motion-reduce:hover:translate-y-0 sm:p-5"
+              key={repo.id}
+              data-featured-card
+            >
+              <div className="flex items-center justify-between gap-4">
+                <Badge>#{index + 1}</Badge>
+                <Badge>{repo.stargazers_count}★</Badge>
+              </div>
+              <h2 className="mt-5 text-xl font-semibold tracking-tight">
+                {repo.name}
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-[var(--muted-foreground)]">
+                {repo.description ?? "No description yet."}
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2 text-sm text-[var(--muted-foreground)]">
+                <span>{repo.language ?? "Unknown"}</span>
+                <span>•</span>
+                <span>Updated {formatRepoDate(repo.pushed_at)}</span>
+              </div>
+              <div className="mt-6 flex flex-wrap gap-3">
                 <ButtonLink
-                  href={repo.homepage}
+                  href={repo.html_url}
                   target="_blank"
                   rel="noreferrer"
-                  variant="secondary"
                 >
-                  Live
+                  Source
                 </ButtonLink>
-              ) : null}
-            </div>
-          </Card>
-        ))}
-      </section>
+                {repo.homepage ? (
+                  <ButtonLink
+                    href={repo.homepage}
+                    target="_blank"
+                    rel="noreferrer"
+                    variant="secondary"
+                  >
+                    Live
+                  </ButtonLink>
+                ) : null}
+              </div>
+            </Card>
+          ))}
+        </section>
+      </ScrollReveal>
     </div>
   );
 }
