@@ -27,7 +27,7 @@ export function ThemeToggle() {
       variant="secondary"
       aria-label="Toggle theme"
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
-      className="gap-2"
+      className="gap-2 px-3 sm:px-4"
     >
       <span aria-hidden>{isDark ? '☀️' : '🌙'}</span>
       <span>{isDark ? 'Light' : 'Dark'}</span>

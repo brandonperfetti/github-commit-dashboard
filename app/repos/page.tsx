@@ -17,7 +17,7 @@ export default async function ReposPage() {
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-emerald-500/80">Repos</p>
-          <h1 className="mt-2 text-4xl font-semibold tracking-tight">Repository surface area</h1>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Repository surface area</h1>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted-foreground)]">
             Public repositories sorted by recent activity. Simple, readable, and directly tied to the live GitHub account.
           </p>
@@ -27,7 +27,7 @@ export default async function ReposPage() {
 
       <div className="mt-8 grid gap-4 lg:grid-cols-2">
         {repos.map((repo) => (
-          <article key={repo.id} className="rounded-3xl border border-[var(--border)] bg-[var(--card-muted)] p-5">
+          <article key={repo.id} className="rounded-3xl border border-[var(--border)] bg-[var(--card-muted)] p-4 sm:p-5">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-lg font-semibold tracking-tight">{repo.name}</h2>

@@ -12,6 +12,12 @@
   --shadow-card: 0 20px 60px rgba(15, 23, 42, 0.08);
   --hero: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(59, 130, 246, 0.08) 55%, rgba(255, 255, 255, 0));
   --page-gradient: radial-gradient(circle at top, rgba(16, 185, 129, 0.12), transparent 35%), linear-gradient(180deg, #fcfdff 0%, #f4f7fb 52%, #eef3f8 100%);
+  --nav-surface: rgba(246, 248, 251, 0.82);
+  --nav-active-bg: #0f172a;
+  --nav-active-fg: #f8fafc;
+  --button-accent: #059669;
+  --button-accent-hover: #047857;
+  --button-accent-foreground: #f8fafc;
   --heat-0: rgba(15, 23, 42, 0.06);
   --heat-0-border: rgba(15, 23, 42, 0.05);
   --heat-1: rgba(16, 185, 129, 0.25);
@@ -36,6 +42,12 @@
   --shadow-card: 0 24px 80px rgba(0, 0, 0, 0.38);
   --hero: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(59, 130, 246, 0.08) 55%, rgba(255, 255, 255, 0));
   --page-gradient: radial-gradient(circle at top, rgba(16, 185, 129, 0.18), transparent 35%), linear-gradient(180deg, #07110f 0%, #0a0f1a 45%, #050816 100%);
+  --nav-surface: rgba(9, 16, 24, 0.8);
+  --nav-active-bg: rgba(16, 185, 129, 0.16);
+  --nav-active-fg: #ecfdf5;
+  --button-accent: #10b981;
+  --button-accent-hover: #34d399;
+  --button-accent-foreground: #f8fafc;
   --heat-0: rgba(255, 255, 255, 0.06);
   --heat-0-border: rgba(255, 255, 255, 0.05);
   --heat-1: rgba(6, 78, 59, 0.82);

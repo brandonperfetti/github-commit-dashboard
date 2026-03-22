@@ -4,7 +4,7 @@ export function SectionShell({ className, ...props }: React.ComponentProps<'sect
   return (
     <section
       className={cn(
-        'rounded-[28px] border border-[var(--border)] bg-[var(--card)] p-6 shadow-[var(--shadow-card)] sm:p-8',
+        'rounded-[24px] border border-[var(--border)] bg-[var(--card)] p-4 shadow-[var(--shadow-card)] sm:rounded-[28px] sm:p-6 lg:p-8',
         className,
       )}
       {...props}

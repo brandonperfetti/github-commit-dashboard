@@ -32,7 +32,7 @@ export default function ContributionHeatmap({ days }: { days: ContributionDay[] 
   const [selectedDay, setSelectedDay] = useState<ContributionDay>(defaultSelected)
 
   return (
-    <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--card-muted)] p-4">
+    <div className="mt-5 rounded-[24px] border border-[var(--border)] bg-[var(--card-muted)] p-3 sm:mt-6 sm:rounded-3xl sm:p-4">
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="rounded-xl border border-[var(--border-strong)] bg-[var(--accent-soft)] px-3 py-2 text-sm text-[var(--foreground)]">
           <span className="font-medium">{prettyDay(selectedDay.date)}</span>
@@ -45,10 +45,10 @@ export default function ContributionHeatmap({ days }: { days: ContributionDay[] 
         </div>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto py-2">
-        <div className="grid grid-rows-7 gap-3 pt-1 text-[11px] text-[var(--muted-foreground)]">
+      <div className="flex gap-2 overflow-x-auto py-2 sm:gap-3">
+        <div className="grid grid-rows-7 gap-2 pt-1 text-[10px] text-[var(--muted-foreground)] sm:gap-3 sm:text-[11px]">
           {WEEKDAY_LABELS.map((label) => (
-            <div key={label} className="flex h-5 items-center pr-2 md:h-6">
+            <div key={label} className="flex h-[18px] items-center pr-1 sm:pr-2 md:h-6">
               {label}
             </div>
           ))}
@@ -57,17 +57,17 @@ export default function ContributionHeatmap({ days }: { days: ContributionDay[] 
         <div
           className="grid min-w-0 flex-1 gap-3"
           style={{
-            gridTemplateColumns: `repeat(${weeks.length}, minmax(48px, 1fr))`,
+            gridTemplateColumns: `repeat(${weeks.length}, minmax(38px, 1fr))`,
           }}
         >
           {weeks.map((week, weekIndex) => (
-            <div key={`week-${weekIndex}`} className="grid gap-3" style={{ gridTemplateRows: 'repeat(7, minmax(0, 1fr))' }}>
+            <div key={`week-${weekIndex}`} className="grid gap-2 sm:gap-3" style={{ gridTemplateRows: 'repeat(7, minmax(0, 1fr))' }}>
               {week.map((day, dayIndex) => {
                 if (!day) {
                   return (
                     <div
                       key={`empty-${weekIndex}-${dayIndex}`}
-                      className="h-[18px] rounded-[6px] bg-transparent md:h-6"
+                      className="h-4 rounded-[5px] bg-transparent sm:h-[18px] sm:rounded-[6px] md:h-6"
                     />
                   )
                 }
@@ -81,7 +81,7 @@ export default function ContributionHeatmap({ days }: { days: ContributionDay[] 
                     onMouseEnter={() => setSelectedDay(day)}
                     onFocus={() => setSelectedDay(day)}
                     onClick={() => setSelectedDay(day)}
-                    className={`h-[18px] rounded-[6px] border transition md:h-6 ${levelClasses[day.level]} ${
+                    className={`h-4 rounded-[5px] border transition sm:h-[18px] sm:rounded-[6px] md:h-6 ${levelClasses[day.level]} ${
                       isSelected
                         ? 'ring-2 ring-emerald-400/70 ring-offset-1 ring-offset-[var(--card-muted)]'
                         : 'hover:ring-1 hover:ring-emerald-400/40'

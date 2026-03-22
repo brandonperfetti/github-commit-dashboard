@@ -16,12 +16,12 @@ export default async function Home() {
     .slice(0, 3);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6">
       <SectionShell className="overflow-hidden p-0">
-        <div className="grid gap-8 px-6 py-8 sm:px-8 lg:grid-cols-[1.3fr_0.9fr] lg:items-end">
+        <div className="grid gap-6 px-4 py-5 sm:px-6 sm:py-7 lg:grid-cols-[1.3fr_0.9fr] lg:items-end lg:px-8 lg:py-8">
           <div>
             <Badge>Overview</Badge>
-            <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight md:text-6xl">
+            <h1 className="mt-4 max-w-3xl text-3xl font-semibold tracking-tight sm:text-4xl md:text-6xl">
               Build turns GitHub activity into a cleaner operating dashboard.
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted-foreground)]">
@@ -36,7 +36,7 @@ export default async function Home() {
             </div>
           </div>
 
-          <Card className="p-6">
+          <Card className="p-4 sm:p-6">
             <CardHeader>
               <CardDescription>At a glance</CardDescription>
               <CardTitle className="text-3xl">{totalContributions} contributions in 30 days</CardTitle>
@@ -64,7 +64,7 @@ export default async function Home() {
 
       <section className="grid gap-4 lg:grid-cols-2">
         <SectionShell>
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-xl font-semibold">Featured work</h2>
               <p className="mt-1 text-sm text-[var(--muted-foreground)]">A few projects worth pulling forward first.</p>
@@ -93,7 +93,7 @@ export default async function Home() {
         </SectionShell>
 
         <SectionShell>
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-xl font-semibold">Repository view</h2>
               <p className="mt-1 text-sm text-[var(--muted-foreground)]">Recent repos, language mix, and shipping velocity.</p>

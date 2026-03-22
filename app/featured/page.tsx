@@ -24,7 +24,7 @@ export default async function FeaturedPage() {
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-emerald-500/80">Featured</p>
-            <h1 className="mt-2 text-4xl font-semibold tracking-tight">Projects to lead with</h1>
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Projects to lead with</h1>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted-foreground)]">
               A lightweight curation pass based on public repo signals: stars first, fresh pushes second.
             </p>
@@ -38,7 +38,7 @@ export default async function FeaturedPage() {
 
       <section className="grid gap-4 lg:grid-cols-3">
         {featured.map((repo, index) => (
-          <Card key={repo.id} className="p-5">
+          <Card key={repo.id} className="p-4 sm:p-5">
             <div className="flex items-center justify-between gap-4">
               <Badge>#{index + 1}</Badge>
               <Badge>{repo.stargazers_count}★</Badge>

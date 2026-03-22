@@ -33,7 +33,7 @@ export default function RootLayout({
         <Providers>
           <div className="min-h-screen bg-[var(--page-gradient)]">
             <SiteNav />
-            <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+            <main className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-3 py-4 sm:gap-6 sm:px-5 sm:py-6 lg:px-8 lg:py-8">
               {children}
             </main>
           </div>

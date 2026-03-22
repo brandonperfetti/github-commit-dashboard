@@ -19,13 +19,13 @@ export function ActivityOverview({ days, compact = false }: { days: Contribution
   const sparklinePoints = buildSparklinePoints(days);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6">
       <SectionShell className="overflow-hidden p-0">
-        <div className="border-b border-[var(--border)] bg-[var(--hero)] px-6 py-8 sm:px-8">
+        <div className="border-b border-[var(--border)] bg-[var(--hero)] px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.35em] text-emerald-500/80">Build</p>
-              <h1 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">Shipping signal, not vanity metrics.</h1>
+              <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl">Shipping signal, not vanity metrics.</h1>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted-foreground)] md:text-base">
                 Public GitHub contribution activity for the last {DAYS} days, packaged as a clean daily operating view.
               </p>
@@ -33,14 +33,14 @@ export function ActivityOverview({ days, compact = false }: { days: Contribution
           </div>
         </div>
 
-        <div className="grid gap-4 px-6 py-6 md:grid-cols-4 sm:px-8">
+        <div className="grid gap-3 px-4 py-4 sm:px-6 sm:py-6 md:grid-cols-4 lg:px-8">
           {[
             { label: 'Total contributions', value: total },
             { label: 'Active days', value: `${activeDays}/${DAYS}` },
             { label: 'Current streak', value: `${currentStreak(days)} days` },
             { label: 'Best streak', value: `${longestStreak(days)} days` },
           ].map((card) => (
-            <Card key={card.label} className="rounded-2xl bg-[var(--card-muted)] p-5 shadow-none">
+            <Card key={card.label} className="rounded-2xl bg-[var(--card-muted)] p-4 sm:p-5 shadow-none">
               <CardDescription>{card.label}</CardDescription>
               <div className="mt-2 text-3xl font-semibold tracking-tight">{card.value}</div>
             </Card>
@@ -88,8 +88,8 @@ export function ActivityOverview({ days, compact = false }: { days: Contribution
         <section className="grid gap-4 md:grid-cols-[1.6fr_1fr]">
           <SectionShell>
             <h2 className="text-xl font-semibold">Daily breakdown</h2>
-            <div className="mt-5 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card-muted)]">
-              <table className="min-w-full divide-y divide-[var(--border)] text-left text-sm">
+            <div className="mt-5 overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--card-muted)]">
+              <table className="min-w-[520px] divide-y divide-[var(--border)] text-left text-sm sm:min-w-full">
                 <thead className="bg-[var(--accent-soft)] text-[var(--muted-foreground)]">
                   <tr>
                     <th className="px-4 py-3 font-medium">Date</th>
