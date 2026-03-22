@@ -1,11 +1,12 @@
 "use client";
 
-import { useLayoutEffect, useState } from "react";
+import { useState } from "react";
+import { useIsomorphicLayoutEffect } from "@/lib/motion/useIsomorphicLayoutEffect";
 
 export function usePrefersReducedMotion() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (typeof window === "undefined") {
       return;
     }

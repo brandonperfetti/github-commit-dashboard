@@ -2,13 +2,14 @@
 
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useLayoutEffect, useRef } from "react";
+import { useRef } from "react";
 import {
   SCROLL_REVEAL_DURATION,
   SCROLL_REVEAL_START,
   SCROLL_REVEAL_STAGGER,
   SCROLL_REVEAL_Y,
 } from "@/lib/motion/headlineTiming";
+import { useIsomorphicLayoutEffect } from "@/lib/motion/useIsomorphicLayoutEffect";
 import { cn } from "@/lib/utils";
 import { usePrefersReducedMotion } from "@/lib/motion/usePrefersReducedMotion";
 
@@ -38,7 +39,7 @@ export function ScrollReveal({
   const rootRef = useRef<HTMLDivElement | null>(null);
   const prefersReducedMotion = usePrefersReducedMotion();
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const prefersReducedMotionSync =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
