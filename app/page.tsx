@@ -7,6 +7,8 @@ import {
   CardTitle,
 } from "@/app/components/ui/card";
 import { ActivityOverview } from "@/app/components/activity-overview";
+import { AnimatedHeadline } from "@/app/components/motion/AnimatedHeadline";
+import { ScrollReveal } from "@/app/components/motion/ScrollReveal";
 import { SectionShell } from "@/app/components/section-shell";
 import { getContributionDays, getRepos, USERNAME } from "@/lib/github";
 
@@ -38,133 +40,145 @@ export default async function Home() {
                 Live public GitHub signal
               </div>
             </div>
-            <h1 className="mt-5 max-w-3xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl md:text-6xl">
-              Build turns GitHub activity into a cleaner operating dashboard.
-            </h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted-foreground)] sm:text-[17px]">
-              A focused front-end for {USERNAME}&apos;s public GitHub output.
-              Start with the signal, then drill into activity, repos, and
-              featured work without the usual GitHub noise.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <ButtonLink href="/activity">Open activity</ButtonLink>
-              <ButtonLink href="/repos" variant="secondary">
-                Browse repos
-              </ButtonLink>
-              <ButtonLink
-                href={`https://github.com/${USERNAME}`}
-                target="_blank"
-                rel="noreferrer"
-                variant="ghost"
-              >
-                GitHub profile
-              </ButtonLink>
-            </div>
+            <AnimatedHeadline
+              text="Build turns GitHub activity into a cleaner operating dashboard."
+              variant="typewriter"
+              className="mt-5 max-w-3xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl md:text-6xl"
+            />
+            <ScrollReveal delay={0.24} y={12}>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted-foreground)] sm:text-[17px]">
+                A focused front-end for {USERNAME}&apos;s public GitHub output.
+                Start with the signal, then drill into activity, repos, and
+                featured work without the usual GitHub noise.
+              </p>
+            </ScrollReveal>
+            <ScrollReveal delay={0.34} y={10}>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <ButtonLink href="/activity">Open activity</ButtonLink>
+                <ButtonLink href="/repos" variant="secondary">
+                  Browse repos
+                </ButtonLink>
+                <ButtonLink
+                  href={`https://github.com/${USERNAME}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  variant="ghost"
+                >
+                  GitHub profile
+                </ButtonLink>
+              </div>
+            </ScrollReveal>
           </div>
 
-          <Card className="relative overflow-hidden p-4 sm:p-6">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(16,185,129,0.14),transparent)]" />
-            <CardHeader className="relative">
-              <CardDescription>At a glance</CardDescription>
-              <CardTitle className="text-3xl text-balance">
-                {totalContributions} contributions in 30 days
-              </CardTitle>
-            </CardHeader>
-            <div className="relative mt-5 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-muted)] p-4">
-                <div className="text-xs tracking-[0.18em] text-[var(--muted-foreground)] uppercase">
-                  Repos tracked
+          <ScrollReveal delay={0.2} y={16}>
+            <Card className="relative overflow-hidden p-4 sm:p-6">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(16,185,129,0.14),transparent)]" />
+              <CardHeader className="relative">
+                <CardDescription>At a glance</CardDescription>
+                <CardTitle className="text-3xl text-balance">
+                  {totalContributions} contributions in 30 days
+                </CardTitle>
+              </CardHeader>
+              <div className="relative mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-muted)] p-4">
+                  <div className="text-xs tracking-[0.18em] text-[var(--muted-foreground)] uppercase">
+                    Repos tracked
+                  </div>
+                  <div className="mt-2 text-2xl font-semibold">
+                    {repos.length}
+                  </div>
                 </div>
-                <div className="mt-2 text-2xl font-semibold">
-                  {repos.length}
+                <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-muted)] p-4">
+                  <div className="text-xs tracking-[0.18em] text-[var(--muted-foreground)] uppercase">
+                    Languages
+                  </div>
+                  <div className="mt-2 text-2xl font-semibold">
+                    {topLanguages.length}
+                  </div>
                 </div>
               </div>
-              <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-muted)] p-4">
-                <div className="text-xs tracking-[0.18em] text-[var(--muted-foreground)] uppercase">
-                  Languages
-                </div>
-                <div className="mt-2 text-2xl font-semibold">
-                  {topLanguages.length}
-                </div>
+              <div className="relative mt-5 flex flex-wrap gap-2">
+                {topLanguages.map((language) => (
+                  <Badge key={language}>{language}</Badge>
+                ))}
               </div>
-            </div>
-            <div className="relative mt-5 flex flex-wrap gap-2">
-              {topLanguages.map((language) => (
-                <Badge key={language}>{language}</Badge>
-              ))}
-            </div>
-          </Card>
+            </Card>
+          </ScrollReveal>
         </div>
       </SectionShell>
 
       <ActivityOverview days={days} compact />
 
       <section className="grid gap-4 lg:grid-cols-2">
-        <SectionShell>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-xl font-semibold">Featured work</h2>
-              <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                A few projects worth pulling forward first.
-              </p>
-            </div>
-            <ButtonLink href="/featured" variant="secondary">
-              View all
-            </ButtonLink>
-          </div>
-          <div className="mt-5 space-y-3">
-            {featuredRepos.map((repo) => (
-              <a
-                key={repo.id}
-                href={repo.html_url}
-                target="_blank"
-                rel="noreferrer"
-                className="block rounded-2xl border border-[var(--border)] bg-[var(--card-muted)] p-4 transition-all duration-300 hover:-translate-y-1 hover:bg-[var(--accent-soft)] hover:shadow-[0_14px_30px_rgba(15,23,42,0.12)] motion-reduce:hover:translate-y-0"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="font-medium">{repo.name}</div>
-                    <p className="mt-1 text-sm leading-6 text-[var(--muted-foreground)]">
-                      {repo.description ?? "No description yet."}
-                    </p>
-                  </div>
-                  <Badge>{repo.stargazers_count}★</Badge>
-                </div>
-              </a>
-            ))}
-          </div>
-        </SectionShell>
-
-        <SectionShell>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-xl font-semibold">Repository view</h2>
-              <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                Recent repos, language mix, and shipping velocity.
-              </p>
-            </div>
-            <ButtonLink href="/repos" variant="secondary">
-              Open repos
-            </ButtonLink>
-          </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {repos.slice(0, 4).map((repo) => (
-              <Card
-                key={repo.id}
-                className="rounded-2xl bg-[var(--card-muted)] p-4 shadow-none transition-all duration-300 hover:-translate-y-1 hover:bg-[var(--accent-soft)] hover:shadow-[0_14px_30px_rgba(15,23,42,0.1)] motion-reduce:hover:translate-y-0"
-              >
-                <div className="font-medium">{repo.name}</div>
-                <p className="mt-2 text-sm leading-6 text-[var(--muted-foreground)]">
-                  {repo.description ?? "No description yet."}
+        <ScrollReveal y={12}>
+          <SectionShell>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-xl font-semibold">Featured work</h2>
+                <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                  A few projects worth pulling forward first.
                 </p>
-                <div className="mt-4 flex items-center justify-between text-sm text-[var(--muted-foreground)]">
-                  <span>{repo.language ?? "Unknown"}</span>
-                  <span>{repo.forks_count} forks</span>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </SectionShell>
+              </div>
+              <ButtonLink href="/featured" variant="secondary">
+                View all
+              </ButtonLink>
+            </div>
+            <div className="mt-5 space-y-3">
+              {featuredRepos.map((repo) => (
+                <a
+                  key={repo.id}
+                  href={repo.html_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block rounded-2xl border border-[var(--border)] bg-[var(--card-muted)] p-4 transition-all duration-300 hover:-translate-y-1 hover:bg-[var(--accent-soft)] hover:shadow-[0_14px_30px_rgba(15,23,42,0.12)] motion-reduce:hover:translate-y-0"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="font-medium">{repo.name}</div>
+                      <p className="mt-1 text-sm leading-6 text-[var(--muted-foreground)]">
+                        {repo.description ?? "No description yet."}
+                      </p>
+                    </div>
+                    <Badge>{repo.stargazers_count}★</Badge>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </SectionShell>
+        </ScrollReveal>
+
+        <ScrollReveal y={12} delay={0.06}>
+          <SectionShell>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-xl font-semibold">Repository view</h2>
+                <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                  Recent repos, language mix, and shipping velocity.
+                </p>
+              </div>
+              <ButtonLink href="/repos" variant="secondary">
+                Open repos
+              </ButtonLink>
+            </div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {repos.slice(0, 4).map((repo) => (
+                <Card
+                  key={repo.id}
+                  className="rounded-2xl bg-[var(--card-muted)] p-4 shadow-none transition-all duration-300 hover:-translate-y-1 hover:bg-[var(--accent-soft)] hover:shadow-[0_14px_30px_rgba(15,23,42,0.1)] motion-reduce:hover:translate-y-0"
+                >
+                  <div className="font-medium">{repo.name}</div>
+                  <p className="mt-2 text-sm leading-6 text-[var(--muted-foreground)]">
+                    {repo.description ?? "No description yet."}
+                  </p>
+                  <div className="mt-4 flex items-center justify-between text-sm text-[var(--muted-foreground)]">
+                    <span>{repo.language ?? "Unknown"}</span>
+                    <span>{repo.forks_count} forks</span>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </SectionShell>
+        </ScrollReveal>
       </section>
     </div>
   );
