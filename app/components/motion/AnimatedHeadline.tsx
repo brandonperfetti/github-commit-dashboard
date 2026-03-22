@@ -61,6 +61,9 @@ export function AnimatedHeadline({
         );
 
         if (caretRef.current) {
+          // Blink the caret by fading to 0 with yoyo back to 1 (via startAt),
+          // timed to start after the typewriter pass:
+          // chars * TYPEWRITER_CHAR_STAGGER + TYPEWRITER_CARET_START_BUFFER.
           gsap.set(caretRef.current, { autoAlpha: 0 });
           gsap.to(caretRef.current, {
             autoAlpha: 0,
