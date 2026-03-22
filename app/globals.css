@@ -1,18 +1,24 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f6f8fb;
-  --foreground: #0f172a;
-  --muted-foreground: #52607a;
-  --card: rgba(255, 255, 255, 0.82);
-  --card-muted: rgba(255, 255, 255, 0.68);
-  --accent-soft: rgba(15, 23, 42, 0.05);
+  --background: #edf3f9;
+  --foreground: #122033;
+  --muted-foreground: #5b6b82;
+  --card: rgba(255, 255, 255, 0.88);
+  --card-muted: rgba(255, 255, 255, 0.74);
+  --accent-soft: rgba(15, 23, 42, 0.04);
+  --accent-soft-strong: rgba(15, 23, 42, 0.07);
   --border: rgba(15, 23, 42, 0.09);
   --border-strong: rgba(15, 23, 42, 0.14);
   --shadow-card: 0 20px 60px rgba(15, 23, 42, 0.08);
-  --hero: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(59, 130, 246, 0.08) 55%, rgba(255, 255, 255, 0));
-  --page-gradient: radial-gradient(circle at top, rgba(16, 185, 129, 0.12), transparent 35%), linear-gradient(180deg, #fcfdff 0%, #f4f7fb 52%, #eef3f8 100%);
-  --nav-surface: rgba(246, 248, 251, 0.82);
+  --shadow-nav: 0 16px 48px rgba(15, 23, 42, 0.08);
+  --hero: linear-gradient(145deg, rgba(16, 185, 129, 0.16), rgba(59, 130, 246, 0.08) 46%, rgba(255, 255, 255, 0) 78%);
+  --page-gradient:
+    radial-gradient(circle at top left, rgba(16, 185, 129, 0.12), transparent 30%),
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.1), transparent 28%),
+    linear-gradient(180deg, #fdfefe 0%, #f4f8fc 42%, #e9f0f7 100%);
+  --nav-surface: rgba(255, 255, 255, 0.78);
+  --nav-surface-strong: rgba(255, 255, 255, 0.92);
   --nav-active-bg: #0f172a;
   --nav-active-fg: #f8fafc;
   --button-accent: #059669;
@@ -37,12 +43,15 @@
   --card: rgba(10, 15, 26, 0.7);
   --card-muted: rgba(4, 10, 20, 0.56);
   --accent-soft: rgba(255, 255, 255, 0.045);
+  --accent-soft-strong: rgba(255, 255, 255, 0.07);
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.12);
   --shadow-card: 0 24px 80px rgba(0, 0, 0, 0.38);
+  --shadow-nav: 0 16px 52px rgba(0, 0, 0, 0.32);
   --hero: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(59, 130, 246, 0.08) 55%, rgba(255, 255, 255, 0));
   --page-gradient: radial-gradient(circle at top, rgba(16, 185, 129, 0.18), transparent 35%), linear-gradient(180deg, #07110f 0%, #0a0f1a 45%, #050816 100%);
   --nav-surface: rgba(9, 16, 24, 0.8);
+  --nav-surface-strong: rgba(9, 16, 24, 0.94);
   --nav-active-bg: rgba(16, 185, 129, 0.16);
   --nav-active-fg: #ecfdf5;
   --button-accent: #10b981;
@@ -83,6 +92,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  text-rendering: optimizeLegibility;
 }
 
 a {

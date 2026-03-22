@@ -18,14 +18,18 @@ export default async function Home() {
   return (
     <div className="flex flex-col gap-4 sm:gap-6">
       <SectionShell className="overflow-hidden p-0">
-        <div className="grid gap-6 px-4 py-5 sm:px-6 sm:py-7 lg:grid-cols-[1.3fr_0.9fr] lg:items-end lg:px-8 lg:py-8">
+        <div className="grid gap-6 px-4 py-5 sm:px-6 sm:py-7 lg:grid-cols-[1.25fr_0.95fr] lg:items-end lg:px-8 lg:py-8">
           <div>
-            <Badge>Overview</Badge>
-            <h1 className="mt-4 max-w-3xl text-3xl font-semibold tracking-tight sm:text-4xl md:text-6xl">
+            <Badge className="bg-white/50">Overview</Badge>
+            <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-white/55 px-3 py-1 text-xs font-medium text-[var(--muted-foreground)] shadow-[0_8px_24px_rgba(15,23,42,0.06)] backdrop-blur-sm">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.12)]" />
+              Live public GitHub signal
+            </div>
+            <h1 className="mt-5 max-w-3xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl md:text-6xl">
               Build turns GitHub activity into a cleaner operating dashboard.
             </h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted-foreground)]">
-              A dark-first, lightweight front-end for {USERNAME}&apos;s public GitHub output. Start with the signal, then drill into activity, repos, and featured work.
+            <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted-foreground)] sm:text-[17px]">
+              A focused front-end for {USERNAME}&apos;s public GitHub output. Start with the signal, then drill into activity, repos, and featured work without the usual GitHub noise.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <ButtonLink href="/activity">Open activity</ButtonLink>
@@ -36,12 +40,13 @@ export default async function Home() {
             </div>
           </div>
 
-          <Card className="p-4 sm:p-6">
-            <CardHeader>
+          <Card className="relative overflow-hidden p-4 sm:p-6">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(16,185,129,0.14),transparent)]" />
+            <CardHeader className="relative">
               <CardDescription>At a glance</CardDescription>
-              <CardTitle className="text-3xl">{totalContributions} contributions in 30 days</CardTitle>
+              <CardTitle className="text-3xl text-balance">{totalContributions} contributions in 30 days</CardTitle>
             </CardHeader>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <div className="relative mt-5 grid gap-3 sm:grid-cols-2">
               <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-muted)] p-4">
                 <div className="text-xs uppercase tracking-[0.18em] text-[var(--muted-foreground)]">Repos tracked</div>
                 <div className="mt-2 text-2xl font-semibold">{repos.length}</div>
@@ -51,7 +56,7 @@ export default async function Home() {
                 <div className="mt-2 text-2xl font-semibold">{topLanguages.length}</div>
               </div>
             </div>
-            <div className="mt-5 flex flex-wrap gap-2">
+            <div className="relative mt-5 flex flex-wrap gap-2">
               {topLanguages.map((language) => (
                 <Badge key={language}>{language}</Badge>
               ))}
