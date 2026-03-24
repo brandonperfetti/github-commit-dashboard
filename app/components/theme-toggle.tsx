@@ -1,6 +1,5 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
 import { Sun, Moon } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { useTheme } from "@/app/components/theme-context";
@@ -8,19 +7,10 @@ import { useTheme } from "@/app/components/theme-context";
 const TOGGLE_SIZE_PX = 44;
 const ICON_SIZE_PX = 20;
 
-function useMounted() {
-  return useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  );
-}
-
 export function ThemeToggle() {
-  const { resolvedTheme, setTheme } = useTheme();
-  const mounted = useMounted();
+  const { resolvedTheme, setTheme, isResolved } = useTheme();
 
-  if (!mounted) {
+  if (!isResolved) {
     return (
       <Button
         variant="secondary"
