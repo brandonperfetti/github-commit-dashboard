@@ -40,18 +40,28 @@ export default function ContributionHeatmap({
 }) {
   const calendarCells = useMemo(() => buildCalendarCells(days), [days]);
   const weeks = useMemo(() => chunkWeeks(calendarCells), [calendarCells]);
-  const defaultSelected = days[days.length - 1];
-  const [selectedDay, setSelectedDay] =
-    useState<ContributionDay>(defaultSelected);
+  const [selectedDay, setSelectedDay] = useState<ContributionDay | null>(
+    days[days.length - 1] ?? null,
+  );
 
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-muted)] p-3 sm:p-4">
       <div className="mb-3 flex flex-col gap-2.5 sm:mb-4 md:flex-row md:items-center md:justify-between">
         <div className="rounded-xl border border-[var(--border-strong)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] shadow-md">
-          <span className="font-medium">{prettyDay(selectedDay.date)}</span>
-          <span className="mx-2 text-[var(--muted-foreground)]">·</span>
-          <span className="font-medium">{selectedDay.count}</span>{" "}
-          <span className="text-[var(--muted-foreground)]">contributions</span>
+          {selectedDay ? (
+            <>
+              <span className="font-medium">{prettyDay(selectedDay.date)}</span>
+              <span className="mx-2 text-[var(--muted-foreground)]">·</span>
+              <span className="font-medium">{selectedDay.count}</span>{" "}
+              <span className="text-[var(--muted-foreground)]">
+                contributions
+              </span>
+            </>
+          ) : (
+            <span className="text-[var(--muted-foreground)]">
+              No contribution data available.
+            </span>
+          )}
         </div>
 
         <div className="text-xs text-[var(--muted-foreground)] md:text-right">
@@ -93,7 +103,7 @@ export default function ContributionHeatmap({
                   );
                 }
 
-                const isSelected = selectedDay.date === day.date;
+                const isSelected = selectedDay?.date === day.date;
 
                 return (
                   <button
