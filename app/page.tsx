@@ -59,6 +59,7 @@ export default async function Home() {
     return [...pinnedSlice, ...fallbackFill].slice(0, HOME_SUMMARY_ITEM_COUNT);
   })();
   const featuredUsesPinned = pinnedRepos.length > 0;
+  const pinnedRepoIds = new Set(pinnedRepos.map((repo) => repo.id));
   const activeDays = days.filter((day) => day.count > 0).length;
   const averagePerDay = totalContributions / Math.max(days.length, 1);
   const strongestDay = days.reduce(
@@ -265,7 +266,7 @@ export default async function Home() {
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <div className="font-medium">{repo.name}</div>
-                        {featuredUsesPinned ? (
+                        {featuredUsesPinned && pinnedRepoIds.has(repo.id) ? (
                           <Badge className="px-2.5 py-0.5 leading-none">
                             Pinned
                           </Badge>
