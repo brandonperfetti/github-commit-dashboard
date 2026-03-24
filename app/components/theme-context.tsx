@@ -7,18 +7,28 @@ import {
   useEffect,
   useMemo,
   useState,
+  useSyncExternalStore,
 } from "react";
 
 type Theme = "light" | "dark";
 
 type ThemeContextValue = {
   resolvedTheme: Theme;
+  isResolved: boolean;
   setTheme: (theme: Theme) => void;
 };
 
 const STORAGE_KEY = "build-theme";
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
+
+function useMounted() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+}
 
 function applyTheme(theme: Theme) {
   const root = document.documentElement;
@@ -31,32 +41,41 @@ function getSystemTheme(): Theme {
     : "light";
 }
 
+function getInitialTheme(): Theme {
+  if (typeof window === "undefined") return "dark";
+
+  const stored = window.localStorage.getItem(STORAGE_KEY);
+  if (stored === "light" || stored === "dark") return stored;
+
+  return getSystemTheme();
+}
+
 export function AppThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window === "undefined") return "dark";
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored === "light" || stored === "dark") {
-      return stored;
-    }
-    return getSystemTheme();
-  });
+  const [theme, setThemeState] = useState<Theme>(getInitialTheme);
+  const isResolved = useMounted();
 
   useEffect(() => {
+    if (!isResolved) return;
     applyTheme(theme);
-  }, [theme]);
+  }, [isResolved, theme]);
 
   useEffect(() => {
+    if (!isResolved) return;
+
     const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored === "light" || stored === "dark") return;
+    const hasStoredTheme = stored === "light" || stored === "dark";
+    if (hasStoredTheme) return;
 
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const onChange = () => {
-      setThemeState(getSystemTheme());
+      const systemTheme = getSystemTheme();
+      setThemeState(systemTheme);
+      applyTheme(systemTheme);
     };
 
     media.addEventListener("change", onChange);
     return () => media.removeEventListener("change", onChange);
-  }, []);
+  }, [isResolved]);
 
   const setTheme = useCallback((nextTheme: Theme) => {
     setThemeState(nextTheme);
@@ -67,9 +86,10 @@ export function AppThemeProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<ThemeContextValue>(
     () => ({
       resolvedTheme: theme,
+      isResolved,
       setTheme,
     }),
-    [theme, setTheme],
+    [theme, isResolved, setTheme],
   );
 
   return (
