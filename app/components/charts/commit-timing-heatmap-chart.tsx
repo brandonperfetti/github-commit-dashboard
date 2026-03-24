@@ -132,11 +132,14 @@ export function CommitTimingHeatmapChart({
                 const cellKey = toCellKey(dayIndex, hour);
                 const cell = lookup.get(cellKey);
                 const intensity = cell?.intensity ?? 0;
+                const safeIntensity = Math.max(0, Math.min(4, intensity));
+                const intensityClass =
+                  INTENSITY_CLASSES[safeIntensity] ?? INTENSITY_CLASSES[0];
                 const count = cell?.count ?? 0;
                 return (
                   <div
                     key={cellKey}
-                    className={`h-3 rounded-[3px] transition-colors sm:h-4 ${INTENSITY_CLASSES[intensity]}`}
+                    className={`h-3 rounded-[3px] transition-colors sm:h-4 ${intensityClass}`}
                     onMouseEnter={() => setHoveredCellKey(cellKey)}
                     onMouseLeave={() => setHoveredCellKey(null)}
                     onFocus={() => setHoveredCellKey(cellKey)}
