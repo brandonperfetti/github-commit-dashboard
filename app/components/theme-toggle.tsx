@@ -1,9 +1,9 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { useTheme } from "next-themes";
 import { Sun, Moon } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
+import { useTheme } from "@/app/components/theme-context";
 
 const TOGGLE_SIZE_PX = 44;
 const ICON_SIZE_PX = 20;

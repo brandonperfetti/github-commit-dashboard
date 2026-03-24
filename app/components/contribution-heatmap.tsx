@@ -21,14 +21,14 @@ const levelClasses = [
 export function HeatmapLegend() {
   return (
     <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
-      <span>Less</span>
+      <span className="font-medium">Less</span>
       {levelClasses.map((levelClass) => (
         <span
           key={levelClass}
-          className={`h-3.5 w-3.5 rounded-[4px] border ${levelClass}`}
+          className={`h-3.5 w-3.5 rounded-full border ${levelClass}`}
         />
       ))}
-      <span>More</span>
+      <span className="font-medium">More</span>
     </div>
   );
 }
@@ -45,20 +45,21 @@ export default function ContributionHeatmap({
     useState<ContributionDay>(defaultSelected);
 
   return (
-    <div className="mt-5 rounded-[24px] border border-[var(--border)] bg-[var(--card-muted)] p-3 sm:mt-6 sm:rounded-3xl sm:p-4">
-      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="rounded-xl border border-[var(--border-strong)] bg-[var(--accent-soft)] px-3 py-2 text-sm text-[var(--foreground)]">
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-muted)] p-3 sm:p-4">
+      <div className="mb-3 flex flex-col gap-2.5 sm:mb-4 md:flex-row md:items-center md:justify-between">
+        <div className="rounded-xl border border-[var(--border-strong)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] shadow-md">
           <span className="font-medium">{prettyDay(selectedDay.date)}</span>
           <span className="mx-2 text-[var(--muted-foreground)]">·</span>
-          <span>{selectedDay.count} contributions</span>
+          <span className="font-medium">{selectedDay.count}</span>{" "}
+          <span className="text-[var(--muted-foreground)]">contributions</span>
         </div>
 
-        <div className="text-xs text-[var(--muted-foreground)]">
+        <div className="text-xs text-[var(--muted-foreground)] md:text-right">
           Hover on desktop or tap on mobile for details.
         </div>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto px-1 py-2 sm:gap-3">
+      <div className="flex gap-2 overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--card)]/35 px-2 py-3 sm:gap-3 sm:px-3">
         <div className="grid grid-rows-7 gap-2 pt-1 text-[10px] text-[var(--muted-foreground)] sm:gap-3 sm:text-[11px]">
           {WEEKDAY_LABELS.map((label) => (
             <div
@@ -96,14 +97,14 @@ export default function ContributionHeatmap({
 
                 return (
                   <button
-                    key={day.date}
+                    key={`${day.date}-${weekIndex}-${dayIndex}`}
                     type="button"
                     onMouseEnter={() => setSelectedDay(day)}
                     onFocus={() => setSelectedDay(day)}
                     onClick={() => setSelectedDay(day)}
                     className={`h-4 rounded-[5px] border transition motion-safe:transform-gpu motion-safe:transition-transform motion-safe:duration-200 sm:h-[18px] sm:rounded-[6px] md:h-6 ${levelClasses[day.level]} ${
                       isSelected
-                        ? "ring-2 ring-emerald-400/70 ring-offset-1 ring-offset-[var(--card-muted)] motion-safe:scale-105"
+                        ? "ring-2 ring-emerald-400/70 ring-offset-1 ring-offset-[var(--card)] motion-safe:scale-105"
                         : "hover:ring-1 hover:ring-emerald-400/40 motion-safe:scale-100"
                     }`}
                     aria-label={`${day.count} contributions on ${prettyDay(day.date)}`}

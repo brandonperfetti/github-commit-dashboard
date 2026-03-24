@@ -1,14 +1,32 @@
 import { ActivityOverview } from "@/app/components/activity-overview";
-import { getContributionDays } from "@/lib/github";
+import {
+  getCommitTimingHeatmap,
+  getContributionDays,
+  getIssueFlowHealth,
+  getPullRequestHealth,
+} from "@/lib/github";
 
 export const metadata = {
   title: "Activity",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export default async function ActivityPage() {
-  const days = await getContributionDays();
+  const [days, prHealthData, issueFlowData, commitTimingHeatmap] =
+    await Promise.all([
+      getContributionDays(),
+      getPullRequestHealth(),
+      getIssueFlowHealth(),
+      getCommitTimingHeatmap(),
+    ]);
 
-  return <ActivityOverview days={days} />;
+  return (
+    <ActivityOverview
+      days={days}
+      prHealthData={prHealthData}
+      issueFlowData={issueFlowData}
+      commitTimingHeatmap={commitTimingHeatmap}
+    />
+  );
 }

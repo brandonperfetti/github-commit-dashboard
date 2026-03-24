@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/app/components/providers";
 import { SiteNav } from "@/app/components/site-nav";
+import { isGithubAuthConfigured } from "@/lib/github";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,6 +28,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const githubAuthConfigured = isGithubAuthConfigured();
+
   return (
     <html
       lang="en"
@@ -36,7 +39,7 @@ export default function RootLayout({
       <body className="min-h-full bg-[var(--background)] text-[var(--foreground)]">
         <Providers>
           <div className="min-h-screen bg-[var(--page-gradient)] pb-4 sm:pb-6">
-            <SiteNav />
+            <SiteNav githubAuthConfigured={githubAuthConfigured} />
             <main className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-3 pt-4 sm:gap-6 sm:px-5 sm:pt-6 lg:px-8 lg:pt-8">
               {children}
             </main>

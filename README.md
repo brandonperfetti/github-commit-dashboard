@@ -16,6 +16,23 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## GitHub API Auth (Recommended)
+
+This dashboard can run against anonymous GitHub API limits, but you will hit `403` rate limits more often during local development.
+
+Add a token in `.env.local`:
+
+```bash
+GITHUB_TOKEN=github_pat_...
+```
+
+Notes:
+
+- Keep it server-side only (do not prefix with `NEXT_PUBLIC_`).
+- Fine-grained token with read access to repositories is preferred.
+- With a token present, the app uses authenticated `/user/repos` calls and can include private repositories you can access.
+- Without a token, it falls back to public `/users/{username}/repos`.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
