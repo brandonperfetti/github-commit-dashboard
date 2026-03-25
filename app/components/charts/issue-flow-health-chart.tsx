@@ -85,7 +85,6 @@ export function IssueFlowHealthChart({
             <YAxis
               yAxisId="backlog"
               orientation="right"
-              hide
               allowDecimals={false}
               axisLine={false}
               tickLine={false}
