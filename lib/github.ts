@@ -434,8 +434,7 @@ export async function getPinnedRepos(
         node.repositoryTopics?.nodes
           ?.map((topicNode) => topicNode.topic?.name)
           .filter((topicName): topicName is string => Boolean(topicName)) ?? [],
-    }))
-    .filter((repo) => !repo.archived);
+    }));
 }
 
 export function longestStreak(days: ContributionDay[]) {
