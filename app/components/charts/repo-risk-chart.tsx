@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
 import type { RepoRiskBucket, RepoRiskSnapshot } from "@/lib/github";
 
@@ -48,6 +40,10 @@ export function RepoRiskChart({ snapshot }: { snapshot: RepoRiskSnapshot }) {
   const visibleBuckets = snapshot.buckets.filter(
     (bucket) => !bucket.label.toLowerCase().includes("archived"),
   );
+  const chartData = visibleBuckets.map((bucket, index) => ({
+    ...bucket,
+    fill: RISK_COLORS[index % RISK_COLORS.length],
+  }));
   const useCompactLabels =
     size.width > 0 && size.width <= MOBILE_LABEL_BREAKPOINT;
 
@@ -67,7 +63,7 @@ export function RepoRiskChart({ snapshot }: { snapshot: RepoRiskSnapshot }) {
             accessibilityLayer={false}
             width={size.width}
             height={size.height}
-            data={visibleBuckets}
+            data={chartData}
             margin={{ top: 14, right: 16, left: 8, bottom: 34 }}
           >
             <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
@@ -99,16 +95,10 @@ export function RepoRiskChart({ snapshot }: { snapshot: RepoRiskSnapshot }) {
             />
             <Bar
               dataKey="count"
+              fill="#34d399"
               radius={[6, 6, 0, 0]}
               isAnimationActive={false}
-            >
-              {visibleBuckets.map((bucket, index) => (
-                <Cell
-                  key={`${bucket.label}-${bucket.count}`}
-                  fill={RISK_COLORS[index % RISK_COLORS.length]}
-                />
-              ))}
-            </Bar>
+            />
           </BarChart>
         ) : (
           <div className="h-full w-full rounded-xl bg-[var(--card)]/70" />
