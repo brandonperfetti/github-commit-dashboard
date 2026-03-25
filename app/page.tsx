@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Badge } from "@/app/components/ui/badge";
 import { ButtonLink } from "@/app/components/ui/button";
 import {
@@ -22,6 +23,12 @@ import {
 } from "@/lib/github";
 
 export const revalidate = 300;
+export const metadata: Metadata = {
+  title: "Build · GitHub Activity Dashboard",
+  description:
+    "A clear view of GitHub activity: contribution trends, repository momentum, and featured projects.",
+};
+
 const HOME_SUMMARY_ITEM_COUNT = 4;
 
 export default async function Home() {
