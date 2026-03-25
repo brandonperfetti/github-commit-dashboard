@@ -60,11 +60,6 @@ export function FeaturedScoreBreakdownChart({
 }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
   const chartColors = useResolvedChartColors();
-  const chartData = data.map((point, index) => ({
-    ...point,
-    fill: point.pinned ? chartColors.pinned : chartColors.unpinned,
-    fillOpacity: index === 0 ? 1 : 0.9,
-  }));
 
   if (!data.length) {
     return (
@@ -73,6 +68,12 @@ export function FeaturedScoreBreakdownChart({
       </div>
     );
   }
+
+  const chartData = data.map((point, index) => ({
+    ...point,
+    fill: point.pinned ? chartColors.pinned : chartColors.unpinned,
+    fillOpacity: index === 0 ? 1 : 0.9,
+  }));
 
   return (
     <div className="h-[320px] w-full min-w-0 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card-muted)] p-3 sm:p-4">
