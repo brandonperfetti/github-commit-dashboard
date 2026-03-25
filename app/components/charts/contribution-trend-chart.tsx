@@ -89,7 +89,7 @@ export function ContributionTrendChart({
               dataKey="date"
               axisLine={false}
               tickLine={false}
-              minTickGap={compact ? 22 : 22}
+              minTickGap={22}
               tickMargin={compact ? 10 : 8}
               tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
             />
