@@ -1,4 +1,5 @@
 import { ActivityOverview } from "@/app/components/activity-overview";
+import { headers } from "next/headers";
 import {
   getCommitTimingHeatmap,
   getContributionDays,
@@ -13,12 +14,18 @@ export const metadata = {
 export const revalidate = 300;
 
 export default async function ActivityPage() {
+  const requestHeaders = await headers();
+  const requestTimezone =
+    requestHeaders.get("x-time-zone") ??
+    requestHeaders.get("x-vercel-ip-timezone") ??
+    undefined;
+
   const [days, prHealthData, issueFlowData, commitTimingHeatmap] =
     await Promise.all([
       getContributionDays(),
       getPullRequestHealth(),
       getIssueFlowHealth(),
-      getCommitTimingHeatmap(),
+      getCommitTimingHeatmap(undefined, requestTimezone),
     ]);
 
   return (
