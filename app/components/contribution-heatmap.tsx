@@ -40,8 +40,17 @@ export default function ContributionHeatmap({
 }) {
   const calendarCells = useMemo(() => buildCalendarCells(days), [days]);
   const weeks = useMemo(() => chunkWeeks(calendarCells), [calendarCells]);
-  const [selectedDay, setSelectedDay] = useState<ContributionDay | null>(
-    days[days.length - 1] ?? null,
+  const [selectedDayDate, setSelectedDayDate] = useState<string | null>(
+    days[days.length - 1]?.date ?? null,
+  );
+  const selectedDay = useMemo(
+    () =>
+      (selectedDayDate
+        ? days.find((day) => day.date === selectedDayDate)
+        : null) ??
+      days[days.length - 1] ??
+      null,
+    [days, selectedDayDate],
   );
 
   return (
@@ -109,9 +118,9 @@ export default function ContributionHeatmap({
                   <button
                     key={`${day.date}-${weekIndex}-${dayIndex}`}
                     type="button"
-                    onMouseEnter={() => setSelectedDay(day)}
-                    onFocus={() => setSelectedDay(day)}
-                    onClick={() => setSelectedDay(day)}
+                    onMouseEnter={() => setSelectedDayDate(day.date)}
+                    onFocus={() => setSelectedDayDate(day.date)}
+                    onClick={() => setSelectedDayDate(day.date)}
                     className={`h-4 rounded-[5px] border transition motion-safe:transform-gpu motion-safe:transition-transform motion-safe:duration-200 sm:h-[18px] sm:rounded-[6px] md:h-6 ${levelClasses[day.level]} ${
                       isSelected
                         ? "ring-2 ring-emerald-400/70 ring-offset-1 ring-offset-[var(--card)] motion-safe:scale-105"
