@@ -33,6 +33,7 @@ export function CommitTimingHeatmapChart({
   data: CommitTimingHeatmapData;
 }) {
   const [hoveredCellKey, setHoveredCellKey] = useState<CellKey | null>(null);
+  const [focusedCellKey, setFocusedCellKey] = useState<CellKey | null>(null);
   const lookup = useMemo(
     () =>
       new Map(
@@ -95,6 +96,25 @@ export function CommitTimingHeatmapChart({
     const lastHour = visibleHours[visibleHours.length - 1];
     return `Active window: ${formatHourLabel(firstHour)} – ${formatHourLabel(lastHour)}`;
   }, [visibleHours]);
+  const activeFocusedCellKey = useMemo(() => {
+    if (!visibleHours.length) {
+      return null;
+    }
+
+    const defaultCellKey = toCellKey(0, visibleHours[0]);
+    if (!focusedCellKey) {
+      return defaultCellKey;
+    }
+
+    const [dayPart, hourPart] = focusedCellKey.split("-");
+    const dayIndex = Number.parseInt(dayPart, 10);
+    const hour = Number.parseInt(hourPart, 10);
+    const isValidDay =
+      Number.isInteger(dayIndex) && dayIndex >= 0 && dayIndex < DAYS.length;
+    const isValidHour = Number.isInteger(hour) && visibleHours.includes(hour);
+
+    return isValidDay && isValidHour ? focusedCellKey : defaultCellKey;
+  }, [focusedCellKey, visibleHours]);
 
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-muted)] p-3 sm:p-4">
@@ -106,8 +126,8 @@ export function CommitTimingHeatmapChart({
       <div
         role="grid"
         aria-label={`Commit timing heatmap (${data.timezone})`}
-        aria-rowcount={DAYS.length}
-        aria-colcount={visibleHours.length}
+        aria-rowcount={DAYS.length + 1}
+        aria-colcount={visibleHours.length + 1}
       >
         <div
           role="row"
@@ -132,10 +152,15 @@ export function CommitTimingHeatmapChart({
               className="grid gap-1"
               style={{ gridTemplateColumns: hourColumnTemplate }}
             >
-              <div className="flex items-center text-[10px] text-[var(--muted-foreground)]">
+              <div
+                role="rowheader"
+                aria-rowindex={dayIndex + 2}
+                aria-colindex={1}
+                className="flex items-center text-[10px] text-[var(--muted-foreground)]"
+              >
                 {dayLabel}
               </div>
-              {visibleHours.map((hour) => {
+              {visibleHours.map((hour, hourIndex) => {
                 const cellKey = toCellKey(dayIndex, hour);
                 const cell = lookup.get(cellKey);
                 const intensity = cell?.intensity ?? 0;
@@ -146,17 +171,70 @@ export function CommitTimingHeatmapChart({
                 return (
                   <div
                     key={cellKey}
+                    data-cell-key={cellKey}
                     className={`h-3 rounded-[3px] transition-colors sm:h-4 ${intensityClass}`}
                     onMouseEnter={() => setHoveredCellKey(cellKey)}
                     onMouseLeave={() => setHoveredCellKey(null)}
-                    onFocus={() => setHoveredCellKey(cellKey)}
+                    onFocus={() => {
+                      setFocusedCellKey(cellKey);
+                      setHoveredCellKey(cellKey);
+                    }}
                     onBlur={() => setHoveredCellKey(null)}
+                    onKeyDown={(event) => {
+                      let nextDayIndex = dayIndex;
+                      let nextHourIndex = hourIndex;
+
+                      switch (event.key) {
+                        case "ArrowRight":
+                          nextHourIndex = Math.min(
+                            visibleHours.length - 1,
+                            hourIndex + 1,
+                          );
+                          break;
+                        case "ArrowLeft":
+                          nextHourIndex = Math.max(0, hourIndex - 1);
+                          break;
+                        case "ArrowDown":
+                          nextDayIndex = Math.min(
+                            DAYS.length - 1,
+                            dayIndex + 1,
+                          );
+                          break;
+                        case "ArrowUp":
+                          nextDayIndex = Math.max(0, dayIndex - 1);
+                          break;
+                        case "Home":
+                          nextHourIndex = 0;
+                          break;
+                        case "End":
+                          nextHourIndex = visibleHours.length - 1;
+                          break;
+                        default:
+                          return;
+                      }
+
+                      event.preventDefault();
+
+                      const nextCellKey = toCellKey(
+                        nextDayIndex,
+                        visibleHours[nextHourIndex],
+                      );
+                      setFocusedCellKey(nextCellKey);
+                      setHoveredCellKey(nextCellKey);
+
+                      requestAnimationFrame(() => {
+                        const nextCell = document.querySelector<HTMLElement>(
+                          `[data-cell-key="${nextCellKey}"]`,
+                        );
+                        nextCell?.focus();
+                      });
+                    }}
                     title={`${dayLabel} ${formatHourLabel(hour)} · ${count} commit${count === 1 ? "" : "s"}`}
                     aria-label={`${dayLabel} ${formatHourLabel(hour)}: ${count} commit${count === 1 ? "" : "s"}`}
-                    aria-rowindex={dayIndex + 1}
-                    aria-colindex={visibleHours.indexOf(hour) + 1}
+                    aria-rowindex={dayIndex + 2}
+                    aria-colindex={hourIndex + 2}
                     role="gridcell"
-                    tabIndex={0}
+                    tabIndex={activeFocusedCellKey === cellKey ? 0 : -1}
                   />
                 );
               })}
