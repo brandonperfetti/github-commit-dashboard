@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useSyncExternalStore } from "react";
 import { useTheme } from "@/app/components/theme-context";
 
 type ChartColors = {
@@ -42,31 +42,57 @@ const LIGHT_FALLBACK: ChartColors = {
   netBacklog: "#047857",
 };
 
+function readResolvedColors(fallback: ChartColors): ChartColors {
+  if (typeof window === "undefined") {
+    return fallback;
+  }
+
+  const styles = window.getComputedStyle(document.documentElement);
+  const readVar = (name: string, defaultValue: string) =>
+    styles.getPropertyValue(name).trim() || defaultValue;
+
+  return {
+    primary: readVar("--chart-primary", fallback.primary),
+    primarySoft: readVar("--chart-primary-soft", fallback.primarySoft),
+    primaryMuted: readVar("--chart-primary-muted", fallback.primaryMuted),
+    accent: readVar("--chart-accent", fallback.accent),
+    warning: readVar("--chart-warning", fallback.warning),
+    pinned: readVar("--chart-pinned", fallback.pinned),
+    unpinned: readVar("--chart-unpinned", fallback.unpinned),
+    opened: readVar("--chart-opened", fallback.opened),
+    closed: readVar("--chart-closed", fallback.closed),
+    netBacklog: readVar("--chart-net-backlog", fallback.netBacklog),
+  };
+}
+
 export function useResolvedChartColors(): ChartColors {
   const { resolvedTheme } = useTheme();
+  const rootSignature = useSyncExternalStore(
+    (onStoreChange) => {
+      if (typeof window === "undefined") return () => {};
 
-  return useMemo(() => {
-    const fallback = resolvedTheme === "light" ? LIGHT_FALLBACK : DARK_FALLBACK;
+      const root = document.documentElement;
+      const observer = new MutationObserver(() => {
+        onStoreChange();
+      });
+      observer.observe(root, {
+        attributes: true,
+        attributeFilter: ["class", "style"],
+      });
 
-    if (typeof window === "undefined") {
-      return fallback;
-    }
+      return () => observer.disconnect();
+    },
+    () => {
+      if (typeof window === "undefined") return "";
+      const root = document.documentElement;
+      return `${root.className}|${root.getAttribute("style") ?? ""}`;
+    },
+    () => "",
+  );
 
-    const styles = window.getComputedStyle(document.documentElement);
-    const readVar = (name: string, defaultValue: string) =>
-      styles.getPropertyValue(name).trim() || defaultValue;
-
-    return {
-      primary: readVar("--chart-primary", fallback.primary),
-      primarySoft: readVar("--chart-primary-soft", fallback.primarySoft),
-      primaryMuted: readVar("--chart-primary-muted", fallback.primaryMuted),
-      accent: readVar("--chart-accent", fallback.accent),
-      warning: readVar("--chart-warning", fallback.warning),
-      pinned: readVar("--chart-pinned", fallback.pinned),
-      unpinned: readVar("--chart-unpinned", fallback.unpinned),
-      opened: readVar("--chart-opened", fallback.opened),
-      closed: readVar("--chart-closed", fallback.closed),
-      netBacklog: readVar("--chart-net-backlog", fallback.netBacklog),
-    };
-  }, [resolvedTheme]);
+  // Keep this read outside useMemo so rootSignature updates can refresh values
+  // without fighting dependency linting.
+  const fallback = resolvedTheme === "light" ? LIGHT_FALLBACK : DARK_FALLBACK;
+  void rootSignature;
+  return readResolvedColors(fallback);
 }
