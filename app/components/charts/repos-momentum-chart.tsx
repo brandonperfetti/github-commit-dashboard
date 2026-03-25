@@ -11,7 +11,7 @@ import {
 } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
 
-type RepoScatterPoint = {
+type RepoMomentumPoint = {
   name: string;
   fullName: string;
   commits30d: number;
@@ -20,15 +20,15 @@ type RepoScatterPoint = {
   pinned: boolean;
 };
 
-type ScatterTooltipProps = {
+type MomentumTooltipProps = {
   active?: boolean;
-  payload?: Array<{ payload?: RepoScatterPoint }>;
+  payload?: Array<{ payload?: RepoMomentumPoint }>;
 };
 
-function ScatterTooltip({ active, payload }: ScatterTooltipProps) {
+function MomentumTooltip({ active, payload }: MomentumTooltipProps) {
   if (!active || !payload?.length) return null;
 
-  const point = payload[0]?.payload as RepoScatterPoint | undefined;
+  const point = payload[0]?.payload as RepoMomentumPoint | undefined;
   if (!point) return null;
 
   return (
@@ -48,7 +48,7 @@ function ScatterTooltip({ active, payload }: ScatterTooltipProps) {
   );
 }
 
-export function ReposScatterChart({ data }: { data: RepoScatterPoint[] }) {
+export function ReposMomentumChart({ data }: { data: RepoMomentumPoint[] }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
 
   if (!data.length) {
@@ -96,7 +96,7 @@ export function ReposScatterChart({ data }: { data: RepoScatterPoint[] }) {
               />
               <Tooltip
                 cursor={{ fill: "var(--accent-soft)" }}
-                content={<ScatterTooltip />}
+                content={<MomentumTooltip />}
                 wrapperStyle={{ outline: "none", zIndex: 20 }}
                 allowEscapeViewBox={{ x: false, y: false }}
               />

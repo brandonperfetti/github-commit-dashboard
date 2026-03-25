@@ -1,7 +1,7 @@
 import { Badge } from "@/app/components/ui/badge";
 import { RepoPushCadenceChart } from "@/app/components/charts/repo-push-cadence-chart";
 import { RepoRiskChart } from "@/app/components/charts/repo-risk-chart";
-import { ReposScatterChart } from "@/app/components/charts/repos-scatter-chart";
+import { ReposMomentumChart } from "@/app/components/charts/repos-momentum-chart";
 import { ReposCardList } from "@/app/components/repos-card-list";
 import { AnimatedHeadline } from "@/app/components/motion/animated-headline";
 import { ScrollReveal } from "@/app/components/motion/scroll-reveal";
@@ -101,7 +101,7 @@ export default async function ReposPage() {
               projects highlighted.
             </p>
             <div className="mt-5">
-              <ReposScatterChart data={scatterData} />
+              <ReposMomentumChart data={scatterData} />
             </div>
           </ScrollReveal>
 
