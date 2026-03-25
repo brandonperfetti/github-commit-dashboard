@@ -1,5 +1,6 @@
 import { Badge } from "@/app/components/ui/badge";
 import { ButtonLink } from "@/app/components/ui/button";
+import type { Metadata } from "next";
 import { FeaturedScoreBreakdownChart } from "@/app/components/charts/featured-score-breakdown-chart";
 import { ReleaseCadenceChart } from "@/app/components/charts/release-cadence-chart";
 import { AnimatedHeadline } from "@/app/components/motion/animated-headline";
@@ -13,21 +14,86 @@ import {
   getPinnedRepos,
   getRepos,
   getReleaseCadence,
+  type ContributionDay,
+  type ReleaseCadencePoint,
+  type Repo,
 } from "@/lib/github";
 
-export const metadata = {
+const siteUrl = (
+  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
+).replace(/\/+$/, "");
+const featuredPath = "/featured";
+const featuredUrl = `${siteUrl}${featuredPath}`;
+const featuredDescription =
+  "Pinned priorities and standout repositories ranked by relevance, with release cadence and shipping context.";
+
+export const metadata: Metadata = {
   title: "Featured",
+  description: featuredDescription,
+  alternates: {
+    canonical: featuredPath,
+  },
+  openGraph: {
+    title: "Featured · Build",
+    description: featuredDescription,
+    url: featuredUrl,
+    type: "website",
+    images: [
+      {
+        url: `${siteUrl}/globe.svg`,
+        alt: "Build featured project overview",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Featured · Build",
+    description: featuredDescription,
+    images: [`${siteUrl}/globe.svg`],
+  },
 };
 
 export const revalidate = 300;
 
 export default async function FeaturedPage() {
-  const [days, repos, pinnedRepos, releaseCadence] = await Promise.all([
-    getContributionDays(),
-    getRepos(),
-    getPinnedRepos(),
-    getReleaseCadence(),
-  ]);
+  const reportRejected = (label: string, reason: unknown) => {
+    console.error(`[featured/page] Failed to load ${label}:`, reason);
+  };
+
+  const [daysResult, reposResult, pinnedReposResult, releaseCadenceResult] =
+    await Promise.allSettled([
+      getContributionDays(),
+      getRepos(),
+      getPinnedRepos(),
+      getReleaseCadence(),
+    ]);
+
+  const days: ContributionDay[] =
+    daysResult.status === "fulfilled" ? daysResult.value : [];
+  if (daysResult.status === "rejected") {
+    reportRejected("contribution days", daysResult.reason);
+  }
+
+  const repos: Repo[] =
+    reposResult.status === "fulfilled" ? reposResult.value : [];
+  if (reposResult.status === "rejected") {
+    reportRejected("repositories", reposResult.reason);
+  }
+
+  const pinnedRepos: Repo[] =
+    pinnedReposResult.status === "fulfilled" ? pinnedReposResult.value : [];
+  if (pinnedReposResult.status === "rejected") {
+    reportRejected("pinned repositories", pinnedReposResult.reason);
+  }
+
+  const releaseCadence: ReleaseCadencePoint[] =
+    releaseCadenceResult.status === "fulfilled"
+      ? releaseCadenceResult.value
+      : [];
+  if (releaseCadenceResult.status === "rejected") {
+    reportRejected("release cadence", releaseCadenceResult.reason);
+  }
+
   const starredRepos = [...repos].sort(
     (a, b) =>
       b.stargazers_count - a.stargazers_count ||
