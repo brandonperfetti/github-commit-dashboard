@@ -36,14 +36,14 @@ function freshnessBand(days: number) {
     return {
       label: "Warm (4-7 days)",
       fill: "#10b981",
-      opacity: 0.62,
+      opacity: 0.6,
     };
   }
 
   return {
     label: "Stale (8+ days)",
     fill: "#10b981",
-    opacity: 0.38,
+    opacity: 0.4,
   };
 }
 
