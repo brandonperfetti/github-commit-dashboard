@@ -914,9 +914,8 @@ export async function getIssueFlowHealth(
   username: string = USERNAME,
 ): Promise<IssueFlowHealthPoint[]> {
   const windows = buildWeeklyWindows();
-  let runningBacklogDelta = 0;
 
-  const weeklyCounts = await Promise.all(
+  const windowCounts = await Promise.all(
     windows.map(async (window) => {
       const buildQuery = (qualifier: "created" | "closed") =>
         encodeURIComponent(
@@ -945,17 +944,23 @@ export async function getIssueFlowHealth(
         fetchCount(buildQuery("closed")),
       ]);
 
-      runningBacklogDelta += opened - closed;
-
       return {
         label: window.label,
         range: window.range,
         opened,
         closed,
-        backlogDelta: runningBacklogDelta,
       };
     }),
   );
+
+  let runningBacklogDelta = 0;
+  const weeklyCounts = windowCounts.map((window) => {
+    runningBacklogDelta += window.opened - window.closed;
+    return {
+      ...window,
+      backlogDelta: runningBacklogDelta,
+    };
+  });
 
   return weeklyCounts;
 }
