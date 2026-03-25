@@ -12,12 +12,10 @@ import {
 import { useChartSize } from "@/app/components/charts/use-chart-size";
 import type { PullRequestThroughputPoint } from "@/lib/github";
 
-type PrThroughputPoint = PullRequestThroughputPoint;
-
 type PrThroughputTooltipProps = {
   active?: boolean;
   label?: string | number;
-  payload?: Array<{ payload?: PrThroughputPoint }>;
+  payload?: Array<{ payload?: PullRequestThroughputPoint }>;
 };
 
 function PrThroughputTooltip({
@@ -25,7 +23,7 @@ function PrThroughputTooltip({
   label,
   payload,
 }: PrThroughputTooltipProps) {
-  const point = payload?.[0]?.payload as PrThroughputPoint | undefined;
+  const point = payload?.[0]?.payload as PullRequestThroughputPoint | undefined;
 
   if (!active || !point) {
     return null;
@@ -44,7 +42,11 @@ function PrThroughputTooltip({
   );
 }
 
-export function PrThroughputChart({ data }: { data: PrThroughputPoint[] }) {
+export function PrThroughputChart({
+  data,
+}: {
+  data: PullRequestThroughputPoint[];
+}) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
 
   if (!data.length) {
