@@ -61,14 +61,18 @@ export function ReposCardList({
             </div>
 
             <div className="mt-5 flex flex-wrap gap-3">
-              <ButtonLink href={repo.html_url} target="_blank" rel="noreferrer">
+              <ButtonLink
+                href={repo.html_url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 View source
               </ButtonLink>
               {repo.homepage ? (
                 <ButtonLink
                   href={repo.homepage}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   variant="secondary"
                 >
                   Open live site
