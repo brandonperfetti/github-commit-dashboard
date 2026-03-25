@@ -16,7 +16,9 @@ import {
   type RepoRiskSnapshot,
 } from "@/lib/github";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const siteUrl = (
+  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
+).replace(/\/+$/, "");
 const reposPath = "/repos";
 const reposUrl = `${siteUrl}${reposPath}`;
 const reposDescription =
