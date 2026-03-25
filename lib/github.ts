@@ -660,11 +660,24 @@ export async function buildRepoCommitActivitySummary(
 
 export async function getCommitTimingHeatmap(
   username: string = USERNAME,
+  timezone?: string,
 ): Promise<CommitTimingHeatmapData> {
   const dates = buildLast30Days();
   const start = dates[0];
-  const timezone =
-    Intl.DateTimeFormat().resolvedOptions().timeZone || "Local time";
+  const fallbackTimezone =
+    Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  const resolvedTimezone = (() => {
+    if (!timezone) {
+      return fallbackTimezone;
+    }
+
+    try {
+      new Intl.DateTimeFormat("en-US", { timeZone: timezone });
+      return timezone;
+    } catch {
+      return fallbackTimezone;
+    }
+  })();
 
   const repos = await getRepos(username);
   const topRepos = [...repos]
@@ -676,6 +689,13 @@ export async function getCommitTimingHeatmap(
     .slice(0, 10);
 
   const hourBuckets = Array.from({ length: 7 }, () => Array(24).fill(0));
+  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const zonedDateFormatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: resolvedTimezone,
+    weekday: "short",
+    hour: "2-digit",
+    hourCycle: "h23",
+  });
 
   const commitResponses = await Promise.all(
     topRepos.map(async (repo) => {
@@ -706,8 +726,17 @@ export async function getCommitTimingHeatmap(
       const timestamp = parsed.getTime();
       if (!Number.isFinite(timestamp)) continue;
 
-      const dayIndex = parsed.getDay();
-      const hour = parsed.getHours();
+      const zonedParts = zonedDateFormatter.formatToParts(parsed);
+      const weekday = zonedParts.find((part) => part.type === "weekday")?.value;
+      const hour = Number.parseInt(
+        zonedParts.find((part) => part.type === "hour")?.value ?? "",
+        10,
+      );
+      const dayIndex = weekday ? dayLabels.indexOf(weekday) : -1;
+      if (dayIndex === -1 || Number.isNaN(hour)) {
+        continue;
+      }
+
       hourBuckets[dayIndex][hour] += 1;
     }
   }
@@ -715,7 +744,6 @@ export async function getCommitTimingHeatmap(
   const flatCounts = hourBuckets.flat();
   const maxCellCount = Math.max(...flatCounts, 0);
   const totalCommits = flatCounts.reduce((sum, value) => sum + value, 0);
-  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   const toIntensity = (count: number): CommitTimingHeatmapCell["intensity"] => {
     if (count === 0 || maxCellCount === 0) return 0;
@@ -742,7 +770,7 @@ export async function getCommitTimingHeatmap(
   }
 
   return {
-    timezone,
+    timezone: resolvedTimezone,
     totalCommits,
     maxCellCount,
     cells,
