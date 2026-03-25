@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
 import type { PullRequestThroughputPoint } from "@/lib/github";
 
@@ -48,6 +49,7 @@ export function PrThroughputChart({
   data: PullRequestThroughputPoint[];
 }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
+  const chartColors = useResolvedChartColors();
 
   if (!data.length) {
     return (
@@ -95,7 +97,7 @@ export function PrThroughputChart({
             <Bar
               dataKey="opened"
               name="Opened"
-              fill="#10b981"
+              fill={chartColors.primary}
               fillOpacity={0.95}
               radius={[3, 3, 0, 0]}
               isAnimationActive={false}
@@ -103,7 +105,7 @@ export function PrThroughputChart({
             <Bar
               dataKey="merged"
               name="Merged"
-              fill="#34d399"
+              fill={chartColors.primarySoft}
               fillOpacity={0.85}
               radius={[3, 3, 0, 0]}
               isAnimationActive={false}
@@ -111,7 +113,7 @@ export function PrThroughputChart({
             <Bar
               dataKey="closed"
               name="Closed"
-              fill="#6ee7b7"
+              fill={chartColors.primaryMuted}
               fillOpacity={0.8}
               radius={[3, 3, 0, 0]}
               isAnimationActive={false}

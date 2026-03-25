@@ -2,6 +2,7 @@
 
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
+import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
 import type { ReleaseCadencePoint } from "@/lib/github";
 
 type ReleaseCadenceTooltipProps = {
@@ -33,6 +34,7 @@ function ReleaseCadenceTooltip({
 
 export function ReleaseCadenceChart({ data }: { data: ReleaseCadencePoint[] }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
+  const chartColors = useResolvedChartColors();
   const totalReleases = data.reduce((sum, point) => sum + point.releases, 0);
 
   if (!data.length) {
@@ -91,7 +93,7 @@ export function ReleaseCadenceChart({ data }: { data: ReleaseCadencePoint[] }) {
             <Bar
               dataKey="releases"
               name="Releases"
-              fill="#10b981"
+              fill={chartColors.primary}
               radius={[6, 6, 0, 0]}
               isAnimationActive={false}
             />

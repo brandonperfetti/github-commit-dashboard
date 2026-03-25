@@ -2,6 +2,7 @@
 
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
+import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
 
 type RepoFreshnessPoint = {
   name: string;
@@ -19,7 +20,7 @@ function freshnessBand(days: number) {
   if (days <= 3) {
     return {
       label: "Fresh (0-3 days)",
-      fill: "#10b981",
+      fill: "var(--chart-primary)",
       opacity: 0.9,
     };
   }
@@ -27,14 +28,14 @@ function freshnessBand(days: number) {
   if (days <= 7) {
     return {
       label: "Warm (4-7 days)",
-      fill: "#10b981",
+      fill: "var(--chart-primary)",
       opacity: 0.6,
     };
   }
 
   return {
     label: "Stale (8+ days)",
-    fill: "#10b981",
+    fill: "var(--chart-primary)",
     opacity: 0.4,
   };
 }
@@ -74,11 +75,12 @@ function FreshnessTooltip({ active, payload }: FreshnessTooltipProps) {
 
 export function RepoFreshnessChart({ data }: { data: RepoFreshnessPoint[] }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
+  const chartColors = useResolvedChartColors();
   const chartData = data.map((row) => {
     const band = freshnessBand(row.daysSincePush);
     return {
       ...row,
-      fill: band.fill,
+      fill: chartColors.primary,
       fillOpacity: band.opacity,
     };
   });
@@ -151,7 +153,7 @@ export function RepoFreshnessChart({ data }: { data: RepoFreshnessPoint[] }) {
                     height={height}
                     rx={5}
                     ry={5}
-                    fill={payload?.fill ?? "#10b981"}
+                    fill={payload?.fill ?? chartColors.primary}
                     fillOpacity={payload?.fillOpacity ?? 1}
                   />
                 );
@@ -164,15 +166,24 @@ export function RepoFreshnessChart({ data }: { data: RepoFreshnessPoint[] }) {
       </div>
       <div className="mt-2 flex items-center justify-center gap-4 text-[11px] text-[var(--muted-foreground)]">
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-emerald-500/90" />
+          <span
+            className="h-2 w-2 rounded-full"
+            style={{ backgroundColor: chartColors.primary, opacity: 0.9 }}
+          />
           Fresh (0-3d)
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-emerald-500/60" />
+          <span
+            className="h-2 w-2 rounded-full"
+            style={{ backgroundColor: chartColors.primary, opacity: 0.6 }}
+          />
           Warm (4-7d)
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-emerald-500/40" />
+          <span
+            className="h-2 w-2 rounded-full"
+            style={{ backgroundColor: chartColors.primary, opacity: 0.4 }}
+          />
           Stale (8+d)
         </span>
       </div>

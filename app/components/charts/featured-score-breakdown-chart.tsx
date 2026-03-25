@@ -2,6 +2,7 @@
 
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
+import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
 
 type FeaturedScorePoint = {
   name: string;
@@ -58,9 +59,10 @@ export function FeaturedScoreBreakdownChart({
   data: FeaturedScorePoint[];
 }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
+  const chartColors = useResolvedChartColors();
   const chartData = data.map((point, index) => ({
     ...point,
-    fill: point.pinned ? "#10b981" : "#34d399",
+    fill: point.pinned ? chartColors.pinned : chartColors.unpinned,
     fillOpacity: index === 0 ? 1 : 0.9,
   }));
 
@@ -116,7 +118,7 @@ export function FeaturedScoreBreakdownChart({
             <Bar
               dataKey="relevanceScore"
               name="Relevance"
-              fill="#10b981"
+              fill={chartColors.primary}
               radius={[0, 6, 6, 0]}
               isAnimationActive={false}
               shape={(props: {
@@ -135,7 +137,7 @@ export function FeaturedScoreBreakdownChart({
                     height={height}
                     rx={6}
                     ry={6}
-                    fill={payload?.fill ?? "#10b981"}
+                    fill={payload?.fill ?? chartColors.primary}
                     fillOpacity={payload?.fillOpacity ?? 1}
                   />
                 );

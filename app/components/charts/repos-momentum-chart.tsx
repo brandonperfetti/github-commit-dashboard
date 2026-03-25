@@ -2,6 +2,7 @@
 
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
+import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
 
 type RepoMomentumPoint = {
   name: string;
@@ -42,9 +43,10 @@ function MomentumTooltip({ active, payload }: MomentumTooltipProps) {
 
 export function ReposMomentumChart({ data }: { data: RepoMomentumPoint[] }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
+  const chartColors = useResolvedChartColors();
   const chartData = data.map((point) => ({
     ...point,
-    fill: point.pinned ? "#059669" : "#34d399",
+    fill: point.pinned ? chartColors.pinned : chartColors.unpinned,
   }));
 
   if (!data.length) {
@@ -98,7 +100,7 @@ export function ReposMomentumChart({ data }: { data: RepoMomentumPoint[] }) {
               />
               <Bar
                 dataKey="commits30d"
-                fill="#10b981"
+                fill={chartColors.primary}
                 fillOpacity={0.95}
                 barSize={16}
                 radius={[0, 5, 5, 0]}
@@ -125,7 +127,7 @@ export function ReposMomentumChart({ data }: { data: RepoMomentumPoint[] }) {
                       height={height}
                       rx={5}
                       ry={5}
-                      fill={payload?.fill ?? "#10b981"}
+                      fill={payload?.fill ?? chartColors.primary}
                     />
                   );
                 }}
@@ -133,11 +135,17 @@ export function ReposMomentumChart({ data }: { data: RepoMomentumPoint[] }) {
             </BarChart>
             <div className="pointer-events-none absolute inset-x-0 bottom-2 flex items-center justify-center gap-4 text-xs text-[var(--muted-foreground)]">
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald-700" />
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: chartColors.pinned }}
+                />
                 Pinned
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: chartColors.unpinned }}
+                />
                 Non-pinned
               </span>
             </div>

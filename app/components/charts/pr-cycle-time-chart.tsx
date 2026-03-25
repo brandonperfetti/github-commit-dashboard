@@ -9,6 +9,7 @@ import {
   YAxis,
 } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
+import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
 import type { PullRequestHealthPoint } from "@/lib/github";
 
 type PrCycleTimeTooltipProps = {
@@ -42,6 +43,7 @@ function PrCycleTimeTooltip({
 
 export function PrCycleTimeChart({ data }: { data: PullRequestHealthPoint[] }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
+  const chartColors = useResolvedChartColors();
 
   if (!data.length) {
     return (
@@ -91,10 +93,10 @@ export function PrCycleTimeChart({ data }: { data: PullRequestHealthPoint[] }) {
               type="monotone"
               dataKey="medianCycleHours"
               name="Median cycle (h)"
-              stroke="#10b981"
+              stroke={chartColors.primary}
               strokeWidth={2}
-              dot={{ r: 3, fill: "#10b981" }}
-              activeDot={{ r: 5, fill: "#10b981" }}
+              dot={{ r: 3, fill: chartColors.primary }}
+              activeDot={{ r: 5, fill: chartColors.primary }}
               isAnimationActive={false}
             />
           </LineChart>

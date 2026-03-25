@@ -2,6 +2,7 @@
 
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
+import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
 
 type RepoPushCadencePoint = {
   label: string;
@@ -24,7 +25,7 @@ function CadenceTooltip({ active, payload }: CadenceTooltipProps) {
     <div className="max-w-[220px] rounded-xl border border-[var(--border-strong)] bg-[var(--background)] p-2.5 text-xs shadow-md">
       <p className="font-medium text-[var(--foreground)]">{point.range}</p>
       <div className="mt-2 inline-flex items-center gap-1.5 text-[var(--foreground)]">
-        <span className="h-2 w-2 rounded-full bg-emerald-500/90" />
+        <span className="h-2 w-2 rounded-full bg-[var(--chart-primary)]/90" />
         Weekly commits: {point.value}
       </div>
     </div>
@@ -37,6 +38,7 @@ export function RepoPushCadenceChart({
   data: RepoPushCadencePoint[];
 }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
+  const chartColors = useResolvedChartColors();
 
   if (!data.length) {
     return (
@@ -84,7 +86,7 @@ export function RepoPushCadenceChart({
             />
             <Bar
               dataKey="value"
-              fill="#10b981"
+              fill={chartColors.primary}
               radius={[6, 6, 0, 0]}
               isAnimationActive={false}
             />

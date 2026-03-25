@@ -10,6 +10,7 @@ import {
   YAxis,
 } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
+import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
 import type { PullRequestHealthPoint } from "@/lib/github";
 
 type PrFlowHealthTooltipProps = {
@@ -50,6 +51,7 @@ export function PrFlowHealthChart({
   data: PullRequestHealthPoint[];
 }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
+  const chartColors = useResolvedChartColors();
 
   if (!data.length) {
     return (
@@ -100,14 +102,19 @@ export function PrFlowHealthChart({
               type="monotone"
               dataKey="mergeRate"
               name="Merge rate"
-              stroke="#10b981"
+              stroke={chartColors.primary}
               strokeWidth={2}
               strokeDasharray="0"
-              dot={{ r: 3, fill: "#10b981", stroke: "#10b981", strokeWidth: 1 }}
+              dot={{
+                r: 3,
+                fill: chartColors.primary,
+                stroke: chartColors.primary,
+                strokeWidth: 1,
+              }}
               activeDot={{
                 r: 5,
-                fill: "#10b981",
-                stroke: "#10b981",
+                fill: chartColors.primary,
+                stroke: chartColors.primary,
                 strokeWidth: 1.5,
               }}
               isAnimationActive={false}
@@ -116,19 +123,19 @@ export function PrFlowHealthChart({
               type="monotone"
               dataKey="reopenRate"
               name="Reopen rate"
-              stroke="#6ee7b7"
+              stroke={chartColors.primaryMuted}
               strokeWidth={2}
               strokeDasharray="5 4"
               dot={{
                 r: 3,
                 fill: "var(--card-muted)",
-                stroke: "#6ee7b7",
+                stroke: chartColors.primaryMuted,
                 strokeWidth: 1.5,
               }}
               activeDot={{
                 r: 5,
                 fill: "var(--card-muted)",
-                stroke: "#6ee7b7",
+                stroke: chartColors.primaryMuted,
                 strokeWidth: 2,
               }}
               isAnimationActive={false}

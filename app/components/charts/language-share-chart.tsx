@@ -1,6 +1,7 @@
 "use client";
 
 import { Pie, PieChart, Tooltip } from "recharts";
+import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
 import { cn } from "@/lib/utils";
 
@@ -14,15 +15,6 @@ type LanguageShareTooltipProps = {
   payload?: Array<{ payload?: LanguageSharePoint; color?: string }>;
 };
 
-const LANGUAGE_COLORS = [
-  "#10b981",
-  "#34d399",
-  "#6ee7b7",
-  "#2dd4bf",
-  "#14b8a6",
-  "#99f6e4",
-];
-
 function LanguageShareTooltip({ active, payload }: LanguageShareTooltipProps) {
   if (!active || !payload?.length) return null;
 
@@ -30,7 +22,7 @@ function LanguageShareTooltip({ active, payload }: LanguageShareTooltipProps) {
   const point = entry.payload as LanguageSharePoint | undefined;
   if (!point) return null;
 
-  const color = entry.color ?? "#10b981";
+  const color = entry.color ?? "var(--chart-primary)";
 
   return (
     <div className="max-w-[220px] rounded-xl border border-[var(--border-strong)] bg-[var(--background)] px-3 py-2 text-xs shadow-md">
@@ -61,9 +53,18 @@ export function LanguageShareChart({
   frameless?: boolean;
 }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
+  const chartColors = useResolvedChartColors();
+  const languageColors = [
+    chartColors.primary,
+    chartColors.primarySoft,
+    chartColors.primaryMuted,
+    chartColors.accent,
+    chartColors.pinned,
+    chartColors.netBacklog,
+  ];
   const chartData = data.map((item, index) => ({
     ...item,
-    fill: LANGUAGE_COLORS[index % LANGUAGE_COLORS.length],
+    fill: languageColors[index % languageColors.length],
   }));
   const isDense = data.length >= 6;
   const legendGapClass = isDense ? "gap-1.5" : "gap-2";
@@ -140,7 +141,7 @@ export function LanguageShareChart({
                   className="h-2.5 w-2.5 rounded-full"
                   style={{
                     backgroundColor:
-                      LANGUAGE_COLORS[index % LANGUAGE_COLORS.length],
+                      languageColors[index % languageColors.length],
                   }}
                 />
                 <span className="truncate">{item.name}</span>

@@ -2,6 +2,7 @@
 
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
+import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
 
 type TopRepoCommitPoint = {
   name: string;
@@ -29,7 +30,7 @@ function TopRepoCommitTooltip({ active, payload }: TopRepoCommitTooltipProps) {
         {point.fullName}
       </p>
       <div className="mt-2 inline-flex items-center gap-1.5 text-[var(--foreground)]">
-        <span className="h-2 w-2 rounded-full bg-emerald-500/90" />
+        <span className="h-2 w-2 rounded-full bg-[var(--chart-primary)]/90" />
         Commits: {point.commits}
       </div>
     </div>
@@ -38,6 +39,7 @@ function TopRepoCommitTooltip({ active, payload }: TopRepoCommitTooltipProps) {
 
 export function TopRepoCommitChart({ data }: { data: TopRepoCommitPoint[] }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
+  const chartColors = useResolvedChartColors();
 
   if (!data.length) {
     return (
@@ -85,7 +87,7 @@ export function TopRepoCommitChart({ data }: { data: TopRepoCommitPoint[] }) {
             />
             <Bar
               dataKey="commits"
-              fill="#10b981"
+              fill={chartColors.primary}
               fillOpacity={0.9}
               barSize={12}
               radius={[0, 5, 5, 0]}

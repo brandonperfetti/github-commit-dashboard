@@ -9,6 +9,7 @@ import {
   YAxis,
 } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
+import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
 
 type ContributionTrendPoint = {
   date: string;
@@ -47,6 +48,7 @@ export function ContributionTrendChart({
   compact?: boolean;
 }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
+  const chartColors = useResolvedChartColors();
   const chartHeight = compact ? 204 : 240;
 
   if (!data.length) {
@@ -80,8 +82,16 @@ export function ContributionTrendChart({
           >
             <defs>
               <linearGradient id="contribTrendFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#10b981" stopOpacity={0.45} />
-                <stop offset="100%" stopColor="#10b981" stopOpacity={0.02} />
+                <stop
+                  offset="0%"
+                  stopColor={chartColors.primary}
+                  stopOpacity={0.45}
+                />
+                <stop
+                  offset="100%"
+                  stopColor={chartColors.primary}
+                  stopOpacity={0.02}
+                />
               </linearGradient>
             </defs>
             <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
@@ -109,7 +119,7 @@ export function ContributionTrendChart({
             <Area
               type="monotone"
               dataKey="count"
-              stroke="#10b981"
+              stroke={chartColors.primary}
               strokeWidth={2}
               fill="url(#contribTrendFill)"
               isAnimationActive={false}

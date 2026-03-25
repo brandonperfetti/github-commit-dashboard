@@ -10,6 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
 import type { IssueFlowHealthPoint } from "@/lib/github";
 
@@ -45,6 +46,10 @@ export function IssueFlowHealthChart({
   data: IssueFlowHealthPoint[];
 }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
+  const chartColors = useResolvedChartColors();
+  const openedColor = chartColors.primarySoft;
+  const closedColor = chartColors.primary;
+  const backlogColor = chartColors.accent;
 
   if (!data.length) {
     return (
@@ -102,7 +107,7 @@ export function IssueFlowHealthChart({
               yAxisId="counts"
               dataKey="opened"
               name="Opened"
-              fill="#34d399"
+              fill={openedColor}
               radius={[4, 4, 0, 0]}
               isAnimationActive={false}
             />
@@ -110,7 +115,7 @@ export function IssueFlowHealthChart({
               yAxisId="counts"
               dataKey="closed"
               name="Closed"
-              fill="#10b981"
+              fill={closedColor}
               radius={[4, 4, 0, 0]}
               isAnimationActive={false}
             />
@@ -119,10 +124,16 @@ export function IssueFlowHealthChart({
               type="monotone"
               dataKey="backlogDelta"
               name="Net backlog"
-              stroke="#a7f3d0"
+              stroke={backlogColor}
               strokeWidth={2}
-              dot={{ r: 3, fill: "#a7f3d0" }}
-              activeDot={{ r: 5, fill: "#a7f3d0" }}
+              dot={{
+                r: 3,
+                fill: backlogColor,
+              }}
+              activeDot={{
+                r: 5,
+                fill: backlogColor,
+              }}
               isAnimationActive={false}
             />
           </ComposedChart>

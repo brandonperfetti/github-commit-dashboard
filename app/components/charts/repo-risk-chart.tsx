@@ -2,9 +2,9 @@
 
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
+import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
 import type { RepoRiskBucket, RepoRiskSnapshot } from "@/lib/github";
 
-const RISK_COLORS = ["#10b981", "#34d399", "#6ee7b7", "#f59e0b"];
 const MOBILE_LABEL_BREAKPOINT = 520;
 
 function compactRiskLabel(label: string) {
@@ -37,12 +37,19 @@ function RepoRiskTooltip({ active, payload }: RepoRiskTooltipProps) {
 
 export function RepoRiskChart({ snapshot }: { snapshot: RepoRiskSnapshot }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
+  const chartColors = useResolvedChartColors();
+  const riskColors = [
+    chartColors.primary,
+    chartColors.primarySoft,
+    chartColors.primaryMuted,
+    chartColors.warning,
+  ];
   const visibleBuckets = snapshot.buckets.filter(
     (bucket) => !bucket.label.toLowerCase().includes("archived"),
   );
   const chartData = visibleBuckets.map((bucket, index) => ({
     ...bucket,
-    fill: RISK_COLORS[index % RISK_COLORS.length],
+    fill: riskColors[index % riskColors.length],
   }));
   const useCompactLabels =
     size.width > 0 && size.width <= MOBILE_LABEL_BREAKPOINT;
@@ -95,7 +102,7 @@ export function RepoRiskChart({ snapshot }: { snapshot: RepoRiskSnapshot }) {
             />
             <Bar
               dataKey="count"
-              fill="#34d399"
+              fill={chartColors.primarySoft}
               radius={[6, 6, 0, 0]}
               isAnimationActive={false}
             />
