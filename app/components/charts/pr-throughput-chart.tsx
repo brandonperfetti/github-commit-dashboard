@@ -10,14 +10,9 @@ import {
   YAxis,
 } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
+import type { PullRequestThroughputPoint } from "@/lib/github";
 
-type PrThroughputPoint = {
-  label: string;
-  range: string;
-  opened: number;
-  merged: number;
-  closed: number;
-};
+type PrThroughputPoint = PullRequestThroughputPoint;
 
 type PrThroughputTooltipProps = {
   active?: boolean;
