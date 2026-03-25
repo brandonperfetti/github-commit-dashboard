@@ -32,11 +32,29 @@ export const metadata: Metadata = {
 const HOME_SUMMARY_ITEM_COUNT = 4;
 
 export default async function Home() {
-  const [days, repos, pinnedRepos] = await Promise.all([
-    getContributionDays(),
-    getRepos(),
-    getPinnedRepos(),
-  ]);
+  const [daysResult, reposResult, pinnedReposResult] = await Promise.allSettled(
+    [getContributionDays(), getRepos(), getPinnedRepos()],
+  );
+
+  const reportRejected = (label: string, reason: unknown) => {
+    console.error(
+      `[home] Failed to fetch ${label}:`,
+      reason instanceof Error ? reason.message : reason,
+    );
+  };
+
+  const days =
+    daysResult.status === "fulfilled"
+      ? daysResult.value
+      : (reportRejected("contribution days", daysResult.reason), []);
+  const repos =
+    reposResult.status === "fulfilled"
+      ? reposResult.value
+      : (reportRejected("repos", reposResult.reason), []);
+  const pinnedRepos =
+    pinnedReposResult.status === "fulfilled"
+      ? pinnedReposResult.value
+      : (reportRejected("pinned repos", pinnedReposResult.reason), []);
   const totalContributions = days.reduce((sum, day) => sum + day.count, 0);
   const topLanguages = [
     ...new Set(repos.map((repo) => repo.language).filter(Boolean)),
