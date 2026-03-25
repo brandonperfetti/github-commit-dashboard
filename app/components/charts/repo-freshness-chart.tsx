@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  Bar,
-  BarChart,
-  Cell,
-  CartesianGrid,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
 
 type RepoFreshnessPoint = {
@@ -82,6 +74,14 @@ function FreshnessTooltip({ active, payload }: FreshnessTooltipProps) {
 
 export function RepoFreshnessChart({ data }: { data: RepoFreshnessPoint[] }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
+  const chartData = data.map((row) => {
+    const band = freshnessBand(row.daysSincePush);
+    return {
+      ...row,
+      fill: band.fill,
+      fillOpacity: band.opacity,
+    };
+  });
 
   if (!data.length) {
     return (
@@ -102,7 +102,7 @@ export function RepoFreshnessChart({ data }: { data: RepoFreshnessPoint[] }) {
             accessibilityLayer={false}
             width={size.width}
             height={size.height}
-            data={data}
+            data={chartData}
             layout="vertical"
             margin={{ top: 10, right: 16, left: 6, bottom: 10 }}
           >
@@ -135,18 +135,28 @@ export function RepoFreshnessChart({ data }: { data: RepoFreshnessPoint[] }) {
               barSize={12}
               radius={[0, 5, 5, 0]}
               isAnimationActive={false}
-            >
-              {data.map((row) => {
-                const band = freshnessBand(row.daysSincePush);
+              shape={(props: {
+                x?: number;
+                y?: number;
+                width?: number;
+                height?: number;
+                payload?: { fill?: string; fillOpacity?: number };
+              }) => {
+                const { x = 0, y = 0, width = 0, height = 0, payload } = props;
                 return (
-                  <Cell
-                    key={`${row.fullName}-${row.daysSincePush}`}
-                    fill={band.fill}
-                    fillOpacity={band.opacity}
+                  <rect
+                    x={x}
+                    y={y}
+                    width={width}
+                    height={height}
+                    rx={5}
+                    ry={5}
+                    fill={payload?.fill ?? "#10b981"}
+                    fillOpacity={payload?.fillOpacity ?? 1}
                   />
                 );
-              })}
-            </Bar>
+              }}
+            />
           </BarChart>
         ) : (
           <div className="h-full w-full rounded-xl bg-[var(--card)]/70" />
