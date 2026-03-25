@@ -136,7 +136,7 @@ export function CommitTimingHeatmapChart({
         >
           <div />
           {visibleHours.map((hour, index) => (
-            <div key={hour} className="text-center">
+            <div key={hour} role="columnheader" className="text-center">
               {index % labelStep === 0 || index === visibleHours.length - 1
                 ? formatHourLabel(hour).replace(":00 ", " ")
                 : ""}
