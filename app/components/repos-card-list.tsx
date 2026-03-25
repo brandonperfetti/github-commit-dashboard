@@ -3,18 +3,10 @@
 import { useRef, useState } from "react";
 import { Badge } from "@/app/components/ui/badge";
 import { Button, ButtonLink } from "@/app/components/ui/button";
-import type { Repo } from "@/lib/github";
+import { formatRepoDate, type Repo } from "@/lib/github";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 12;
-
-function formatRepoDate(value: string) {
-  return new Date(value).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
 
 export function ReposCardList({
   repos,
