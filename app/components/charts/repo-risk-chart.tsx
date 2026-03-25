@@ -102,7 +102,6 @@ export function RepoRiskChart({ snapshot }: { snapshot: RepoRiskSnapshot }) {
             />
             <Bar
               dataKey="count"
-              fill={chartColors.primarySoft}
               radius={[6, 6, 0, 0]}
               isAnimationActive={false}
             />
