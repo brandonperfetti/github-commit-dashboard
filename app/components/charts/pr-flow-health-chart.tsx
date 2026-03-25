@@ -67,7 +67,6 @@ export function PrFlowHealthChart({
       >
         {ready ? (
           <LineChart
-            accessibilityLayer={false}
             width={size.width}
             height={size.height}
             data={data}
@@ -103,8 +102,14 @@ export function PrFlowHealthChart({
               name="Merge rate"
               stroke="#10b981"
               strokeWidth={2}
-              dot={{ r: 3, fill: "#10b981" }}
-              activeDot={{ r: 5, fill: "#10b981" }}
+              strokeDasharray="0"
+              dot={{ r: 3, fill: "#10b981", stroke: "#10b981", strokeWidth: 1 }}
+              activeDot={{
+                r: 5,
+                fill: "#10b981",
+                stroke: "#10b981",
+                strokeWidth: 1.5,
+              }}
               isAnimationActive={false}
             />
             <Line
@@ -113,8 +118,19 @@ export function PrFlowHealthChart({
               name="Reopen rate"
               stroke="#6ee7b7"
               strokeWidth={2}
-              dot={{ r: 3, fill: "#6ee7b7" }}
-              activeDot={{ r: 5, fill: "#6ee7b7" }}
+              strokeDasharray="5 4"
+              dot={{
+                r: 3,
+                fill: "var(--card-muted)",
+                stroke: "#6ee7b7",
+                strokeWidth: 1.5,
+              }}
+              activeDot={{
+                r: 5,
+                fill: "var(--card-muted)",
+                stroke: "#6ee7b7",
+                strokeWidth: 2,
+              }}
               isAnimationActive={false}
             />
           </LineChart>
