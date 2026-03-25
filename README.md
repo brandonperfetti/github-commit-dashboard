@@ -24,11 +24,13 @@ Add a token in `.env.local`:
 
 ```bash
 GITHUB_TOKEN=github_pat_...
+ALLOWED_DEV_ORIGINS=192.168.1.156
 ```
 
 Notes:
 
 - Keep it server-side only (do not prefix with `NEXT_PUBLIC_`).
+- `ALLOWED_DEV_ORIGINS` accepts a comma-separated list for local device testing (for example, `192.168.1.156,192.168.1.200`).
 - Fine-grained token with read access to repositories is preferred.
 - With a token present, the app uses authenticated `/user/repos` calls and can include private repositories you can access.
 - Without a token, it falls back to public `/users/{username}/repos`.
