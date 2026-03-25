@@ -103,8 +103,14 @@ export function CommitTimingHeatmapChart({
           {activeWindowLabel}
         </p>
       ) : null}
-      <div>
+      <div
+        role="grid"
+        aria-label={`Commit timing heatmap (${data.timezone})`}
+        aria-rowcount={DAYS.length}
+        aria-colcount={visibleHours.length}
+      >
         <div
+          role="row"
           className="grid gap-1 text-[10px] text-[var(--muted-foreground)]"
           style={{ gridTemplateColumns: hourColumnTemplate }}
         >
@@ -122,6 +128,7 @@ export function CommitTimingHeatmapChart({
           {DAYS.map((dayLabel, dayIndex) => (
             <div
               key={dayLabel}
+              role="row"
               className="grid gap-1"
               style={{ gridTemplateColumns: hourColumnTemplate }}
             >
@@ -146,7 +153,10 @@ export function CommitTimingHeatmapChart({
                     onBlur={() => setHoveredCellKey(null)}
                     title={`${dayLabel} ${formatHourLabel(hour)} · ${count} commit${count === 1 ? "" : "s"}`}
                     aria-label={`${dayLabel} ${formatHourLabel(hour)}: ${count} commit${count === 1 ? "" : "s"}`}
-                    role="img"
+                    aria-rowindex={dayIndex + 1}
+                    aria-colindex={visibleHours.indexOf(hour) + 1}
+                    role="gridcell"
+                    tabIndex={0}
                   />
                 );
               })}
