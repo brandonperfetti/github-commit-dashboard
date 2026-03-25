@@ -69,10 +69,10 @@ export default async function Home() {
   const pinnedRepoIds = new Set(pinnedRepos.map((repo) => repo.id));
   const activeDays = days.filter((day) => day.count > 0).length;
   const averagePerDay = totalContributions / Math.max(days.length, 1);
-  const strongestDay = days.reduce(
-    (best, day) => (day.count > best.count ? day : best),
-    days[0] ?? { date: "", count: 0, level: 0 as const },
-  );
+  const strongestDay =
+    days.length > 0
+      ? days.reduce((best, day) => (day.count > best.count ? day : best))
+      : null;
   const trendData = days.map((day) => ({
     date: prettyDay(day.date),
     count: day.count,
@@ -209,11 +209,17 @@ export default async function Home() {
                 </div>
               </div>
               <div className="mt-3 text-xs text-[var(--muted-foreground)]">
-                Strongest day ({prettyDay(strongestDay.date)}):{" "}
-                <span className="font-medium text-[var(--foreground)]">
-                  {strongestDay.count}
-                </span>{" "}
-                contributions
+                {strongestDay ? (
+                  <>
+                    Strongest day ({prettyDay(strongestDay.date)}):{" "}
+                    <span className="font-medium text-[var(--foreground)]">
+                      {strongestDay.count}
+                    </span>{" "}
+                    contributions
+                  </>
+                ) : (
+                  "Strongest day: No contributions yet"
+                )}
               </div>
             </div>
           </SectionShell>
