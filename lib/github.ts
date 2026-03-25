@@ -301,6 +301,21 @@ export async function getRepos(
 export async function getPinnedRepos(
   username: string = USERNAME,
 ): Promise<Repo[]> {
+  const decodeGraphqlRepositoryId = (graphQlId: string): number | null => {
+    try {
+      const decoded = Buffer.from(graphQlId, "base64").toString("utf8");
+      const match = decoded.match(/(\d+)$/);
+      if (!match) {
+        return null;
+      }
+
+      const parsed = Number.parseInt(match[1], 10);
+      return Number.isNaN(parsed) ? null : parsed;
+    } catch {
+      return null;
+    }
+  };
+
   const query = `
     query PinnedRepos($login: String!) {
       user(login: $login) {
@@ -399,7 +414,7 @@ export async function getPinnedRepos(
   return nodes
     .filter((node) => node && !node.isArchived)
     .map((node, index) => ({
-      id: Number.parseInt(node.id.replace(/\D/g, ""), 10) || -(index + 1),
+      id: decodeGraphqlRepositoryId(node.id) ?? -(index + 1),
       name: node.name,
       full_name: node.nameWithOwner,
       description: node.description,
