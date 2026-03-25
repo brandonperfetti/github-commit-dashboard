@@ -848,6 +848,8 @@ export async function getPullRequestHealth(
         fetchCount(buildQuery("created")),
         fetchCount(buildQuery("merged")),
         fetchCount(buildQuery("closed")),
+        // Verified against GitHub Search API in this project: `reopened:YYYY-MM-DD..YYYY-MM-DD`
+        // returns expected counts for authored PRs, so we keep this metric in flow health.
         fetchCount(buildQuery("reopened")),
       ]);
 
