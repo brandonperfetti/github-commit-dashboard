@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import {
   Area,
   AreaChart,
@@ -50,6 +51,7 @@ export function ContributionTrendChart({
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
   const chartColors = useResolvedChartColors();
   const chartHeight = compact ? 204 : 240;
+  const gradientId = `contribTrendFill-${useId().replace(/:/g, "")}`;
 
   if (!data.length) {
     return (
@@ -81,7 +83,7 @@ export function ContributionTrendChart({
             }
           >
             <defs>
-              <linearGradient id="contribTrendFill" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                 <stop
                   offset="0%"
                   stopColor={chartColors.primary}
@@ -121,7 +123,7 @@ export function ContributionTrendChart({
               dataKey="count"
               stroke={chartColors.primary}
               strokeWidth={2}
-              fill="url(#contribTrendFill)"
+              fill={`url(#${gradientId})`}
               isAnimationActive={false}
             />
           </AreaChart>
