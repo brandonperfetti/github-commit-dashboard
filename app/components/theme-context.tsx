@@ -52,6 +52,11 @@ function getInitialTheme(): Theme {
 
 export function AppThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(getInitialTheme);
+  const [userHasSetTheme, setUserHasSetTheme] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    return stored === "light" || stored === "dark";
+  });
   const isResolved = useMounted();
 
   useEffect(() => {
@@ -62,9 +67,7 @@ export function AppThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isResolved) return;
 
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    const hasStoredTheme = stored === "light" || stored === "dark";
-    if (hasStoredTheme) return;
+    if (userHasSetTheme) return;
 
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const onChange = () => {
@@ -75,9 +78,33 @@ export function AppThemeProvider({ children }: { children: React.ReactNode }) {
 
     media.addEventListener("change", onChange);
     return () => media.removeEventListener("change", onChange);
+  }, [isResolved, userHasSetTheme]);
+
+  useEffect(() => {
+    if (!isResolved) return;
+
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== STORAGE_KEY) return;
+
+      if (event.newValue === "light" || event.newValue === "dark") {
+        setUserHasSetTheme(true);
+        setThemeState(event.newValue);
+        applyTheme(event.newValue);
+        return;
+      }
+
+      setUserHasSetTheme(false);
+      const systemTheme = getSystemTheme();
+      setThemeState(systemTheme);
+      applyTheme(systemTheme);
+    };
+
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, [isResolved]);
 
   const setTheme = useCallback((nextTheme: Theme) => {
+    setUserHasSetTheme(true);
     setThemeState(nextTheme);
     window.localStorage.setItem(STORAGE_KEY, nextTheme);
     applyTheme(nextTheme);
