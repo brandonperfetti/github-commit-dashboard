@@ -16,25 +16,28 @@ type FreshnessTooltipProps = {
   payload?: Array<{ payload?: RepoFreshnessPoint }>;
 };
 
+const FRESH_THRESHOLD_DAYS = 3;
+const WARM_THRESHOLD_DAYS = 7;
+
 function freshnessBand(days: number) {
-  if (days <= 3) {
+  if (days <= FRESH_THRESHOLD_DAYS) {
     return {
-      label: "Fresh (0-3 days)",
+      label: `Fresh (0-${FRESH_THRESHOLD_DAYS} days)`,
       fill: "var(--chart-primary)",
       opacity: 0.9,
     };
   }
 
-  if (days <= 7) {
+  if (days <= WARM_THRESHOLD_DAYS) {
     return {
-      label: "Warm (4-7 days)",
+      label: `Warm (${FRESH_THRESHOLD_DAYS + 1}-${WARM_THRESHOLD_DAYS} days)`,
       fill: "var(--chart-primary)",
       opacity: 0.6,
     };
   }
 
   return {
-    label: "Stale (8+ days)",
+    label: `Stale (${WARM_THRESHOLD_DAYS + 1}+ days)`,
     fill: "var(--chart-primary)",
     opacity: 0.4,
   };
@@ -76,14 +79,6 @@ function FreshnessTooltip({ active, payload }: FreshnessTooltipProps) {
 export function RepoFreshnessChart({ data }: { data: RepoFreshnessPoint[] }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
   const chartColors = useResolvedChartColors();
-  const chartData = data.map((row) => {
-    const band = freshnessBand(row.daysSincePush);
-    return {
-      ...row,
-      fill: chartColors.primary,
-      fillOpacity: band.opacity,
-    };
-  });
 
   if (!data.length) {
     return (
@@ -92,6 +87,15 @@ export function RepoFreshnessChart({ data }: { data: RepoFreshnessPoint[] }) {
       </div>
     );
   }
+
+  const chartData = data.map((row) => {
+    const band = freshnessBand(row.daysSincePush);
+    return {
+      ...row,
+      fill: chartColors.primary,
+      fillOpacity: band.opacity,
+    };
+  });
 
   return (
     <div className="h-[220px] w-full min-w-0 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card-muted)] p-3 sm:p-4">
@@ -170,21 +174,21 @@ export function RepoFreshnessChart({ data }: { data: RepoFreshnessPoint[] }) {
             className="h-2 w-2 rounded-full"
             style={{ backgroundColor: chartColors.primary, opacity: 0.9 }}
           />
-          Fresh (0-3d)
+          {`Fresh (0-${FRESH_THRESHOLD_DAYS}d)`}
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span
             className="h-2 w-2 rounded-full"
             style={{ backgroundColor: chartColors.primary, opacity: 0.6 }}
           />
-          Warm (4-7d)
+          {`Warm (${FRESH_THRESHOLD_DAYS + 1}-${WARM_THRESHOLD_DAYS}d)`}
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span
             className="h-2 w-2 rounded-full"
             style={{ backgroundColor: chartColors.primary, opacity: 0.4 }}
           />
-          Stale (8+d)
+          {`Stale (${WARM_THRESHOLD_DAYS + 1}+d)`}
         </span>
       </div>
     </div>
