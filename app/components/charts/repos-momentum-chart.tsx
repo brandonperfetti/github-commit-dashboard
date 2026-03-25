@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
 
 type RepoMomentumPoint = {
@@ -50,6 +42,10 @@ function MomentumTooltip({ active, payload }: MomentumTooltipProps) {
 
 export function ReposMomentumChart({ data }: { data: RepoMomentumPoint[] }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
+  const chartData = data.map((point) => ({
+    ...point,
+    fill: point.pinned ? "#059669" : "#34d399",
+  }));
 
   if (!data.length) {
     return (
@@ -68,7 +64,7 @@ export function ReposMomentumChart({ data }: { data: RepoMomentumPoint[] }) {
               accessibilityLayer={false}
               width={size.width}
               height={size.height}
-              data={data}
+              data={chartData}
               layout="vertical"
               barCategoryGap={18}
               barGap={3}
@@ -107,14 +103,33 @@ export function ReposMomentumChart({ data }: { data: RepoMomentumPoint[] }) {
                 barSize={16}
                 radius={[0, 5, 5, 0]}
                 isAnimationActive={false}
-              >
-                {data.map((point, index) => (
-                  <Cell
-                    key={`repo-momentum-${point.fullName}-${index}`}
-                    fill={point.pinned ? "#059669" : "#34d399"}
-                  />
-                ))}
-              </Bar>
+                shape={(props: {
+                  x?: number;
+                  y?: number;
+                  width?: number;
+                  height?: number;
+                  payload?: { fill?: string };
+                }) => {
+                  const {
+                    x = 0,
+                    y = 0,
+                    width = 0,
+                    height = 0,
+                    payload,
+                  } = props;
+                  return (
+                    <rect
+                      x={x}
+                      y={y}
+                      width={width}
+                      height={height}
+                      rx={5}
+                      ry={5}
+                      fill={payload?.fill ?? "#10b981"}
+                    />
+                  );
+                }}
+              />
             </BarChart>
             <div className="pointer-events-none absolute inset-x-0 bottom-2 flex items-center justify-center gap-4 text-xs text-[var(--muted-foreground)]">
               <span className="inline-flex items-center gap-1.5">
