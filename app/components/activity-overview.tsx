@@ -45,10 +45,10 @@ export function ActivityOverview({
 }) {
   const total = days.reduce((sum, day) => sum + day.count, 0);
   const activeDays = days.filter((day) => day.count > 0).length;
-  const bestDay = days.reduce(
-    (best, day) => (day.count > best.count ? day : best),
-    days[0],
-  );
+  const bestDay =
+    days.length > 0
+      ? days.reduce((best, day) => (day.count > best.count ? day : best))
+      : null;
   const weeklyTotals = buildWeeklyTotals(days);
   const trendData = days.map((day) => ({
     date: prettyDay(day.date),
@@ -131,9 +131,9 @@ export function ActivityOverview({
           <div className="rounded-xl border border-[var(--border-strong)] bg-[var(--background)] px-3 py-1.5 shadow-sm">
             Best day:{" "}
             <span className="font-medium text-[var(--foreground)]">
-              {prettyDay(bestDay.date)}
+              {bestDay ? prettyDay(bestDay.date) : "N/A"}
             </span>{" "}
-            · {bestDay.count}
+            · {bestDay?.count ?? 0}
           </div>
           <div className="rounded-xl border border-[var(--border-strong)] bg-[var(--background)] px-3 py-1.5 shadow-sm">
             Average/day:{" "}
