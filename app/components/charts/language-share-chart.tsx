@@ -1,6 +1,6 @@
 "use client";
 
-import { Cell, Pie, PieChart, Tooltip } from "recharts";
+import { Pie, PieChart, Tooltip } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
 import { cn } from "@/lib/utils";
 
@@ -61,6 +61,10 @@ export function LanguageShareChart({
   frameless?: boolean;
 }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
+  const chartData = data.map((item, index) => ({
+    ...item,
+    fill: LANGUAGE_COLORS[index % LANGUAGE_COLORS.length],
+  }));
   const isDense = data.length >= 6;
   const legendGapClass = isDense ? "gap-1.5" : "gap-2";
   const legendItemPaddingClass = isDense ? "px-2.5 py-1.5" : "px-2.5 py-2";
@@ -98,7 +102,7 @@ export function LanguageShareChart({
               height={size.height}
             >
               <Pie
-                data={data}
+                data={chartData}
                 dataKey="value"
                 nameKey="name"
                 innerRadius={46}
@@ -106,14 +110,7 @@ export function LanguageShareChart({
                 paddingAngle={2}
                 stroke="none"
                 isAnimationActive={false}
-              >
-                {data.map((entry, index) => (
-                  <Cell
-                    key={`language-${entry.name}`}
-                    fill={LANGUAGE_COLORS[index % LANGUAGE_COLORS.length]}
-                  />
-                ))}
-              </Pie>
+              />
               <Tooltip
                 content={<LanguageShareTooltip />}
                 wrapperStyle={{ outline: "none", zIndex: 20 }}
