@@ -1,4 +1,5 @@
 import { Badge } from "@/app/components/ui/badge";
+import type { Metadata } from "next";
 import { RepoPushCadenceChart } from "@/app/components/charts/repo-push-cadence-chart";
 import { RepoRiskChart } from "@/app/components/charts/repo-risk-chart";
 import { ReposMomentumChart } from "@/app/components/charts/repos-momentum-chart";
@@ -12,20 +13,70 @@ import {
   getPinnedRepos,
   getRepoRiskSnapshot,
   getRepos,
+  type RepoRiskSnapshot,
 } from "@/lib/github";
 
-export const metadata = {
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const reposPath = "/repos";
+const reposUrl = `${siteUrl}${reposPath}`;
+const reposDescription =
+  "Repository health at a glance: pinned momentum, commit cadence, risk distribution, and a browsable inventory of active projects.";
+
+export const metadata: Metadata = {
   title: "Repos",
+  description: reposDescription,
+  alternates: {
+    canonical: reposPath,
+  },
+  openGraph: {
+    title: "Repos · Build",
+    description: reposDescription,
+    url: reposUrl,
+    type: "website",
+    images: [
+      {
+        url: `${siteUrl}/globe.svg`,
+        alt: "Build repository surface area overview",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Repos · Build",
+    description: reposDescription,
+    images: [`${siteUrl}/globe.svg`],
+  },
 };
 
 export const revalidate = 300;
 
+const FALLBACK_REPO_RISK_SNAPSHOT: RepoRiskSnapshot = {
+  totalRepos: 0,
+  archivedRepos: 0,
+  privateRepos: 0,
+  atRiskRepos: 0,
+  buckets: [
+    { label: "Hot (0-7d)", count: 0 },
+    { label: "Active (8-30d)", count: 0 },
+    { label: "Stale (31-90d)", count: 0 },
+    { label: "Dormant (90d+)", count: 0 },
+  ],
+};
+
 export default async function ReposPage() {
-  const [repos, pinnedRepos, repoRiskSnapshot] = await Promise.all([
-    getRepos(),
-    getPinnedRepos(),
-    getRepoRiskSnapshot(),
-  ]);
+  const [reposResult, pinnedReposResult, repoRiskSnapshotResult] =
+    await Promise.allSettled([
+      getRepos(),
+      getPinnedRepos(),
+      getRepoRiskSnapshot(),
+    ]);
+  const repos = reposResult.status === "fulfilled" ? reposResult.value : [];
+  const pinnedRepos =
+    pinnedReposResult.status === "fulfilled" ? pinnedReposResult.value : [];
+  const repoRiskSnapshot =
+    repoRiskSnapshotResult.status === "fulfilled"
+      ? repoRiskSnapshotResult.value
+      : FALLBACK_REPO_RISK_SNAPSHOT;
   const pinnedRepoNames = new Set(pinnedRepos.map((repo) => repo.full_name));
   const reposByFullName = new Map(repos.map((repo) => [repo.full_name, repo]));
   const commitSummary = await buildRepoCommitActivitySummary(repos);
