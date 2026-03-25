@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
 
 type FeaturedScorePoint = {
@@ -66,6 +58,11 @@ export function FeaturedScoreBreakdownChart({
   data: FeaturedScorePoint[];
 }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
+  const chartData = data.map((point, index) => ({
+    ...point,
+    fill: point.pinned ? "#10b981" : "#34d399",
+    fillOpacity: index === 0 ? 1 : 0.9,
+  }));
 
   if (!data.length) {
     return (
@@ -83,7 +80,7 @@ export function FeaturedScoreBreakdownChart({
             accessibilityLayer={false}
             width={size.width}
             height={size.height}
-            data={data}
+            data={chartData}
             layout="vertical"
             margin={{ top: 18, right: 18, left: 18, bottom: 18 }}
           >
@@ -122,15 +119,28 @@ export function FeaturedScoreBreakdownChart({
               fill="#10b981"
               radius={[0, 6, 6, 0]}
               isAnimationActive={false}
-            >
-              {data.map((point, index) => (
-                <Cell
-                  key={`featured-star-${point.name}`}
-                  fill={point.pinned ? "#10b981" : "#34d399"}
-                  fillOpacity={index === 0 ? 1 : 0.9}
-                />
-              ))}
-            </Bar>
+              shape={(props: {
+                x?: number;
+                y?: number;
+                width?: number;
+                height?: number;
+                payload?: { fill?: string; fillOpacity?: number };
+              }) => {
+                const { x = 0, y = 0, width = 0, height = 0, payload } = props;
+                return (
+                  <rect
+                    x={x}
+                    y={y}
+                    width={width}
+                    height={height}
+                    rx={6}
+                    ry={6}
+                    fill={payload?.fill ?? "#10b981"}
+                    fillOpacity={payload?.fillOpacity ?? 1}
+                  />
+                );
+              }}
+            />
           </BarChart>
         ) : (
           <div className="h-full w-full rounded-xl bg-[var(--card)]/70" />
