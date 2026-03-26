@@ -73,7 +73,6 @@ export function AppThemeProvider({ children }: { children: React.ReactNode }) {
     const onChange = () => {
       const systemTheme = getSystemTheme();
       setThemeState(systemTheme);
-      applyTheme(systemTheme);
     };
 
     media.addEventListener("change", onChange);
