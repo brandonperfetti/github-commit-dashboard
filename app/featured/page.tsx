@@ -8,6 +8,7 @@ import { ScrollReveal } from "@/app/components/motion/scroll-reveal";
 import { Card } from "@/app/components/ui/card";
 import { SectionShell } from "@/app/components/section-shell";
 import {
+  buildLast30Days,
   buildRepoCommitActivitySummary,
   formatRepoDate,
   getContributionDays,
@@ -106,13 +107,18 @@ export default async function FeaturedPage() {
   ].slice(0, 6);
   const total = days.reduce((sum, day) => sum + day.count, 0);
   const activeDays = days.filter((day) => day.count > 0).length;
+  const pushedAtTimes = featured
+    .flatMap((repo) => [
+      new Date(repo.pushed_at).getTime(),
+      new Date(repo.updated_at).getTime(),
+    ])
+    .filter(Number.isFinite);
+  const latestWindowDay = buildLast30Days().at(-1);
+  const todayReferenceTime = latestWindowDay
+    ? new Date(`${latestWindowDay}T00:00:00`).getTime()
+    : 0;
   const fallbackReferenceTime =
-    Math.max(
-      0,
-      ...featured
-        .map((repo) => new Date(repo.pushed_at).getTime())
-        .filter(Number.isFinite),
-    ) || 0;
+    pushedAtTimes.length > 0 ? Math.max(...pushedAtTimes) : todayReferenceTime;
   const referenceTime = days.length
     ? new Date(`${days[days.length - 1].date}T00:00:00`).getTime()
     : fallbackReferenceTime;
