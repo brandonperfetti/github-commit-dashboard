@@ -514,6 +514,13 @@ export async function getPinnedRepos(
   };
 
   if (payload.errors?.length) {
+    console.error(
+      "[github:getPinnedRepos] GraphQL errors:",
+      payload.errors
+        .map((error) => error.message)
+        .filter(Boolean)
+        .join(" | ") || payload.errors,
+    );
     return [];
   }
 
@@ -988,24 +995,39 @@ export async function getPullRequestHealth(
 
   const prResponses = await Promise.all(
     topRepos.map(async (repo) => {
-      const response = await fetch(
-        `https://api.github.com/repos/${repo.full_name}/pulls?state=closed&sort=updated&direction=desc&per_page=100`,
-        {
-          headers: githubHeaders(),
-          next: { revalidate: GITHUB_REVALIDATE_SECONDS },
-        },
-      );
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, GITHUB_FETCH_TIMEOUT_MS);
 
-      if (!response.ok) {
+      try {
+        const response = await fetch(
+          `https://api.github.com/repos/${repo.full_name}/pulls?state=closed&sort=updated&direction=desc&per_page=100`,
+          {
+            headers: githubHeaders(),
+            next: { revalidate: GITHUB_REVALIDATE_SECONDS },
+            signal: controller.signal,
+          },
+        );
+
+        if (!response.ok) {
+          return [] as Array<{
+            created_at?: string;
+            merged_at?: string | null;
+          }>;
+        }
+
+        const pulls = (await response.json()) as Array<{
+          created_at?: string;
+          merged_at?: string | null;
+        }>;
+
+        return pulls;
+      } catch {
         return [] as Array<{ created_at?: string; merged_at?: string | null }>;
+      } finally {
+        clearTimeout(timeoutId);
       }
-
-      const pulls = (await response.json()) as Array<{
-        created_at?: string;
-        merged_at?: string | null;
-      }>;
-
-      return pulls;
     }),
   );
 
@@ -1125,19 +1147,33 @@ export async function getReleaseCadence(
 
   const releaseResponses = await Promise.all(
     topRepos.map(async (repo) => {
-      const response = await fetch(
-        `https://api.github.com/repos/${repo.full_name}/releases?per_page=30`,
-        {
-          headers: githubHeaders(),
-          next: { revalidate: GITHUB_REVALIDATE_SECONDS },
-        },
-      );
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, GITHUB_FETCH_TIMEOUT_MS);
 
-      if (!response.ok) {
+      try {
+        const response = await fetch(
+          `https://api.github.com/repos/${repo.full_name}/releases?per_page=30`,
+          {
+            headers: githubHeaders(),
+            next: { revalidate: GITHUB_REVALIDATE_SECONDS },
+            signal: controller.signal,
+          },
+        );
+
+        if (!response.ok) {
+          return [] as Array<{ published_at?: string | null }>;
+        }
+
+        return (await response.json()) as Array<{
+          published_at?: string | null;
+        }>;
+      } catch {
         return [] as Array<{ published_at?: string | null }>;
+      } finally {
+        clearTimeout(timeoutId);
       }
-
-      return (await response.json()) as Array<{ published_at?: string | null }>;
     }),
   );
 
