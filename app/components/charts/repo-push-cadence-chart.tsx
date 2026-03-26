@@ -18,7 +18,7 @@ type CadenceTooltipProps = {
 function CadenceTooltip({ active, payload }: CadenceTooltipProps) {
   if (!active || !payload?.length) return null;
 
-  const point = payload[0]?.payload as RepoPushCadencePoint | undefined;
+  const point = payload[0]?.payload;
   if (!point) return null;
 
   return (

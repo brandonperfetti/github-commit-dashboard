@@ -24,7 +24,7 @@ function PrThroughputTooltip({
   label,
   payload,
 }: PrThroughputTooltipProps) {
-  const point = payload?.[0]?.payload as PullRequestThroughputPoint | undefined;
+  const point = payload?.[0]?.payload;
 
   if (!active || !point) {
     return null;
