@@ -116,10 +116,17 @@ export default async function FeaturedPage() {
   const referenceTime = days.length
     ? new Date(`${days[days.length - 1].date}T00:00:00`).getTime()
     : fallbackReferenceTime;
-  const commitSummary = await buildRepoCommitActivitySummary(
-    featured,
-    featured.length,
-  );
+  const commitSummary = await (async () => {
+    try {
+      return await buildRepoCommitActivitySummary(featured, featured.length);
+    } catch (error) {
+      reportRejected("repo commit activity summary", error);
+      return {
+        weekly: [],
+        perRepo: [],
+      };
+    }
+  })();
   const commitsByRepo = new Map(
     commitSummary.perRepo.map((repo) => [repo.fullName, repo.commits]),
   );

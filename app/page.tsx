@@ -95,7 +95,17 @@ export default async function Home() {
     date: prettyDay(day.date),
     count: day.count,
   }));
-  const homeCommitSummary = await buildRepoCommitActivitySummary(repos, 8);
+  const homeCommitSummary = await (async () => {
+    try {
+      return await buildRepoCommitActivitySummary(repos, 8);
+    } catch (error) {
+      reportRejected("repo commit activity summary", error);
+      return {
+        weekly: [],
+        perRepo: [],
+      };
+    }
+  })();
   const recentShipping = [...homeCommitSummary.perRepo]
     .sort((a, b) => +new Date(b.pushedAt) - +new Date(a.pushedAt))
     .slice(0, HOME_SUMMARY_ITEM_COUNT);
