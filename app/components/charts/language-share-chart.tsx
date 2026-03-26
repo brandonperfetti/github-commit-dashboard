@@ -60,7 +60,7 @@ export function LanguageShareChart({
     chartColors.primaryMuted,
     chartColors.accent,
     chartColors.pinned,
-    chartColors.netBacklog,
+    chartColors.unpinned,
   ];
   const getLanguageColor = (index: number) =>
     languageColors[index % languageColors.length];

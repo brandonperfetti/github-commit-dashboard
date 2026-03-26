@@ -44,9 +44,7 @@ export function RepoRiskChart({ snapshot }: { snapshot: RepoRiskSnapshot }) {
     chartColors.primaryMuted,
     chartColors.warning,
   ];
-  const visibleBuckets = snapshot.buckets.filter(
-    (bucket) => !bucket.label.toLowerCase().includes("archived"),
-  );
+  const visibleBuckets = snapshot.buckets;
   const chartData = visibleBuckets.map((bucket, index) => ({
     ...bucket,
     fill: riskColors[index % riskColors.length],

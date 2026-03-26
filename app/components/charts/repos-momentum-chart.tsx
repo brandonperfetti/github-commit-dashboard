@@ -44,10 +44,6 @@ function MomentumTooltip({ active, payload }: MomentumTooltipProps) {
 export function ReposMomentumChart({ data }: { data: RepoMomentumPoint[] }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
   const chartColors = useResolvedChartColors();
-  const chartData = data.map((point) => ({
-    ...point,
-    fill: point.pinned ? chartColors.pinned : chartColors.unpinned,
-  }));
 
   if (!data.length) {
     return (
@@ -57,13 +53,17 @@ export function ReposMomentumChart({ data }: { data: RepoMomentumPoint[] }) {
     );
   }
 
+  const chartData = data.map((point) => ({
+    ...point,
+    fill: point.pinned ? chartColors.pinned : chartColors.unpinned,
+  }));
+
   return (
     <div className="h-[320px] w-full min-w-0 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card-muted)] p-3 sm:p-4">
       <div ref={ref} className="h-full w-full min-w-0 overflow-hidden">
         {ready ? (
           <div className="relative h-full w-full">
             <BarChart
-              accessibilityLayer={false}
               width={size.width}
               height={size.height}
               data={chartData}

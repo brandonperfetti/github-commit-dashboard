@@ -105,7 +105,6 @@ export function RepoFreshnessChart({ data }: { data: RepoFreshnessPoint[] }) {
       >
         {ready ? (
           <BarChart
-            accessibilityLayer={false}
             width={size.width}
             height={size.height}
             data={chartData}
