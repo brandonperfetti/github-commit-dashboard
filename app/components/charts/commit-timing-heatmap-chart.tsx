@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
 import type { CommitTimingHeatmapData } from "@/lib/github";
 
+// Intensity 1-4 classes are intentionally blank: those cells get their
+// background via the `intensityStyles` color-mix lookup during render.
 const INTENSITY_CLASSES: Record<number, string> = {
   0: "bg-[var(--card-muted)]",
   1: "",
