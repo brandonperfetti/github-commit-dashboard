@@ -104,7 +104,6 @@ export function PrFlowHealthChart({
               name="Merge rate"
               stroke={chartColors.primary}
               strokeWidth={2}
-              strokeDasharray="0"
               dot={{
                 r: 3,
                 fill: chartColors.primary,
