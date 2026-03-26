@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { useTheme } from "@/app/components/theme-context";
 
 type ChartColors = {
@@ -90,9 +90,11 @@ export function useResolvedChartColors(): ChartColors {
     () => "",
   );
 
-  // Keep this read outside useMemo so rootSignature updates can refresh values
-  // without fighting dependency linting.
-  const fallback = resolvedTheme === "light" ? LIGHT_FALLBACK : DARK_FALLBACK;
-  void rootSignature;
-  return readResolvedColors(fallback);
+  return useMemo(() => {
+    const fallback = resolvedTheme === "light" ? LIGHT_FALLBACK : DARK_FALLBACK;
+    if (!rootSignature && typeof window === "undefined") {
+      return fallback;
+    }
+    return readResolvedColors(fallback);
+  }, [resolvedTheme, rootSignature]);
 }
