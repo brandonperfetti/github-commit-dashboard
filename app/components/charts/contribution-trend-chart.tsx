@@ -11,11 +11,7 @@ import {
 } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
 import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
-
-type ContributionTrendPoint = {
-  date: string;
-  count: number;
-};
+import type { ContributionTrendPoint } from "@/lib/github";
 
 type ContributionTrendTooltipProps = {
   active?: boolean;

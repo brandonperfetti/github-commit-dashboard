@@ -43,6 +43,11 @@ export type PullRequestThroughputPoint = {
   closed: number;
 };
 
+export type ContributionTrendPoint = {
+  date: string;
+  count: number;
+};
+
 export type RepoPushCadencePoint = {
   label: string;
   value: number;
