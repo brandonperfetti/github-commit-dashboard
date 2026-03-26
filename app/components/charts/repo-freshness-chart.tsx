@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
 import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
@@ -43,7 +44,7 @@ function freshnessBand(days: number) {
 function FreshnessTooltip({ active, payload }: FreshnessTooltipProps) {
   if (!active || !payload?.length) return null;
 
-  const point = payload[0]?.payload as RepoFreshnessPoint | undefined;
+  const point = payload[0]?.payload;
   if (!point) return null;
 
   const band = freshnessBand(point.daysSincePush);
@@ -79,6 +80,16 @@ function FreshnessTooltip({ active, payload }: FreshnessTooltipProps) {
 export function RepoFreshnessChart({ data }: { data: RepoFreshnessPoint[] }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
   const chartColors = useResolvedChartColors();
+  const yAxisWidth = useMemo(() => {
+    const longestNameLength = data.reduce(
+      (longest, point) => Math.max(longest, point.name.length),
+      0,
+    );
+    const estimatedWidth = longestNameLength * 7 + 20;
+    const maxWidth = size.width > 0 ? size.width * 0.45 : 200;
+
+    return Math.max(110, Math.min(estimatedWidth, maxWidth, 200));
+  }, [data, size.width]);
 
   if (!data.length) {
     return (
@@ -124,7 +135,7 @@ export function RepoFreshnessChart({ data }: { data: RepoFreshnessPoint[] }) {
             <YAxis
               type="category"
               dataKey="name"
-              width={110}
+              width={yAxisWidth}
               axisLine={false}
               tickLine={false}
               tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
