@@ -62,9 +62,11 @@ export function LanguageShareChart({
     chartColors.pinned,
     chartColors.netBacklog,
   ];
+  const getLanguageColor = (index: number) =>
+    languageColors[index % languageColors.length];
   const chartData = data.map((item, index) => ({
     ...item,
-    fill: languageColors[index % languageColors.length],
+    fill: getLanguageColor(index),
   }));
   const isDense = data.length >= 6;
   const legendGapClass = isDense ? "gap-1.5" : "gap-2";
@@ -140,8 +142,7 @@ export function LanguageShareChart({
                 <span
                   className="h-2.5 w-2.5 rounded-full"
                   style={{
-                    backgroundColor:
-                      languageColors[index % languageColors.length],
+                    backgroundColor: getLanguageColor(index),
                   }}
                 />
                 <span className="truncate">{item.name}</span>
