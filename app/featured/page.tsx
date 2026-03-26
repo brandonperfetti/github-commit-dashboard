@@ -106,9 +106,16 @@ export default async function FeaturedPage() {
   ].slice(0, 6);
   const total = days.reduce((sum, day) => sum + day.count, 0);
   const activeDays = days.filter((day) => day.count > 0).length;
-  const referenceTime = new Date(
-    `${days[days.length - 1]?.date ?? "1970-01-01"}T00:00:00`,
-  ).getTime();
+  const fallbackReferenceTime =
+    Math.max(
+      0,
+      ...featured
+        .map((repo) => new Date(repo.pushed_at).getTime())
+        .filter(Number.isFinite),
+    ) || 0;
+  const referenceTime = days.length
+    ? new Date(`${days[days.length - 1].date}T00:00:00`).getTime()
+    : fallbackReferenceTime;
   const commitSummary = await buildRepoCommitActivitySummary(
     featured,
     featured.length,
