@@ -17,7 +17,7 @@ type RepoRiskTooltipProps = {
 };
 
 function RepoRiskTooltip({ active, payload }: RepoRiskTooltipProps) {
-  const point = payload?.[0]?.payload as RepoRiskBucket | undefined;
+  const point = payload?.[0]?.payload;
 
   if (!active || !point) {
     return null;

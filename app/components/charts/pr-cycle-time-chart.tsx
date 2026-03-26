@@ -23,7 +23,7 @@ function PrCycleTimeTooltip({
   label,
   payload,
 }: PrCycleTimeTooltipProps) {
-  const point = payload?.[0]?.payload as PullRequestHealthPoint | undefined;
+  const point = payload?.[0]?.payload;
 
   if (!active || !point) {
     return null;

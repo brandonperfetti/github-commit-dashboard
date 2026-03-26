@@ -21,7 +21,7 @@ type IssueFlowTooltipProps = {
 };
 
 function IssueFlowTooltip({ active, label, payload }: IssueFlowTooltipProps) {
-  const point = payload?.[0]?.payload as IssueFlowHealthPoint | undefined;
+  const point = payload?.[0]?.payload;
 
   if (!active || !point) {
     return null;
