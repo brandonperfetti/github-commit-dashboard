@@ -899,32 +899,12 @@ export async function getPullRequestHealth(
         encodeURIComponent(
           `is:pr author:${username} ${qualifier}:${window.start}..${window.end}`,
         );
-
-      const fetchCount = async (query: string) => {
-        const response = await fetch(
-          `https://api.github.com/search/issues?q=${query}&per_page=1`,
-          {
-            headers: githubHeaders(),
-            next: { revalidate: GITHUB_REVALIDATE_SECONDS },
-          },
-        );
-
-        if (!response.ok) {
-          return 0;
-        }
-
-        const payload = (await response.json()) as { total_count?: number };
-        return payload.total_count ?? 0;
-      };
-
-      const [opened, merged, closed, reopened] = await Promise.all([
-        fetchCount(buildQuery("created")),
-        fetchCount(buildQuery("merged")),
-        fetchCount(buildQuery("closed")),
-        // Verified against GitHub Search API in this project: `reopened:YYYY-MM-DD..YYYY-MM-DD`
-        // returns expected counts for authored PRs, so we keep this metric in flow health.
-        fetchCount(buildQuery("reopened")),
-      ]);
+      const opened = await fetchGithubSearchCount(buildQuery("created"));
+      const merged = await fetchGithubSearchCount(buildQuery("merged"));
+      const closed = await fetchGithubSearchCount(buildQuery("closed"));
+      // Verified against GitHub Search API in this project: `reopened:YYYY-MM-DD..YYYY-MM-DD`
+      // returns expected counts for authored PRs, so we keep this metric in flow health.
+      const reopened = await fetchGithubSearchCount(buildQuery("reopened"));
 
       return {
         label: window.label,
@@ -1039,28 +1019,8 @@ export async function getIssueFlowHealth(
         encodeURIComponent(
           `is:issue user:${username} ${qualifier}:${window.start}..${window.end}`,
         );
-
-      const fetchCount = async (query: string) => {
-        const response = await fetch(
-          `https://api.github.com/search/issues?q=${query}&per_page=1`,
-          {
-            headers: githubHeaders(),
-            next: { revalidate: GITHUB_REVALIDATE_SECONDS },
-          },
-        );
-
-        if (!response.ok) {
-          return 0;
-        }
-
-        const payload = (await response.json()) as { total_count?: number };
-        return payload.total_count ?? 0;
-      };
-
-      const [opened, closed] = await Promise.all([
-        fetchCount(buildQuery("created")),
-        fetchCount(buildQuery("closed")),
-      ]);
+      const opened = await fetchGithubSearchCount(buildQuery("created"));
+      const closed = await fetchGithubSearchCount(buildQuery("closed"));
 
       return {
         label: window.label,
