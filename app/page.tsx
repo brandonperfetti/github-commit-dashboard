@@ -63,16 +63,16 @@ export const metadata: Metadata = {
 const HOME_SUMMARY_ITEM_COUNT = 4;
 
 export default async function Home() {
-  const [daysResult, reposResult, pinnedReposResult] = await Promise.allSettled(
-    [getContributionDays(), getRepos(), getPinnedRepos()],
-  );
-
   const reportRejected = (label: string, reason: unknown) => {
     console.error(
       `[home] Failed to fetch ${label}:`,
       reason instanceof Error ? reason.message : reason,
     );
   };
+
+  const [daysResult, reposResult, pinnedReposResult] = await Promise.allSettled(
+    [getContributionDays(), getRepos(), getPinnedRepos()],
+  );
 
   const days = daysResult.status === "fulfilled" ? daysResult.value : [];
   if (daysResult.status === "rejected") {
