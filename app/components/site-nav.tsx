@@ -67,7 +67,7 @@ export function SiteNav({
                 className={cn(
                   "inline-flex h-10 shrink-0 items-center justify-center rounded-full px-3.5 text-sm font-medium transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-emerald-400/60 focus-visible:outline-none motion-safe:transform-gpu motion-safe:transition-transform motion-safe:duration-300 motion-safe:hover:-translate-y-0.5 sm:px-4",
                   active
-                    ? "bg-[var(--nav-active-bg)] !text-white shadow-[inset_0_0_0_1px_var(--border-strong)]"
+                    ? "bg-[var(--nav-active-bg)] text-white shadow-[inset_0_0_0_1px_var(--border-strong)]"
                     : "text-[var(--muted-foreground)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]",
                 )}
               >
