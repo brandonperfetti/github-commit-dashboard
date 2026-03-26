@@ -1,14 +1,22 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
 import type { CommitTimingHeatmapData } from "@/lib/github";
 
 const INTENSITY_CLASSES: Record<number, string> = {
   0: "bg-[var(--card-muted)]",
-  1: "bg-emerald-400/30",
-  2: "bg-emerald-400/45",
-  3: "bg-emerald-400/60",
-  4: "bg-emerald-400/80",
+  1: "",
+  2: "",
+  3: "",
+  4: "",
+};
+const INTENSITY_OPACITY: Record<number, number> = {
+  0: 0,
+  1: 0.3,
+  2: 0.45,
+  3: 0.6,
+  4: 0.8,
 };
 
 const HOURS = Array.from({ length: 24 }, (_, index) => index);
@@ -32,6 +40,7 @@ export function CommitTimingHeatmapChart({
 }: {
   data: CommitTimingHeatmapData;
 }) {
+  const chartColors = useResolvedChartColors();
   const [hoveredCellKey, setHoveredCellKey] = useState<CellKey | null>(null);
   const [focusedCellKey, setFocusedCellKey] = useState<CellKey | null>(null);
   const lookup = useMemo(
@@ -115,6 +124,21 @@ export function CommitTimingHeatmapChart({
 
     return isValidDay && isValidHour ? focusedCellKey : defaultCellKey;
   }, [focusedCellKey, visibleHours]);
+  const intensityStyles = useMemo(
+    () =>
+      Object.fromEntries(
+        [1, 2, 3, 4].map((intensity) => {
+          const opacity = INTENSITY_OPACITY[intensity];
+          return [
+            intensity,
+            {
+              backgroundColor: `color-mix(in srgb, ${chartColors.primary} ${opacity * 100}%, transparent)`,
+            },
+          ];
+        }),
+      ) as Record<1 | 2 | 3 | 4, { backgroundColor: string }>,
+    [chartColors.primary],
+  );
 
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-muted)] p-3 sm:p-4">
@@ -167,12 +191,17 @@ export function CommitTimingHeatmapChart({
                 const safeIntensity = Math.max(0, Math.min(4, intensity));
                 const intensityClass =
                   INTENSITY_CLASSES[safeIntensity] ?? INTENSITY_CLASSES[0];
+                const intensityStyle =
+                  safeIntensity === 0
+                    ? undefined
+                    : intensityStyles[safeIntensity as 1 | 2 | 3 | 4];
                 const count = cell?.count ?? 0;
                 return (
                   <div
                     key={cellKey}
                     data-cell-key={cellKey}
                     className={`h-3 rounded-[3px] transition-colors sm:h-4 ${intensityClass}`}
+                    style={intensityStyle}
                     onMouseEnter={() => setHoveredCellKey(cellKey)}
                     onMouseLeave={() => setHoveredCellKey(null)}
                     onFocus={() => {
@@ -250,6 +279,11 @@ export function CommitTimingHeatmapChart({
             <span
               key={intensity}
               className={`h-2.5 w-2.5 rounded-full ${INTENSITY_CLASSES[intensity]}`}
+              style={
+                intensity === 0
+                  ? undefined
+                  : intensityStyles[intensity as 1 | 2 | 3 | 4]
+              }
             />
           ))}
           <span>More</span>
