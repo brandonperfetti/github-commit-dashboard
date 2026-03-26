@@ -69,6 +69,7 @@ export function FeaturedScoreBreakdownChart({
     );
   }
 
+  // Keep the top-ranked repo at full opacity so it reads as the primary item.
   const chartData = data.map((point, index) => ({
     ...point,
     fill: point.pinned ? chartColors.pinned : chartColors.unpinned,
