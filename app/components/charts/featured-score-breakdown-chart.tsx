@@ -6,6 +6,7 @@ import { useResolvedChartColors } from "@/app/components/charts/use-resolved-cha
 
 type FeaturedScorePoint = {
   name: string;
+  fullName: string;
   stars: number;
   daysSincePush: number;
   commits30d: number;
@@ -38,7 +39,7 @@ function FeaturedScoreTooltip({
   return (
     <div className="max-w-[320px] rounded-xl border border-[var(--border-strong)] bg-[var(--background)] px-3 py-2 shadow-md">
       <p className="text-sm font-medium text-[var(--foreground)]">
-        Repo: {label}
+        Repo: {point.fullName || label}
       </p>
       <p className="mt-1 text-sm leading-5 text-[var(--foreground)]">
         Relevance: {point.relevanceScore}/100
