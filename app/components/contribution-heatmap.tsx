@@ -118,6 +118,9 @@ export default function ContributionHeatmap({
 
                 return (
                   <button
+                    // Intentionally composite: date-only keys have produced duplicate-key
+                    // warnings in this heatmap when upstream data includes repeated dates.
+                    // Keep positional segments to guarantee uniqueness per rendered cell.
                     key={`${day.date}-${weekIndex}-${dayIndex}`}
                     type="button"
                     onMouseEnter={() => setSelectedDayDate(day.date)}
