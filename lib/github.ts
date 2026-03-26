@@ -43,6 +43,13 @@ export type PullRequestThroughputPoint = {
   closed: number;
 };
 
+export type RepoPushCadencePoint = {
+  label: string;
+  value: number;
+  range: string;
+  index: number;
+};
+
 export type PullRequestHealthPoint = PullRequestThroughputPoint & {
   reopened: number;
   mergeRate: number;

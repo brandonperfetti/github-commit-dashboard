@@ -3,12 +3,7 @@
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
 import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
-
-type RepoPushCadencePoint = {
-  label: string;
-  value: number;
-  range: string;
-};
+import type { RepoPushCadencePoint } from "@/lib/github";
 
 type CadenceTooltipProps = {
   active?: boolean;
