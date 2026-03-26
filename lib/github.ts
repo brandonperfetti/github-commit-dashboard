@@ -94,6 +94,17 @@ export type CommitTimingHeatmapData = {
   cells: CommitTimingHeatmapCell[];
 };
 
+const SEARCH_CACHE_TTL_MS = 5 * 60 * 1000;
+const SEARCH_MAX_RETRIES = 3;
+const SEARCH_RATE_LIMIT_INTERVAL_MS = 2100;
+
+const githubSearchCountCache = new Map<
+  string,
+  { value: number; expiresAt: number }
+>();
+let nextSearchAtMs = 0;
+let searchRateLimiter: Promise<void> = Promise.resolve();
+
 function formatDate(date: Date) {
   return date.toISOString().slice(0, 10);
 }
@@ -105,6 +116,69 @@ function githubHeaders() {
     "User-Agent": "Build Dashboard",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
+}
+
+function wait(ms: number) {
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+async function reserveSearchRequestSlot() {
+  searchRateLimiter = searchRateLimiter.then(async () => {
+    const now = Date.now();
+    const waitFor = Math.max(0, nextSearchAtMs - now);
+    if (waitFor > 0) {
+      await wait(waitFor);
+    }
+    nextSearchAtMs = Date.now() + SEARCH_RATE_LIMIT_INTERVAL_MS;
+  });
+
+  await searchRateLimiter;
+}
+
+async function fetchGithubSearchCount(encodedQuery: string) {
+  const now = Date.now();
+  const cacheEntry = githubSearchCountCache.get(encodedQuery);
+  if (cacheEntry && cacheEntry.expiresAt > now) {
+    return cacheEntry.value;
+  }
+
+  for (let attempt = 0; attempt < SEARCH_MAX_RETRIES; attempt += 1) {
+    await reserveSearchRequestSlot();
+
+    const response = await fetch(
+      `https://api.github.com/search/issues?q=${encodedQuery}&per_page=1`,
+      {
+        headers: githubHeaders(),
+        next: { revalidate: GITHUB_REVALIDATE_SECONDS },
+      },
+    );
+
+    if (response.ok) {
+      const payload = (await response.json()) as { total_count?: number };
+      const count = payload.total_count ?? 0;
+      githubSearchCountCache.set(encodedQuery, {
+        value: count,
+        expiresAt: Date.now() + SEARCH_CACHE_TTL_MS,
+      });
+      return count;
+    }
+
+    if (response.status !== 403 && response.status !== 429) {
+      break;
+    }
+
+    const baseDelay = 500 * 2 ** attempt;
+    const jitter = Math.floor(Math.random() * 250);
+    await wait(baseDelay + jitter);
+  }
+
+  if (cacheEntry) {
+    return cacheEntry.value;
+  }
+
+  return 0;
 }
 
 function hasGithubToken() {
