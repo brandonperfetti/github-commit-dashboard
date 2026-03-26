@@ -40,6 +40,10 @@ export function ScrollReveal({
   const prefersReducedMotion = usePrefersReducedMotion();
 
   useIsomorphicLayoutEffect(() => {
+    // Keep an immediate matchMedia check here to avoid a first-layout flicker
+    // when the hook value is briefly stale during SSR/hydration. The hook value
+    // remains the normal reactive source after mount. We also bail when the ref
+    // is not ready so GSAP does not run against a null root.
     const prefersReducedMotionSync =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
