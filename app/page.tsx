@@ -23,10 +23,41 @@ import {
 } from "@/lib/github";
 
 export const revalidate = 300;
+const siteUrl = (
+  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
+).replace(/\/+$/, "");
+const homePath = "/";
+const homeUrl = `${siteUrl}${homePath}`;
+const homeDescription =
+  "A clear view of GitHub activity: contribution trends, repository momentum, and featured projects.";
+
 export const metadata: Metadata = {
   title: "Build · GitHub Activity Dashboard",
-  description:
-    "A clear view of GitHub activity: contribution trends, repository momentum, and featured projects.",
+  description: homeDescription,
+  alternates: {
+    canonical: homePath,
+  },
+  openGraph: {
+    title: "Build · GitHub Activity Dashboard",
+    description: homeDescription,
+    url: homeUrl,
+    siteName: "Build",
+    locale: "en_US",
+    type: "website",
+    images: [
+      {
+        url: `${siteUrl}/globe.svg`,
+        alt: "Build GitHub activity dashboard overview",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Build · GitHub Activity Dashboard",
+    description: homeDescription,
+    images: [`${siteUrl}/globe.svg`],
+    creator: "@brandonperfetti",
+  },
 };
 
 const HOME_SUMMARY_ITEM_COUNT = 4;
