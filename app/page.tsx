@@ -74,18 +74,21 @@ export default async function Home() {
     );
   };
 
-  const days =
-    daysResult.status === "fulfilled"
-      ? daysResult.value
-      : (reportRejected("contribution days", daysResult.reason), []);
-  const repos =
-    reposResult.status === "fulfilled"
-      ? reposResult.value
-      : (reportRejected("repos", reposResult.reason), []);
+  const days = daysResult.status === "fulfilled" ? daysResult.value : [];
+  if (daysResult.status === "rejected") {
+    reportRejected("contribution days", daysResult.reason);
+  }
+
+  const repos = reposResult.status === "fulfilled" ? reposResult.value : [];
+  if (reposResult.status === "rejected") {
+    reportRejected("repos", reposResult.reason);
+  }
+
   const pinnedRepos =
-    pinnedReposResult.status === "fulfilled"
-      ? pinnedReposResult.value
-      : (reportRejected("pinned repos", pinnedReposResult.reason), []);
+    pinnedReposResult.status === "fulfilled" ? pinnedReposResult.value : [];
+  if (pinnedReposResult.status === "rejected") {
+    reportRejected("pinned repos", pinnedReposResult.reason);
+  }
   const totalContributions = days.reduce((sum, day) => sum + day.count, 0);
   const topLanguages = [
     ...new Set(repos.map((repo) => repo.language).filter(Boolean)),
