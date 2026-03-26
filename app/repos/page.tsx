@@ -66,22 +66,53 @@ const FALLBACK_REPO_RISK_SNAPSHOT: RepoRiskSnapshot = {
 };
 
 export default async function ReposPage() {
-  const [reposResult, pinnedReposResult, repoRiskSnapshotResult] =
-    await Promise.allSettled([
-      getRepos(),
-      getPinnedRepos(),
-      getRepoRiskSnapshot(),
-    ]);
+  const reportRejected = (label: string, reason: unknown) => {
+    console.error(`[repos/page] Failed to load ${label}:`, reason);
+  };
+
+  const reposPromise = getRepos();
+  const pinnedReposPromise = getPinnedRepos();
+  const repoRiskSnapshotPromise = getRepoRiskSnapshot();
+  const commitSummaryPromise = reposPromise.then((loadedRepos) =>
+    buildRepoCommitActivitySummary(loadedRepos),
+  );
+
+  const [
+    reposResult,
+    pinnedReposResult,
+    repoRiskSnapshotResult,
+    commitSummaryResult,
+  ] = await Promise.allSettled([
+    reposPromise,
+    pinnedReposPromise,
+    repoRiskSnapshotPromise,
+    commitSummaryPromise,
+  ]);
   const repos = reposResult.status === "fulfilled" ? reposResult.value : [];
+  if (reposResult.status === "rejected") {
+    reportRejected("repositories", reposResult.reason);
+  }
   const pinnedRepos =
     pinnedReposResult.status === "fulfilled" ? pinnedReposResult.value : [];
+  if (pinnedReposResult.status === "rejected") {
+    reportRejected("pinned repositories", pinnedReposResult.reason);
+  }
   const repoRiskSnapshot =
     repoRiskSnapshotResult.status === "fulfilled"
       ? repoRiskSnapshotResult.value
       : FALLBACK_REPO_RISK_SNAPSHOT;
+  if (repoRiskSnapshotResult.status === "rejected") {
+    reportRejected("repo risk snapshot", repoRiskSnapshotResult.reason);
+  }
   const pinnedRepoNames = new Set(pinnedRepos.map((repo) => repo.full_name));
   const reposByFullName = new Map(repos.map((repo) => [repo.full_name, repo]));
-  const commitSummary = await buildRepoCommitActivitySummary(repos);
+  const commitSummary =
+    commitSummaryResult.status === "fulfilled"
+      ? commitSummaryResult.value
+      : { weekly: [], perRepo: [] };
+  if (commitSummaryResult.status === "rejected") {
+    reportRejected("repo commit activity summary", commitSummaryResult.reason);
+  }
   const cadenceData = commitSummary.weekly;
   const commitCountsByFullName = new Map(
     commitSummary.perRepo.map((repo) => [repo.fullName, repo.commits]),
