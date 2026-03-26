@@ -113,6 +113,8 @@ export default function ContributionHeatmap({
                 }
 
                 const isSelected = selectedDay?.date === day.date;
+                // ContributionDay.level is a strict union (0|1|2|3|4), so this index is always valid.
+                const levelClass = levelClasses[day.level];
 
                 return (
                   <button
@@ -121,7 +123,7 @@ export default function ContributionHeatmap({
                     onMouseEnter={() => setSelectedDayDate(day.date)}
                     onFocus={() => setSelectedDayDate(day.date)}
                     onClick={() => setSelectedDayDate(day.date)}
-                    className={`h-4 rounded-[5px] border transition motion-safe:transform-gpu motion-safe:transition-transform motion-safe:duration-200 sm:h-[18px] sm:rounded-[6px] md:h-6 ${levelClasses[day.level]} ${
+                    className={`h-4 rounded-[5px] border transition motion-safe:transform-gpu motion-safe:transition-transform motion-safe:duration-200 sm:h-[18px] sm:rounded-[6px] md:h-6 ${levelClass} ${
                       isSelected
                         ? "ring-2 ring-emerald-400/70 ring-offset-1 ring-offset-[var(--card)] motion-safe:scale-105"
                         : "hover:ring-1 hover:ring-emerald-400/40 focus:ring-1 focus:ring-emerald-400/40 motion-safe:scale-100"
