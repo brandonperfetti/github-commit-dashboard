@@ -803,21 +803,33 @@ export async function getCommitTimingHeatmap(
 
   const commitResponses = await Promise.all(
     topRepos.map(async (repo) => {
-      const response = await fetch(
-        `https://api.github.com/repos/${repo.full_name}/commits?since=${start}T00:00:00Z&per_page=100`,
-        {
-          headers: githubHeaders(),
-          next: { revalidate: GITHUB_REVALIDATE_SECONDS },
-        },
-      );
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, GITHUB_FETCH_TIMEOUT_MS);
 
-      if (!response.ok) {
+      try {
+        const response = await fetch(
+          `https://api.github.com/repos/${repo.full_name}/commits?since=${start}T00:00:00Z&per_page=100`,
+          {
+            headers: githubHeaders(),
+            next: { revalidate: GITHUB_REVALIDATE_SECONDS },
+            signal: controller.signal,
+          },
+        );
+
+        if (!response.ok) {
+          return [] as Array<{ commit?: { author?: { date?: string } } }>;
+        }
+
+        return (await response.json()) as Array<{
+          commit?: { author?: { date?: string } };
+        }>;
+      } catch {
         return [] as Array<{ commit?: { author?: { date?: string } } }>;
+      } finally {
+        clearTimeout(timeoutId);
       }
-
-      return (await response.json()) as Array<{
-        commit?: { author?: { date?: string } };
-      }>;
     }),
   );
 
