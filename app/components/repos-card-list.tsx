@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Badge } from "@/app/components/ui/badge";
 import { Button, ButtonLink } from "@/app/components/ui/button";
 import { formatRepoDate, type Repo } from "@/lib/github";
+import { usePrefersReducedMotion } from "@/lib/motion/usePrefersReducedMotion";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 12;
@@ -16,6 +17,7 @@ export function ReposCardList({
   className?: string;
 }) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const prefersReducedMotion = usePrefersReducedMotion();
   const listTopRef = useRef<HTMLDivElement | null>(null);
   const visibleRepos = repos.slice(0, visibleCount);
   const canLoadMore = visibleCount < repos.length;
@@ -27,9 +29,6 @@ export function ReposCardList({
 
   const handleShowLess = () => {
     setVisibleCount(PAGE_SIZE);
-    const prefersReducedMotion =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     listTopRef.current?.scrollIntoView({
       behavior: prefersReducedMotion ? "auto" : "smooth",
       block: "start",
