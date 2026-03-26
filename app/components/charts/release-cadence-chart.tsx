@@ -14,7 +14,7 @@ function ReleaseCadenceTooltip({
   active,
   payload,
 }: ReleaseCadenceTooltipProps) {
-  const point = payload?.[0]?.payload as ReleaseCadencePoint | undefined;
+  const point = payload?.[0]?.payload;
 
   if (!active || !point) {
     return null;
