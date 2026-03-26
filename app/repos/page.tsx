@@ -73,21 +73,13 @@ export default async function ReposPage() {
   const reposPromise = getRepos();
   const pinnedReposPromise = getPinnedRepos();
   const repoRiskSnapshotPromise = getRepoRiskSnapshot();
-  const commitSummaryPromise = reposPromise.then((loadedRepos) =>
-    buildRepoCommitActivitySummary(loadedRepos),
-  );
 
-  const [
-    reposResult,
-    pinnedReposResult,
-    repoRiskSnapshotResult,
-    commitSummaryResult,
-  ] = await Promise.allSettled([
-    reposPromise,
-    pinnedReposPromise,
-    repoRiskSnapshotPromise,
-    commitSummaryPromise,
-  ]);
+  const [reposResult, pinnedReposResult, repoRiskSnapshotResult] =
+    await Promise.allSettled([
+      reposPromise,
+      pinnedReposPromise,
+      repoRiskSnapshotPromise,
+    ]);
   const repos = reposResult.status === "fulfilled" ? reposResult.value : [];
   if (reposResult.status === "rejected") {
     reportRejected("repositories", reposResult.reason);
@@ -104,6 +96,9 @@ export default async function ReposPage() {
   if (repoRiskSnapshotResult.status === "rejected") {
     reportRejected("repo risk snapshot", repoRiskSnapshotResult.reason);
   }
+  const commitSummaryResult = await Promise.allSettled([
+    buildRepoCommitActivitySummary(repos),
+  ]).then(([result]) => result);
   const pinnedRepoNames = new Set(pinnedRepos.map((repo) => repo.full_name));
   const reposByFullName = new Map(repos.map((repo) => [repo.full_name, repo]));
   const commitSummary =
