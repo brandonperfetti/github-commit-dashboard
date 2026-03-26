@@ -70,7 +70,9 @@ export function SiteNav({
                     ? "bg-[var(--nav-active-bg)] shadow-[inset_0_0_0_1px_var(--border-strong)]"
                     : "text-[var(--muted-foreground)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]",
                 )}
-                style={active ? { color: "var(--nav-active-fg, #fff)" } : undefined}
+                style={
+                  active ? { color: "var(--nav-active-fg, #fff)" } : undefined
+                }
               >
                 {link.label}
               </Link>

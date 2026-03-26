@@ -62,7 +62,10 @@ function FreshnessTooltip({ active, payload }: FreshnessTooltipProps) {
       <div className="mt-2 flex items-center gap-1.5 text-[var(--foreground)]">
         <span
           className="h-2 w-2 shrink-0 rounded-full"
-          style={{ backgroundColor: "var(--chart-primary)", opacity: band.opacity }}
+          style={{
+            backgroundColor: "var(--chart-primary)",
+            opacity: band.opacity,
+          }}
         />
         <span className="truncate">
           {band.label} • {point.daysSincePush}{" "}
