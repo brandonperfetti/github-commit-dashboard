@@ -11,6 +11,9 @@ type TopRepoCommitPoint = {
   commits: number;
 };
 
+const CHARACTER_PIXEL_WIDTH = 7;
+const LABEL_PADDING = 20;
+
 type TopRepoCommitTooltipProps = {
   active?: boolean;
   payload?: Array<{ payload?: TopRepoCommitPoint }>;
@@ -54,7 +57,8 @@ export function TopRepoCommitChart({ data }: { data: TopRepoCommitPoint[] }) {
       (longest, point) => Math.max(longest, point.name.length),
       0,
     );
-    const estimatedWidth = longestNameLength * 7 + 20;
+    const estimatedWidth =
+      longestNameLength * CHARACTER_PIXEL_WIDTH + LABEL_PADDING;
     const maxWidth = size.width > 0 ? size.width * 0.45 : 200;
 
     return Math.max(110, Math.min(estimatedWidth, maxWidth, 200));
