@@ -23,7 +23,6 @@ function freshnessBand(days: number) {
   if (days <= FRESH_THRESHOLD_DAYS) {
     return {
       label: `Fresh (0-${FRESH_THRESHOLD_DAYS} days)`,
-      fill: "var(--chart-primary)",
       opacity: 0.9,
     };
   }
@@ -31,14 +30,12 @@ function freshnessBand(days: number) {
   if (days <= WARM_THRESHOLD_DAYS) {
     return {
       label: `Warm (${FRESH_THRESHOLD_DAYS + 1}-${WARM_THRESHOLD_DAYS} days)`,
-      fill: "var(--chart-primary)",
       opacity: 0.6,
     };
   }
 
   return {
     label: `Stale (${WARM_THRESHOLD_DAYS + 1}+ days)`,
-    fill: "var(--chart-primary)",
     opacity: 0.4,
   };
 }
@@ -65,7 +62,7 @@ function FreshnessTooltip({ active, payload }: FreshnessTooltipProps) {
       <div className="mt-2 flex items-center gap-1.5 text-[var(--foreground)]">
         <span
           className="h-2 w-2 shrink-0 rounded-full"
-          style={{ backgroundColor: band.fill, opacity: band.opacity }}
+          style={{ backgroundColor: "var(--chart-primary)", opacity: band.opacity }}
         />
         <span className="truncate">
           {band.label} • {point.daysSincePush}{" "}
