@@ -61,7 +61,6 @@ export function PrCycleTimeChart({ data }: { data: PullRequestHealthPoint[] }) {
       >
         {ready ? (
           <LineChart
-            accessibilityLayer={false}
             width={size.width}
             height={size.height}
             data={data}

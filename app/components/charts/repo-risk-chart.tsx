@@ -67,7 +67,6 @@ export function RepoRiskChart({ snapshot }: { snapshot: RepoRiskSnapshot }) {
       <div ref={ref} className="h-full w-full min-w-0 overflow-hidden">
         {ready ? (
           <BarChart
-            accessibilityLayer={false}
             width={size.width}
             height={size.height}
             data={chartData}
