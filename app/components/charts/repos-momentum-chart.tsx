@@ -21,7 +21,7 @@ type MomentumTooltipProps = {
 function MomentumTooltip({ active, payload }: MomentumTooltipProps) {
   if (!active || !payload?.length) return null;
 
-  const point = payload[0]?.payload as RepoMomentumPoint | undefined;
+  const point = payload[0]?.payload;
   if (!point) return null;
 
   return (
