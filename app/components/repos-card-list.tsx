@@ -27,7 +27,13 @@ export function ReposCardList({
 
   const handleShowLess = () => {
     setVisibleCount(PAGE_SIZE);
-    listTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    listTopRef.current?.scrollIntoView({
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+      block: "start",
+    });
   };
 
   return (
