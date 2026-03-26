@@ -70,6 +70,10 @@ export function SiteNav({
                     ? "bg-[var(--nav-active-bg)] shadow-[inset_0_0_0_1px_var(--border-strong)]"
                     : "text-[var(--muted-foreground)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]",
                 )}
+                // Intentionally use inline color for active tabs:
+                // class-based token color can lose in specificity during theme/runtime updates,
+                // which regresses active text to dark in light mode.
+                // Keep this until we fully resolve selector precedence for nav active state.
                 style={
                   active ? { color: "var(--nav-active-fg, #fff)" } : undefined
                 }
