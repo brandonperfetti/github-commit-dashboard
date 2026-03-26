@@ -96,18 +96,16 @@ export default async function ReposPage() {
   if (repoRiskSnapshotResult.status === "rejected") {
     reportRejected("repo risk snapshot", repoRiskSnapshotResult.reason);
   }
-  const commitSummaryResult = await Promise.allSettled([
-    buildRepoCommitActivitySummary(repos),
-  ]).then(([result]) => result);
+  let commitSummary: Awaited<
+    ReturnType<typeof buildRepoCommitActivitySummary>
+  > = { weekly: [], perRepo: [] };
+  try {
+    commitSummary = await buildRepoCommitActivitySummary(repos);
+  } catch (error) {
+    reportRejected("repo commit activity summary", error);
+  }
   const pinnedRepoNames = new Set(pinnedRepos.map((repo) => repo.full_name));
   const reposByFullName = new Map(repos.map((repo) => [repo.full_name, repo]));
-  const commitSummary =
-    commitSummaryResult.status === "fulfilled"
-      ? commitSummaryResult.value
-      : { weekly: [], perRepo: [] };
-  if (commitSummaryResult.status === "rejected") {
-    reportRejected("repo commit activity summary", commitSummaryResult.reason);
-  }
   const cadenceData = commitSummary.weekly;
   const commitCountsByFullName = new Map(
     commitSummary.perRepo.map((repo) => [repo.fullName, repo.commits]),
