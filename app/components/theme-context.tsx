@@ -106,7 +106,11 @@ export function AppThemeProvider({ children }: { children: React.ReactNode }) {
   const setTheme = useCallback((nextTheme: Theme) => {
     setUserHasSetTheme(true);
     setThemeState(nextTheme);
-    window.localStorage.setItem(STORAGE_KEY, nextTheme);
+    try {
+      window.localStorage.setItem(STORAGE_KEY, nextTheme);
+    } catch (error) {
+      console.warn("[theme] Failed to persist theme preference", error);
+    }
     applyTheme(nextTheme);
   }, []);
 
