@@ -24,7 +24,7 @@ function PrFlowHealthTooltip({
   label,
   payload,
 }: PrFlowHealthTooltipProps) {
-  const point = payload?.[0]?.payload as PullRequestHealthPoint | undefined;
+  const point = payload?.[0]?.payload;
 
   if (!active || !point) {
     return null;
