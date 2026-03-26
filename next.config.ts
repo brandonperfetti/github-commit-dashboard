@@ -5,9 +5,7 @@ const configuredOrigins = process.env.ALLOWED_DEV_ORIGINS?.split(",")
   .filter(Boolean);
 
 const allowedDevOrigins =
-  configuredOrigins && configuredOrigins.length > 0
-    ? configuredOrigins
-    : ["192.168.1.156"];
+  configuredOrigins && configuredOrigins.length > 0 ? configuredOrigins : [];
 
 const nextConfig: NextConfig = {
   allowedDevOrigins,
