@@ -285,6 +285,8 @@ export function ActivityOverview({
                       .reverse()
                       .map((day, index) => (
                         <tr
+                          // Use a composite key here because duplicate dates can surface in
+                          // edge cases (e.g., upstream data merge/scrape anomalies).
                           key={`${day.date}-${index}`}
                           className="transition hover:bg-[var(--accent-soft)]"
                         >
