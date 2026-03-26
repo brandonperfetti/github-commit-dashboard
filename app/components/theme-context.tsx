@@ -32,7 +32,14 @@ function useMounted() {
 
 function applyTheme(theme: Theme) {
   const root = document.documentElement;
-  root.classList.toggle("light", theme === "light");
+  if (theme === "light") {
+    root.classList.add("light");
+    root.classList.remove("dark");
+    return;
+  }
+
+  root.classList.add("dark");
+  root.classList.remove("light");
 }
 
 function getSystemTheme(): Theme {
