@@ -13,9 +13,14 @@ type TopRepoCommitPoint = {
 type TopRepoCommitTooltipProps = {
   active?: boolean;
   payload?: Array<{ payload?: TopRepoCommitPoint }>;
+  color?: string;
 };
 
-function TopRepoCommitTooltip({ active, payload }: TopRepoCommitTooltipProps) {
+function TopRepoCommitTooltip({
+  active,
+  payload,
+  color,
+}: TopRepoCommitTooltipProps) {
   if (!active || !payload?.length) return null;
 
   const point = payload[0]?.payload as TopRepoCommitPoint | undefined;
@@ -30,7 +35,10 @@ function TopRepoCommitTooltip({ active, payload }: TopRepoCommitTooltipProps) {
         {point.fullName}
       </p>
       <div className="mt-2 inline-flex items-center gap-1.5 text-[var(--foreground)]">
-        <span className="h-2 w-2 rounded-full bg-[var(--chart-primary)]/90" />
+        <span
+          className="h-2 w-2 rounded-full"
+          style={{ backgroundColor: color ?? "var(--chart-primary)" }}
+        />
         Commits: {point.commits}
       </div>
     </div>
@@ -81,7 +89,7 @@ export function TopRepoCommitChart({ data }: { data: TopRepoCommitPoint[] }) {
             />
             <Tooltip
               cursor={{ fill: "var(--accent-soft)" }}
-              content={<TopRepoCommitTooltip />}
+              content={<TopRepoCommitTooltip color={chartColors.primary} />}
               wrapperStyle={{ outline: "none", zIndex: 20 }}
               allowEscapeViewBox={{ x: false, y: false }}
             />
