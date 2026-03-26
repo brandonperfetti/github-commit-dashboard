@@ -106,6 +106,12 @@ const SEARCH_MAX_RETRIES = 3;
 const SEARCH_RATE_LIMIT_INTERVAL_MS = 2100;
 const GITHUB_FETCH_TIMEOUT_MS = 10_000;
 
+// Best-effort process-local cache/limiter for GitHub Search requests.
+// In serverless/multi-instance deployments this state is not shared and can reset
+// on cold starts, so rate limiting and cache hits are opportunistic.
+// NOTE: We intentionally defer a Redis/KV-backed shared limiter/cache for now to
+// keep this project dependency-light; if this app moves to multi-instance prod
+// scale, this is the first place to externalize.
 const githubSearchCountCache = new Map<
   string,
   { value: number; expiresAt: number }
@@ -311,6 +317,20 @@ export async function getContributionDays(
     const countMatch = label.match(/(\d+) contribution/);
     const count = countMatch ? Number(countMatch[1]) : 0;
     counts.set(date, count);
+  }
+
+  if (counts.size === 0) {
+    const htmlSample = html.replace(/\s+/g, " ").slice(0, 220);
+    console.warn(
+      "[github/getContributionDays] Parsed zero contribution cells; GitHub markup may have changed.",
+      {
+        username,
+        from,
+        to,
+        htmlLength: html.length,
+        htmlSample,
+      },
+    );
   }
 
   return dates.map((date) => {
