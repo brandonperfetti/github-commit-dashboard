@@ -1233,6 +1233,9 @@ export async function getReleaseCadence(
         return await paginateGitHub<{
           published_at?: string | null;
         }>(
+          // GitHub's list-releases REST endpoint does not expose a `published_at`
+          // query filter. We keep an upstream repo limit + timeout and enforce the
+          // date window (`earliestStartIso`) immediately after fetch.
           `https://api.github.com/repos/${repo.full_name}/releases?per_page=30`,
           {
             headers: githubHeaders(),
