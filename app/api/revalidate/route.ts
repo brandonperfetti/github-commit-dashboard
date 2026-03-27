@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 
@@ -22,7 +23,10 @@ function getRequestSecret(request: Request) {
   return null;
 }
 
-function normalizeList(values: unknown): string[] {
+function normalizeList(
+  values: unknown,
+  validator?: (value: string) => boolean,
+): string[] {
   if (!Array.isArray(values)) {
     return [];
   }
@@ -32,7 +36,8 @@ function normalizeList(values: unknown): string[] {
       values
         .filter((value): value is string => typeof value === "string")
         .map((value) => value.trim())
-        .filter(Boolean),
+        .filter(Boolean)
+        .filter((value) => (validator ? validator(value) : true)),
     ),
   ).slice(0, MAX_ITEMS_PER_REQUEST);
 }
@@ -43,6 +48,24 @@ function isValidTag(tag: string) {
 
 function isValidPath(path: string) {
   return path.startsWith("/");
+}
+
+function isAuthorizedRequest(
+  requestSecret: string | null,
+  configuredSecret: string,
+) {
+  if (!requestSecret) {
+    return false;
+  }
+
+  const requestBuffer = Buffer.from(requestSecret);
+  const configuredBuffer = Buffer.from(configuredSecret);
+
+  if (requestBuffer.length !== configuredBuffer.length) {
+    return false;
+  }
+
+  return timingSafeEqual(requestBuffer, configuredBuffer);
 }
 
 export async function POST(request: Request) {
@@ -59,7 +82,7 @@ export async function POST(request: Request) {
   }
 
   const requestSecret = getRequestSecret(request);
-  if (!requestSecret || requestSecret !== configuredSecret) {
+  if (!isAuthorizedRequest(requestSecret, configuredSecret)) {
     return NextResponse.json(
       { ok: false, error: "Unauthorized revalidation request." },
       { status: 401 },
@@ -76,8 +99,8 @@ export async function POST(request: Request) {
     );
   }
 
-  const tags = normalizeList(payload.tags).filter(isValidTag);
-  const paths = normalizeList(payload.paths).filter(isValidPath);
+  const tags = normalizeList(payload.tags, isValidTag);
+  const paths = normalizeList(payload.paths, isValidPath);
 
   if (!tags.length && !paths.length) {
     return NextResponse.json(
