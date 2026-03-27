@@ -484,21 +484,6 @@ export async function getPinnedRepos(
     );
   }
 
-  const decodeGraphqlRepositoryId = (graphQlId: string): number | null => {
-    try {
-      const decoded = Buffer.from(graphQlId, "base64").toString("utf8");
-      const match = decoded.match(/(\d+)$/);
-      if (!match) {
-        return null;
-      }
-
-      const parsed = Number.parseInt(match[1], 10);
-      return Number.isNaN(parsed) ? null : parsed;
-    } catch {
-      return null;
-    }
-  };
-
   const query = `
     query PinnedRepos($login: String!) {
       user(login: $login) {
@@ -506,6 +491,7 @@ export async function getPinnedRepos(
           nodes {
             ... on Repository {
               id
+              databaseId
               name
               nameWithOwner
               description
@@ -567,6 +553,7 @@ export async function getPinnedRepos(
         pinnedItems?: {
           nodes?: Array<{
             id: string;
+            databaseId?: number | null;
             name: string;
             nameWithOwner: string;
             description: string | null;
@@ -605,9 +592,14 @@ export async function getPinnedRepos(
 
   const nodes = payload.data?.user?.pinnedItems?.nodes ?? [];
   return nodes
-    .filter((node) => node && !node.isArchived)
-    .map((node, index) => ({
-      id: decodeGraphqlRepositoryId(node.id) ?? -(index + 1),
+    .filter(
+      (node): node is NonNullable<typeof node> & { databaseId: number } =>
+        Boolean(node) &&
+        !node.isArchived &&
+        typeof node.databaseId === "number",
+    )
+    .map((node) => ({
+      id: node.databaseId,
       name: node.name,
       full_name: node.nameWithOwner,
       description: node.description,
