@@ -1,7 +1,6 @@
 "use client";
 
 import { Pie, PieChart, Tooltip } from "recharts";
-import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
 import { cn } from "@/lib/utils";
 
@@ -53,14 +52,13 @@ export function LanguageShareChart({
   frameless?: boolean;
 }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
-  const chartColors = useResolvedChartColors();
   const languageColors = [
-    chartColors.primary,
-    chartColors.primarySoft,
-    chartColors.primaryMuted,
-    chartColors.accent,
-    chartColors.pinned,
-    chartColors.unpinned,
+    "var(--chart-primary)",
+    "var(--chart-primary-soft)",
+    "var(--chart-primary-muted)",
+    "var(--chart-accent)",
+    "var(--chart-pinned)",
+    "var(--chart-unpinned)",
   ];
   const getLanguageColor = (index: number) =>
     languageColors[index % languageColors.length];
@@ -71,6 +69,8 @@ export function LanguageShareChart({
   const isDense = data.length >= 6;
   const legendGapClass = isDense ? "gap-1.5" : "gap-2";
   const legendItemPaddingClass = isDense ? "px-2.5 py-1.5" : "px-2.5 py-2";
+  const outerRadius = Math.max(0, Math.floor(size.height / 2) - 2);
+  const innerRadius = Math.floor(outerRadius * 0.6);
 
   if (!data.length) {
     return (
@@ -104,8 +104,8 @@ export function LanguageShareChart({
                 data={chartData}
                 dataKey="value"
                 nameKey="name"
-                innerRadius={46}
-                outerRadius={76}
+                innerRadius={innerRadius}
+                outerRadius={outerRadius}
                 paddingAngle={2}
                 stroke="none"
                 isAnimationActive={false}
