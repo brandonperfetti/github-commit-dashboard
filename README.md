@@ -71,10 +71,12 @@ Create a `.env.local` file in the project root:
 GITHUB_TOKEN=your_github_personal_access_token
 GITHUB_USERNAME=your_github_username
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+REVALIDATE_SECRET=replace_with_a_long_random_secret
 ```
 
 > **Note:** The `GITHUB_TOKEN` is used server-side only and is never exposed to the client.
 > **Note:** `NEXT_PUBLIC_SITE_URL` is required for production builds and metadata URLs.
+> **Note:** `REVALIDATE_SECRET` secures on-demand cache invalidation (`POST /api/revalidate`).
 
 ### Development
 
@@ -117,6 +119,42 @@ npm run validate:env -- --mode=production
 ```
 
 This checks required production variables (currently `NEXT_PUBLIC_SITE_URL`) and fails fast when missing or malformed.
+
+### On-Demand Cache Revalidation
+
+Trigger targeted cache invalidation (by tag and/or path):
+
+```bash
+curl -X POST http://localhost:3000/api/revalidate \
+  -H "Content-Type: application/json" \
+  -H "x-revalidate-secret: $REVALIDATE_SECRET" \
+  -d '{
+    "tags": ["route:activity", "github:commit-timing"],
+    "paths": ["/activity"]
+  }'
+```
+
+Supported payload fields:
+
+- `tags`: cache tags set via `cacheTag(...)`
+- `paths`: route paths for `revalidatePath(...)`
+
+Security notes:
+
+- The endpoint requires `REVALIDATE_SECRET`.
+- Secret can be passed via `x-revalidate-secret` or `Authorization: Bearer ...`.
+- Tags must match `^[a-z0-9:_-]{2,64}$`; paths must begin with `/`.
+
+### Revalidate via GitHub Actions
+
+Use the `Revalidate Cache` workflow (`.github/workflows/revalidate-cache.yml`) to trigger invalidation from the Actions UI:
+
+1. Open **Actions** → **Revalidate Cache** → **Run workflow**
+2. Select `Preview` or `Production`
+3. Optionally override `base_url`
+4. Provide comma-separated `tags_csv` and `paths_csv`
+
+The workflow calls `POST /api/revalidate` with `REVALIDATE_SECRET`.
 
 ### Linting
 

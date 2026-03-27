@@ -25,7 +25,13 @@ jobs:
         env:
           NODE_ENV: production
           # Prefer environment/repo variable, fall back to secret if needed.
+          # NEXT_PUBLIC_SITE_URL is required for production validation.
           NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || secrets.NEXT_PUBLIC_SITE_URL }}
         # Intentionally no `npm ci`: this guard runs a standalone Node script and
         # does not rely on installed packages or npm lifecycle hooks.
-        run: node scripts/validate-env.mjs --mode=production
+        run: |
+          if [ -z "${NEXT_PUBLIC_SITE_URL}" ]; then
+            echo "NEXT_PUBLIC_SITE_URL is not set in this environment (vars/secrets)."
+            exit 1
+          fi
+          node scripts/validate-env.mjs --mode=production

@@ -1,0 +1,81 @@
+name: Revalidate Cache
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_environment:
+        description: "Environment-scoped vars/secrets to use"
+        required: true
+        default: "Production"
+        type: choice
+        options:
+          - Preview
+          - Production
+      base_url:
+        description: "Optional site URL override (e.g. https://your-app.vercel.app)"
+        required: false
+        default: ""
+        type: string
+      tags_csv:
+        description: "Comma-separated cache tags to invalidate"
+        required: true
+        default: "route:activity,github:activity,github:commit-timing"
+        type: string
+      paths_csv:
+        description: "Comma-separated paths to invalidate"
+        required: true
+        default: "/activity"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  revalidate:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.target_environment }}
+    steps:
+      - name: Resolve target URL
+        id: resolve
+        env:
+          INPUT_BASE_URL: ${{ inputs.base_url }}
+          ENV_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || secrets.NEXT_PUBLIC_SITE_URL }}
+        run: |
+          TARGET_URL="${INPUT_BASE_URL:-$ENV_SITE_URL}"
+          TARGET_URL="$(echo "$TARGET_URL" | xargs)"
+          TARGET_URL="${TARGET_URL%/}"
+
+          if [ -z "$TARGET_URL" ]; then
+            echo "Unable to resolve target URL. Set inputs.base_url or NEXT_PUBLIC_SITE_URL in the selected environment."
+            exit 1
+          fi
+
+          echo "target_url=$TARGET_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Build revalidation payload
+        id: payload
+        env:
+          TAGS_CSV: ${{ inputs.tags_csv }}
+          PATHS_CSV: ${{ inputs.paths_csv }}
+        run: |
+          TAGS_JSON=$(node -e "const v=(process.argv[1]??'').split(',').map(s=>s.trim()).filter(Boolean); process.stdout.write(JSON.stringify([...new Set(v)]));" "$TAGS_CSV")
+          PATHS_JSON=$(node -e "const v=(process.argv[1]??'').split(',').map(s=>s.trim()).filter(Boolean); process.stdout.write(JSON.stringify([...new Set(v)]));" "$PATHS_CSV")
+          PAYLOAD="{\"tags\":$TAGS_JSON,\"paths\":$PATHS_JSON}"
+          echo "payload=$PAYLOAD" >> "$GITHUB_OUTPUT"
+
+      - name: Call revalidation endpoint
+        env:
+          TARGET_URL: ${{ steps.resolve.outputs.target_url }}
+          PAYLOAD: ${{ steps.payload.outputs.payload }}
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+        run: |
+          if [ -z "$REVALIDATE_SECRET" ]; then
+            echo "REVALIDATE_SECRET is missing in the selected environment."
+            exit 1
+          fi
+
+          echo "POST $TARGET_URL/api/revalidate"
+          curl -fsS -X POST "$TARGET_URL/api/revalidate" \
+            -H "content-type: application/json" \
+            -H "x-revalidate-secret: $REVALIDATE_SECRET" \
+            --data "$PAYLOAD"
