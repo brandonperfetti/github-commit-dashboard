@@ -98,13 +98,23 @@ export default async function ReposPage() {
   let commitSummary: Awaited<
     ReturnType<typeof buildRepoCommitActivitySummary>
   > = { weekly: [], perRepo: [] };
+  const reposWithPinned = [
+    ...repos,
+    ...pinnedRepos.filter(
+      (repo) => !repos.some((r) => r.full_name === repo.full_name),
+    ),
+  ];
   try {
-    commitSummary = await buildRepoCommitActivitySummary(repos);
+    commitSummary = await buildRepoCommitActivitySummary(reposWithPinned, 8, {
+      forceIncludeFullNames: pinnedRepos.map((repo) => repo.full_name),
+    });
   } catch (error) {
     reportRejected("repo commit activity summary", error);
   }
   const pinnedRepoNames = new Set(pinnedRepos.map((repo) => repo.full_name));
-  const reposByFullName = new Map(repos.map((repo) => [repo.full_name, repo]));
+  const reposByFullName = new Map(
+    reposWithPinned.map((repo) => [repo.full_name, repo]),
+  );
   const cadenceData = commitSummary.weekly;
   const commitCountsByFullName = new Map(
     commitSummary.perRepo.map((repo) => [repo.fullName, repo.commits]),
