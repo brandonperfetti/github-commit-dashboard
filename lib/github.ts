@@ -603,6 +603,10 @@ export function daysSince(isoDate: string) {
 }
 
 export function buildCalendarCells(days: ContributionDay[]) {
+  if (days.length === 0) {
+    return [];
+  }
+
   const firstDayIndex = new Date(`${days[0].date}T00:00:00`).getDay();
   const lastDayIndex = new Date(
     `${days[days.length - 1].date}T00:00:00`,

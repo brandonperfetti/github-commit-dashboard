@@ -38,7 +38,10 @@ export default function ContributionHeatmap({
 }: {
   days: ContributionDay[];
 }) {
-  const calendarCells = useMemo(() => buildCalendarCells(days), [days]);
+  const calendarCells = useMemo(
+    () => (days.length === 0 ? [] : buildCalendarCells(days)),
+    [days],
+  );
   const weeks = useMemo(() => chunkWeeks(calendarCells), [calendarCells]);
   const [selectedDayDate, setSelectedDayDate] = useState<string | null>(
     days[days.length - 1]?.date ?? null,
