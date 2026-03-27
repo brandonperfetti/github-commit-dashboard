@@ -100,10 +100,10 @@ export default async function FeaturedPage() {
       b.stargazers_count - a.stargazers_count ||
       +new Date(b.pushed_at) - +new Date(a.pushed_at),
   );
-  const pinnedIds = new Set(pinnedRepos.map((repo) => repo.id));
+  const pinnedFullNames = new Set(pinnedRepos.map((repo) => repo.full_name));
   const featured = [
     ...pinnedRepos,
-    ...starredRepos.filter((repo) => !pinnedIds.has(repo.id)),
+    ...starredRepos.filter((repo) => !pinnedFullNames.has(repo.full_name)),
   ].slice(0, 6);
   const total = days.reduce((sum, day) => sum + day.count, 0);
   const activeDays = days.filter((day) => day.count > 0).length;
@@ -145,7 +145,7 @@ export default async function FeaturedPage() {
     ...commitSummary.perRepo.map((repo) => repo.commits),
   );
   const featuredScoreData = featured.map((repo) => {
-    const isPinned = pinnedIds.has(repo.id);
+    const isPinned = pinnedFullNames.has(repo.full_name);
     const commits30d = commitsByRepo.get(repo.full_name) ?? 0;
     const daysSincePush = Math.max(
       0,
@@ -240,60 +240,64 @@ export default async function FeaturedPage() {
           </p>
           <div className="mt-5">
             <section className="grid gap-4 lg:grid-cols-3">
-              {featured.map((repo, index) => (
-                <Card
-                  className="p-4 transition-all duration-300 hover:-translate-y-1 hover:border-[var(--border-strong)] hover:bg-[var(--accent-soft)] motion-reduce:hover:translate-y-0 sm:p-5"
-                  key={repo.id}
-                  data-featured-card
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <Badge>#{index + 1}</Badge>
-                    <div className="flex items-center gap-2">
-                      <Badge className="border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                        Score {relevanceByRepo.get(repo.full_name) ?? 0}
-                      </Badge>
-                      {pinnedIds.has(repo.id) ? (
-                        <Badge>Pinned</Badge>
-                      ) : (
-                        <Badge className="bg-transparent">Star-ranked</Badge>
-                      )}
-                      <Badge className="bg-transparent text-[var(--muted-foreground)]">
-                        {repo.stargazers_count}★
-                      </Badge>
+              {featured.map((repo, index) => {
+                const homepageUrl = normalizeHttpUrl(repo.homepage);
+
+                return (
+                  <Card
+                    className="p-4 transition-all duration-300 hover:-translate-y-1 hover:border-[var(--border-strong)] hover:bg-[var(--accent-soft)] motion-reduce:hover:translate-y-0 sm:p-5"
+                    key={repo.id}
+                    data-featured-card
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <Badge>#{index + 1}</Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge className="border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                          Score {relevanceByRepo.get(repo.full_name) ?? 0}
+                        </Badge>
+                        {pinnedFullNames.has(repo.full_name) ? (
+                          <Badge>Pinned</Badge>
+                        ) : (
+                          <Badge className="bg-transparent">Star-ranked</Badge>
+                        )}
+                        <Badge className="bg-transparent text-[var(--muted-foreground)]">
+                          {repo.stargazers_count}★
+                        </Badge>
+                      </div>
                     </div>
-                  </div>
-                  <h2 className="mt-5 text-xl font-semibold tracking-tight">
-                    {repo.name}
-                  </h2>
-                  <p className="mt-3 text-sm leading-6 text-[var(--muted-foreground)]">
-                    {repo.description ?? "No description yet."}
-                  </p>
-                  <div className="mt-5 flex flex-wrap gap-2 text-sm text-[var(--muted-foreground)]">
-                    <span>{repo.language ?? "Unknown"}</span>
-                    <span>•</span>
-                    <span>Updated {formatRepoDate(repo.pushed_at)}</span>
-                  </div>
-                  <div className="mt-6 flex flex-wrap gap-3">
-                    <ButtonLink
-                      href={repo.html_url}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      View source
-                    </ButtonLink>
-                    {repo.homepage ? (
+                    <h2 className="mt-5 text-xl font-semibold tracking-tight">
+                      {repo.name}
+                    </h2>
+                    <p className="mt-3 text-sm leading-6 text-[var(--muted-foreground)]">
+                      {repo.description ?? "No description yet."}
+                    </p>
+                    <div className="mt-5 flex flex-wrap gap-2 text-sm text-[var(--muted-foreground)]">
+                      <span>{repo.language ?? "Unknown"}</span>
+                      <span>•</span>
+                      <span>Updated {formatRepoDate(repo.pushed_at)}</span>
+                    </div>
+                    <div className="mt-6 flex flex-wrap gap-3">
                       <ButtonLink
-                        href={repo.homepage}
+                        href={repo.html_url}
                         target="_blank"
                         rel="noreferrer"
-                        variant="secondary"
                       >
-                        Open live site
+                        View source
                       </ButtonLink>
-                    ) : null}
-                  </div>
-                </Card>
-              ))}
+                      {homepageUrl ? (
+                        <ButtonLink
+                          href={homepageUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          variant="secondary"
+                        >
+                          Open live site
+                        </ButtonLink>
+                      ) : null}
+                    </div>
+                  </Card>
+                );
+              })}
             </section>
           </div>
         </ScrollReveal>
