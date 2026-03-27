@@ -108,7 +108,8 @@ export type CommitTimingHeatmapData = {
 
 const SEARCH_CACHE_TTL_MS = 5 * 60 * 1000;
 const SEARCH_MAX_RETRIES = 3;
-const SEARCH_RATE_LIMIT_INTERVAL_MS = 2100;
+const SEARCH_RATE_LIMIT_INTERVAL_AUTH_MS = 350;
+const SEARCH_RATE_LIMIT_INTERVAL_PUBLIC_MS = 1100;
 const GITHUB_FETCH_TIMEOUT_MS = 10_000;
 
 class GitHubApiError extends Error {
@@ -185,13 +186,17 @@ function wait(ms: number) {
 }
 
 async function reserveSearchRequestSlot() {
+  const intervalMs = hasGithubToken()
+    ? SEARCH_RATE_LIMIT_INTERVAL_AUTH_MS
+    : SEARCH_RATE_LIMIT_INTERVAL_PUBLIC_MS;
+
   searchRateLimiter = searchRateLimiter.then(async () => {
     const now = Date.now();
     const waitFor = Math.max(0, nextSearchAtMs - now);
     if (waitFor > 0) {
       await wait(waitFor);
     }
-    nextSearchAtMs = Date.now() + SEARCH_RATE_LIMIT_INTERVAL_MS;
+    nextSearchAtMs = Date.now() + intervalMs;
   });
 
   await searchRateLimiter;
@@ -1023,12 +1028,14 @@ export async function getPullRequestHealth(
         encodeURIComponent(
           `is:pr author:${username} ${qualifier}:${window.start}..${window.end}`,
         );
-      const opened = await fetchGithubSearchCount(buildQuery("created"));
-      const merged = await fetchGithubSearchCount(buildQuery("merged"));
-      const closed = await fetchGithubSearchCount(buildQuery("closed"));
-      // Verified against GitHub Search API in this project: `reopened:YYYY-MM-DD..YYYY-MM-DD`
-      // returns expected counts for authored PRs, so we keep this metric in flow health.
-      const reopened = await fetchGithubSearchCount(buildQuery("reopened"));
+      const [opened, merged, closed, reopened] = await Promise.all([
+        fetchGithubSearchCount(buildQuery("created")),
+        fetchGithubSearchCount(buildQuery("merged")),
+        fetchGithubSearchCount(buildQuery("closed")),
+        // Verified against GitHub Search API in this project: `reopened:YYYY-MM-DD..YYYY-MM-DD`
+        // returns expected counts for authored PRs, so we keep this metric in flow health.
+        fetchGithubSearchCount(buildQuery("reopened")),
+      ]);
 
       return {
         label: window.label,
@@ -1157,8 +1164,10 @@ export async function getIssueFlowHealth(
         encodeURIComponent(
           `is:issue user:${username} ${qualifier}:${window.start}..${window.end}`,
         );
-      const opened = await fetchGithubSearchCount(buildQuery("created"));
-      const closed = await fetchGithubSearchCount(buildQuery("closed"));
+      const [opened, closed] = await Promise.all([
+        fetchGithubSearchCount(buildQuery("created")),
+        fetchGithubSearchCount(buildQuery("closed")),
+      ]);
 
       return {
         label: window.label,
@@ -1284,7 +1293,7 @@ export async function getRepoRiskSnapshot(
   const buckets: RepoRiskBucket[] = [
     { label: "Hot (0-7d)", count: hot },
     { label: "Active (8-30d)", count: active },
-    { label: "Stale (31-90d)", count: stale },
+    { label: "Stale (31-89d)", count: stale },
     { label: "Dormant (90d+)", count: dormant },
   ];
 
