@@ -29,6 +29,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const githubAuthConfigured = isGithubAuthConfigured();
+  const themeScript = `
+(() => {
+  const STORAGE_KEY = "build-theme";
+  const root = document.documentElement;
+  const fromStorage = (() => {
+    try {
+      const value = window.localStorage.getItem(STORAGE_KEY);
+      return value === "light" || value === "dark" ? value : null;
+    } catch {
+      return null;
+    }
+  })();
+  const fromCookie = document.cookie.match(/(?:^|;\\s*)build-theme=(light|dark)(?:;|$)/)?.[1] ?? null;
+  const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  const theme = fromStorage ?? fromCookie ?? systemTheme;
+  root.classList.remove("light", "dark");
+  root.classList.add(theme);
+})();
+`;
 
   return (
     <html
@@ -36,6 +55,13 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: themeScript,
+          }}
+        />
+      </head>
       <body className="min-h-full bg-[var(--background)] text-[var(--foreground)]">
         <Providers>
           <div className="min-h-screen bg-[var(--page-gradient)] pb-4 sm:pb-6">

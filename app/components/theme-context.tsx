@@ -18,7 +18,7 @@ type ThemeContextValue = {
   setTheme: (theme: Theme) => void;
 };
 
-const STORAGE_KEY = "build-theme";
+export const STORAGE_KEY = "build-theme";
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
@@ -48,21 +48,38 @@ function getSystemTheme(): Theme {
     : "light";
 }
 
-function getInitialTheme(): Theme {
-  if (typeof window === "undefined") return "dark";
+function readThemeFromCookie(cookieHeader: string): Theme | null {
+  const escapedStorageKey = STORAGE_KEY.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const matches = cookieHeader.match(
+    new RegExp(`(?:^|;\\s*)${escapedStorageKey}=(light|dark)(?:;|$)`),
+  );
+  const value = matches?.[1];
+  return value === "light" || value === "dark" ? value : null;
+}
+
+function getInitialTheme(): Theme | undefined {
+  if (typeof window === "undefined") return undefined;
 
   const stored = window.localStorage.getItem(STORAGE_KEY);
   if (stored === "light" || stored === "dark") return stored;
+
+  const cookieTheme = readThemeFromCookie(document.cookie);
+  if (cookieTheme) return cookieTheme;
 
   return getSystemTheme();
 }
 
 export function AppThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(getInitialTheme);
+  const [theme, setThemeState] = useState<Theme>(
+    () => getInitialTheme() ?? "dark",
+  );
   const [userHasSetTheme, setUserHasSetTheme] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     const stored = window.localStorage.getItem(STORAGE_KEY);
-    return stored === "light" || stored === "dark";
+    if (stored === "light" || stored === "dark") {
+      return true;
+    }
+    return Boolean(readThemeFromCookie(document.cookie));
   });
   const isResolved = useMounted();
 
@@ -117,6 +134,7 @@ export function AppThemeProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.warn("[theme] Failed to persist theme preference", error);
     }
+    document.cookie = `${STORAGE_KEY}=${nextTheme}; path=/; max-age=31536000; samesite=lax`;
     applyTheme(nextTheme);
   }, []);
 
