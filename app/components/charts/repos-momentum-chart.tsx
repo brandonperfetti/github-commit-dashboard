@@ -35,7 +35,13 @@ function MomentumTooltip({ active, payload }: MomentumTooltipProps) {
       <div className="mt-2 space-y-1 text-[var(--foreground)]">
         <p>{point.sourceLabel}</p>
         <p>Commits (30d): {point.commits30d}</p>
-        <p>{point.daysSincePush}d since push</p>
+        <p>
+          {point.pinned
+            ? point.daysSincePush > 0
+              ? `Pinned - ${point.daysSincePush}d since push`
+              : "Pinned"
+            : `${point.daysSincePush}d since push`}
+        </p>
       </div>
     </div>
   );
