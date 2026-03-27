@@ -770,7 +770,7 @@ export async function buildRepoCommitActivitySummary(
   );
   const topRepos = [
     ...forcedRepos,
-    ...remainder.slice(Math.max(0, topRepoLimit - forcedRepos.length)),
+    ...remainder.slice(0, Math.max(0, topRepoLimit - forcedRepos.length)),
   ];
   const windows = buildWeeklyWindows();
   const buckets = windows.map((window) => ({ ...window, value: 0 }));
@@ -1275,7 +1275,7 @@ export async function getRepoRiskSnapshot(
   }).length;
   const stale = activeRepos.filter((repo) => {
     const age = daysSince(repo.pushed_at);
-    return age >= 31 && age <= 90;
+    return age >= 31 && age < 90;
   }).length;
   const dormant = activeRepos.filter(
     (repo) => daysSince(repo.pushed_at) >= 90,
