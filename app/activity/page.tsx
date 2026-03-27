@@ -27,17 +27,19 @@ class ActivityFetchTimeoutError extends Error {
 
 async function withActivityTimeout<T>(
   label: string,
-  task: Promise<T>,
+  taskFactory: (signal: AbortSignal) => Promise<T>,
   timeoutMs: number = ACTIVITY_FETCH_TIMEOUT_MS,
 ): Promise<T> {
+  const controller = new AbortController();
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
-
   const timeoutPromise = new Promise<never>((_, reject) => {
     timeoutId = setTimeout(() => {
+      controller.abort();
       reject(new ActivityFetchTimeoutError(label, timeoutMs));
     }, timeoutMs);
   });
 
+  const task = taskFactory(controller.signal);
   try {
     return await Promise.race([task, timeoutPromise]);
   } finally {
@@ -49,14 +51,14 @@ async function withActivityTimeout<T>(
 
 async function withActivityTiming<T>(
   label: string,
-  task: Promise<T>,
+  taskFactory: (signal: AbortSignal) => Promise<T>,
   timeoutMs: number = ACTIVITY_FETCH_TIMEOUT_MS,
 ): Promise<T> {
   const startedAt = Date.now();
   console.info(`[activity/page] start ${label}`);
 
   try {
-    const result = await withActivityTimeout(label, task, timeoutMs);
+    const result = await withActivityTimeout(label, taskFactory, timeoutMs);
     const durationMs = Date.now() - startedAt;
     console.info(`[activity/page] success ${label} (${durationMs}ms)`);
     return result;
@@ -77,12 +79,20 @@ export default async function ActivityPage() {
 
   const [daysResult, prHealthResult, issueFlowResult, commitTimingResult] =
     await Promise.allSettled([
-      withActivityTiming("contribution days", getContributionDays()),
-      withActivityTiming("PR flow health", getPullRequestHealth()),
-      withActivityTiming("issue flow health", getIssueFlowHealth()),
+      withActivityTiming("contribution days", (signal) =>
+        getContributionDays(undefined, { signal }),
+      ),
+      withActivityTiming("PR flow health", (signal) =>
+        getPullRequestHealth(undefined, { signal }),
+      ),
+      withActivityTiming("issue flow health", (signal) =>
+        getIssueFlowHealth(undefined, { signal }),
+      ),
       // Keep this page static so `revalidate` remains effective; timezone-aware
       // refinement can happen client-side without forcing dynamic rendering.
-      withActivityTiming("commit timing heatmap", getCommitTimingHeatmap()),
+      withActivityTiming("commit timing heatmap", (signal) =>
+        getCommitTimingHeatmap("UTC", undefined, { signal }),
+      ),
     ]);
 
   const days: ContributionDay[] =
