@@ -49,7 +49,7 @@ export function SiteNav({
               )}
             >
               {githubAuthConfigured
-                ? "GitHub auth active"
+                ? "GitHub auth configured"
                 : "GitHub public mode"}
             </span>
             <ThemeToggle />
