@@ -127,9 +127,13 @@ export default async function FeaturedPage() {
   const referenceTime = days.length
     ? new Date(`${days[days.length - 1].date}T00:00:00`).getTime()
     : fallbackReferenceTime;
-  const commitSummary = await (async () => {
+
+  async function getCommitSummary(featuredRepos: Repo[]) {
     try {
-      return await buildRepoCommitActivitySummary(featured, featured.length);
+      return await buildRepoCommitActivitySummary(
+        featuredRepos,
+        featuredRepos.length,
+      );
     } catch (error) {
       reportRejected("repo commit activity summary", error);
       return {
@@ -137,7 +141,9 @@ export default async function FeaturedPage() {
         perRepo: [],
       };
     }
-  })();
+  }
+
+  const commitSummary = await getCommitSummary(featured);
   const commitsByRepo = new Map(
     commitSummary.perRepo.map((repo) => [repo.fullName, repo.commits]),
   );
