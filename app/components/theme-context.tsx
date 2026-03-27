@@ -13,7 +13,7 @@ import {
 type Theme = "light" | "dark";
 
 type ThemeContextValue = {
-  resolvedTheme: Theme;
+  resolvedTheme: Theme | undefined;
   isResolved: boolean;
   setTheme: (theme: Theme) => void;
 };
@@ -130,9 +130,9 @@ export function AppThemeProvider({ children }: { children: React.ReactNode }) {
       }
 
       setUserHasSetTheme(false);
-      const systemTheme = getSystemTheme();
-      setThemeState(systemTheme);
-      applyTheme(systemTheme);
+      const fallbackTheme = getInitialTheme() ?? getSystemTheme();
+      setThemeState(fallbackTheme);
+      applyTheme(fallbackTheme);
     };
 
     window.addEventListener("storage", onStorage);
@@ -158,7 +158,7 @@ export function AppThemeProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<ThemeContextValue>(
     () => ({
-      resolvedTheme: theme,
+      resolvedTheme: isResolved ? theme : undefined,
       isResolved,
       setTheme,
     }),
