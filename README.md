@@ -36,14 +36,14 @@ Built with **Next.js App Router** (server components for real-time data), **Tail
 
 ## Tech Stack
 
-| Technology | Purpose |
-|---|---|
-| [Next.js](https://nextjs.org/) (App Router) | React framework with server components |
-| [TypeScript](https://www.typescriptlang.org/) | Type safety throughout |
-| [Tailwind CSS](https://tailwindcss.com/) | Utility-first styling |
-| [next-themes](https://github.com/pacocoursey/next-themes) | Dark/light mode |
-| [GitHub REST API](https://docs.github.com/en/rest) | Repository and activity data |
-| [Lucide React](https://lucide.dev/) | Icon library |
+| Technology                                                | Purpose                                |
+| --------------------------------------------------------- | -------------------------------------- |
+| [Next.js](https://nextjs.org/) (App Router)               | React framework with server components |
+| [TypeScript](https://www.typescriptlang.org/)             | Type safety throughout                 |
+| [Tailwind CSS](https://tailwindcss.com/)                  | Utility-first styling                  |
+| [next-themes](https://github.com/pacocoursey/next-themes) | Dark/light mode                        |
+| [GitHub REST API](https://docs.github.com/en/rest)        | Repository and activity data           |
+| [Lucide React](https://lucide.dev/)                       | Icon library                           |
 
 ---
 
