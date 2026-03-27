@@ -21,11 +21,10 @@ import {
   prettyDay,
   USERNAME,
 } from "@/lib/github";
+import { getPublicSiteUrl } from "@/lib/site-config";
 
 export const revalidate = 300;
-const siteUrl = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
-).replace(/\/+$/, "");
+const siteUrl = getPublicSiteUrl();
 const homePath = "/";
 const homeUrl = `${siteUrl}${homePath}`;
 const homeDescription =

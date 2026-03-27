@@ -19,10 +19,10 @@ import {
   type ReleaseCadencePoint,
   type Repo,
 } from "@/lib/github";
+import { getPublicSiteUrl } from "@/lib/site-config";
+import { normalizeHttpUrl } from "@/lib/url";
 
-const siteUrl = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
-).replace(/\/+$/, "");
+const siteUrl = getPublicSiteUrl();
 const featuredPath = "/featured";
 const featuredUrl = `${siteUrl}${featuredPath}`;
 const featuredDescription =

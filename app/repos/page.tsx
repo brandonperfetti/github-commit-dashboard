@@ -15,10 +15,9 @@ import {
   getRepos,
   type RepoRiskSnapshot,
 } from "@/lib/github";
+import { getPublicSiteUrl } from "@/lib/site-config";
 
-const siteUrl = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
-).replace(/\/+$/, "");
+const siteUrl = getPublicSiteUrl();
 const reposPath = "/repos";
 const reposUrl = `${siteUrl}${reposPath}`;
 const reposDescription =
