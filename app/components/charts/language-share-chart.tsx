@@ -2,6 +2,7 @@
 
 import { Pie, PieChart, Tooltip } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
+import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
 import { cn } from "@/lib/utils";
 
 type LanguageSharePoint = {
@@ -52,13 +53,17 @@ export function LanguageShareChart({
   frameless?: boolean;
 }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
+  const chartColors = useResolvedChartColors();
   const languageColors = [
+    chartColors.primary,
+    chartColors.primarySoft,
+    chartColors.primaryMuted,
+    chartColors.accent,
+    chartColors.pinned,
+    chartColors.unpinned,
+    // Fallback tail colors keep behavior stable if future palette APIs change.
     "var(--chart-primary)",
-    "var(--chart-primary-soft)",
-    "var(--chart-primary-muted)",
     "var(--chart-accent)",
-    "var(--chart-pinned)",
-    "var(--chart-unpinned)",
   ];
   const getLanguageColor = (index: number) =>
     languageColors[index % languageColors.length];

@@ -83,7 +83,7 @@ export function PrCycleTimeChart({ data }: { data: PullRequestHealthPoint[] }) {
               tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
             />
             <Tooltip
-              cursor={{ stroke: "var(--accent-strong)", strokeOpacity: 0.35 }}
+              cursor={{ stroke: chartColors.accent, strokeOpacity: 0.35 }}
               content={<PrCycleTimeTooltip />}
               wrapperStyle={{ outline: "none", zIndex: 20 }}
               allowEscapeViewBox={{ x: false, y: false }}
