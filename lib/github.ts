@@ -248,6 +248,44 @@ function throwIfAborted(signal?: AbortSignal) {
   }
 }
 
+async function resolveWithProcessCache<T>(
+  key: string,
+  cache: Map<string, { value: T; expiresAt: number }>,
+  inFlight: Map<string, Promise<T>>,
+  load: () => Promise<T>,
+  signal?: AbortSignal,
+): Promise<T> {
+  throwIfAborted(signal);
+
+  const now = Date.now();
+  const cached = cache.get(key);
+  if (cached && cached.expiresAt > now) {
+    return cached.value;
+  }
+
+  const pending = inFlight.get(key);
+  if (pending) {
+    return pending;
+  }
+
+  const request = load()
+    .then((value) => {
+      cache.set(key, {
+        value,
+        expiresAt: Date.now() + ACTIVITY_AGGREGATE_CACHE_TTL_MS,
+      });
+      inFlight.delete(key);
+      return value;
+    })
+    .catch((error) => {
+      inFlight.delete(key);
+      throw error;
+    });
+
+  inFlight.set(key, request);
+  return request;
+}
+
 async function reserveSearchRequestSlot() {
   const intervalMs = hasGithubToken()
     ? SEARCH_RATE_LIMIT_INTERVAL_AUTH_MS
