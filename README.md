@@ -1,20 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GitHub Commit Dashboard
+
+<div align="center">
+
+<img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white" />
+<img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" />
+<img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" />
+<img src="https://img.shields.io/badge/GitHub_API-181717?style=for-the-badge&logo=github&logoColor=white" />
+
+**A clean, focused operating dashboard for your GitHub activity.**
+
+[Live Demo](https://github-commit-dashboard.vercel.app) · [Report Bug](https://github.com/brandonperfetti/github-commit-dashboard/issues)
+
+</div>
+
+---
+
+## Overview
+
+GitHub Commit Dashboard transforms raw GitHub API signals into a polished, scannable UI. It surfaces your recent contribution history, top repositories, and language breakdown — without the noise of the standard GitHub profile UI.
+
+Built with **Next.js App Router** (server components for real-time data), **Tailwind CSS**, and a dark/light theme system, it's a practical tool for developers who want a cleaner lens into their own productivity.
+
+---
+
+## Features
+
+- 📊 **Contribution Activity** — Visual heatmap-style contribution feed over the past 30 days
+- 🏆 **Featured Repositories** — Top repos surfaced by star count and recent push activity
+- 🗂️ **Repository Browser** — Full list of public repos with language, stars, and last-updated indicators
+- 🌐 **Language Breakdown** — At-a-glance view of your most-used languages across repositories
+- 🌙 **Dark / Light Mode** — System-aware theme toggle via `next-themes`
+- ⚡ **Live GitHub Signal** — Server-side data fetching ensures fresh data on every page load
+
+---
+
+## Tech Stack
+
+| Technology | Purpose |
+|---|---|
+| [Next.js](https://nextjs.org/) (App Router) | React framework with server components |
+| [TypeScript](https://www.typescriptlang.org/) | Type safety throughout |
+| [Tailwind CSS](https://tailwindcss.com/) | Utility-first styling |
+| [next-themes](https://github.com/pacocoursey/next-themes) | Dark/light mode |
+| [GitHub REST API](https://docs.github.com/en/rest) | Repository and activity data |
+| [Lucide React](https://lucide.dev/) | Icon library |
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) v18+
+- [npm](https://www.npmjs.com/) or compatible package manager
+- A [GitHub Personal Access Token](https://github.com/settings/tokens) (classic, with `public_repo` scope)
+
+### Installation
+
+```bash
+git clone https://github.com/brandonperfetti/github-commit-dashboard.git
+cd github-commit-dashboard
+npm install
+```
+
+### Environment Variables
+
+Create a `.env.local` file in the project root:
+
+```env
+GITHUB_TOKEN=your_github_personal_access_token
+GITHUB_USERNAME=your_github_username
+```
+
+> **Note:** The `GITHUB_TOKEN` is used server-side only and is never exposed to the client.
+
+### Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the dashboard.
 
 ## GitHub API Auth (Recommended)
 
@@ -35,23 +101,47 @@ Notes:
 - With a token present, the app uses authenticated `/user/repos` calls and can include private repositories you can access.
 - Without a token, it falls back to public `/users/{username}/repos`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Production Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm run start
+```
 
-## Learn More
+### Linting
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run lint
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project Structure
 
-## Deploy on Vercel
+```
+github-commit-dashboard/
+├── app/
+│   ├── activity/         # Contribution activity page
+│   ├── components/       # Shared UI components
+│   ├── featured/         # Featured repositories page
+│   ├── repos/            # Repository browser page
+│   ├── layout.tsx        # Root layout with theme provider
+│   └── page.tsx          # Dashboard home
+├── lib/
+│   └── github.ts         # GitHub API utilities
+└── public/               # Static assets
+```
 
-_Last repo/Vercel sync test performed via OpenClaw on 2026-03-22._
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deployment
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project is optimized for deployment on [Vercel](https://vercel.com/). Add your `GITHUB_TOKEN` and `GITHUB_USERNAME` as environment variables in the Vercel project settings.
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/brandonperfetti/github-commit-dashboard)
+
+---
+
+## License
+
+MIT © [Brandon Perfetti](https://brandonperfetti.com)
