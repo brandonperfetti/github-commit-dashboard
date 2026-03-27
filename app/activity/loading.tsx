@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 
 const SKELETON_DELAY_MS = 450;
 
+// Kept local intentionally: this helper is only used by the /activity loading
+// skeleton and extraction would add indirection without meaningful reuse yet.
 function SkeletonBlock({ className }: { className?: string }) {
   return (
     <div

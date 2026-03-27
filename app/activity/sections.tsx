@@ -38,9 +38,29 @@ function SkeletonBlock({ className }: { className: string }) {
   );
 }
 
-export function ActivityHeroSection({ days }: { days: ContributionDay[] }) {
+function computeActivityStats(days: ContributionDay[]) {
   const total = days.reduce((sum, day) => sum + day.count, 0);
   const activeDays = days.filter((day) => day.count > 0).length;
+  const bestDay =
+    days.length > 0
+      ? days.reduce((best, day) => (day.count > best.count ? day : best))
+      : null;
+  const weeklyTotals = buildWeeklyTotals(days);
+
+  return {
+    total,
+    activeDays,
+    bestDay,
+    weeklyTotals,
+    currentStreakDays: currentStreak(days),
+    longestStreakDays: longestStreak(days),
+    averagePerDay: total / DAYS,
+  };
+}
+
+export function ActivityHeroSection({ days }: { days: ContributionDay[] }) {
+  const { total, activeDays, currentStreakDays, longestStreakDays } =
+    computeActivityStats(days);
 
   return (
     <SectionShell className="overflow-hidden p-0">
@@ -68,8 +88,8 @@ export function ActivityHeroSection({ days }: { days: ContributionDay[] }) {
           {[
             { label: "Total contributions", value: total },
             { label: "Active days", value: `${activeDays}/${DAYS}` },
-            { label: "Current streak", value: `${currentStreak(days)} days` },
-            { label: "Best streak", value: `${longestStreak(days)} days` },
+            { label: "Current streak", value: `${currentStreakDays} days` },
+            { label: "Best streak", value: `${longestStreakDays} days` },
           ].map((card) => (
             <Card
               key={card.label}
@@ -88,13 +108,8 @@ export function ActivityHeroSection({ days }: { days: ContributionDay[] }) {
 }
 
 export function ActivityHeatmapSection({ days }: { days: ContributionDay[] }) {
-  const total = days.reduce((sum, day) => sum + day.count, 0);
-  const activeDays = days.filter((day) => day.count > 0).length;
-  const bestDay =
-    days.length > 0
-      ? days.reduce((best, day) => (day.count > best.count ? day : best))
-      : null;
-  const weeklyTotals = buildWeeklyTotals(days);
+  const { activeDays, bestDay, weeklyTotals, averagePerDay } =
+    computeActivityStats(days);
 
   return (
     <SectionShell>
@@ -127,7 +142,7 @@ export function ActivityHeatmapSection({ days }: { days: ContributionDay[] }) {
         <div className="rounded-xl border border-[var(--border-strong)] bg-[var(--background)] px-3 py-1.5 shadow-sm">
           Average/day:{" "}
           <span className="font-medium text-[var(--foreground)]">
-            {(total / DAYS).toFixed(1)}
+            {averagePerDay.toFixed(1)}
           </span>
         </div>
         <div className="rounded-xl border border-[var(--border-strong)] bg-[var(--background)] px-3 py-1.5 shadow-sm">
@@ -215,10 +230,19 @@ export function ActivityCommitTimingSection({
 }: {
   commitTimingHeatmap: CommitTimingHeatmapData;
 }) {
+  const heatmapIdentityKey = `${commitTimingHeatmap.timezone}:${commitTimingHeatmap.totalCommits}:${commitTimingHeatmap.maxCellCount}:${commitTimingHeatmap.cells
+    .map((cell) => cell.count)
+    .join(",")}`;
+
   return (
     <SectionShell>
       <h2 className="text-xl font-semibold">Commit timing heatmap</h2>
-      <CommitTimingHeatmapLocalized initialData={commitTimingHeatmap} />
+      {/* Intentionally use a key so localized client state re-initializes when
+          server-provided heatmap payload changes, without set-state-in-effect. */}
+      <CommitTimingHeatmapLocalized
+        key={heatmapIdentityKey}
+        initialData={commitTimingHeatmap}
+      />
     </SectionShell>
   );
 }
