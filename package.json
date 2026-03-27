@@ -4,9 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "npm run validate:env -- --mode=production",
     "build": "next build",
+    "prestart": "npm run validate:env -- --mode=production",
     "start": "next start",
     "lint": "eslint",
+    "validate:env": "node scripts/validate-env.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

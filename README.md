@@ -70,9 +70,11 @@ Create a `.env.local` file in the project root:
 ```env
 GITHUB_TOKEN=your_github_personal_access_token
 GITHUB_USERNAME=your_github_username
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
 > **Note:** The `GITHUB_TOKEN` is used server-side only and is never exposed to the client.
+> **Note:** `NEXT_PUBLIC_SITE_URL` is required for production builds and metadata URLs.
 
 ### Development
 
@@ -107,6 +109,14 @@ Notes:
 npm run build
 npm run start
 ```
+
+### Environment Validation
+
+```bash
+npm run validate:env -- --mode=production
+```
+
+This checks required production variables (currently `NEXT_PUBLIC_SITE_URL`) and fails fast when missing or malformed.
 
 ### Linting
 

@@ -33,16 +33,18 @@
 
 ## How to Test (Reviewer Checklist)
 
-1.
-2.
-3.
+1. Install dependencies (`npm install`).
+2. Run linting (`npm run lint`).
+3. Run production build (`npm run build`).
+4. Run automated tests (if added/updated for this PR).
+5. Smoke-test key routes: `/`, `/activity`, `/repos`, `/featured`.
+6. Add any PR-specific validation steps below this line.
 
 ---
 
 ## Breaking Changes?
 
-- [ ] Yes
-- [ ] No
+Breaking Changes: Yes / No
 
 ---
 
