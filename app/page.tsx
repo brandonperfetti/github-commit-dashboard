@@ -61,6 +61,28 @@ export const metadata: Metadata = {
 
 const HOME_SUMMARY_ITEM_COUNT = 4;
 
+function getFeaturedRepos<T extends { full_name: string }>(
+  pinnedRepos: T[],
+  fallbackFeaturedRepos: T[],
+  itemCount: number,
+) {
+  if (pinnedRepos.length === 0) {
+    return fallbackFeaturedRepos;
+  }
+
+  const pinnedSlice = pinnedRepos.slice(0, itemCount);
+  if (pinnedSlice.length >= itemCount) {
+    return pinnedSlice;
+  }
+
+  const pinnedFullNames = new Set(pinnedSlice.map((repo) => repo.full_name));
+  const fallbackFill = fallbackFeaturedRepos.filter(
+    (repo) => !pinnedFullNames.has(repo.full_name),
+  );
+
+  return [...pinnedSlice, ...fallbackFill].slice(0, itemCount);
+}
+
 export default async function Home() {
   const reportRejected = (label: string, reason: unknown) => {
     console.error(
@@ -96,23 +118,11 @@ export default async function Home() {
         +new Date(b.pushed_at) - +new Date(a.pushed_at),
     )
     .slice(0, HOME_SUMMARY_ITEM_COUNT);
-  const featuredRepos = (() => {
-    if (pinnedRepos.length === 0) {
-      return fallbackFeaturedRepos;
-    }
-
-    const pinnedSlice = pinnedRepos.slice(0, HOME_SUMMARY_ITEM_COUNT);
-    if (pinnedSlice.length >= HOME_SUMMARY_ITEM_COUNT) {
-      return pinnedSlice;
-    }
-
-    const pinnedFullNames = new Set(pinnedSlice.map((repo) => repo.full_name));
-    const fallbackFill = fallbackFeaturedRepos.filter(
-      (repo) => !pinnedFullNames.has(repo.full_name),
-    );
-
-    return [...pinnedSlice, ...fallbackFill].slice(0, HOME_SUMMARY_ITEM_COUNT);
-  })();
+  const featuredRepos = getFeaturedRepos(
+    pinnedRepos,
+    fallbackFeaturedRepos,
+    HOME_SUMMARY_ITEM_COUNT,
+  );
   const featuredUsesPinned = pinnedRepos.length > 0;
   const pinnedRepoIds = new Set(pinnedRepos.map((repo) => repo.id));
   const activeDays = days.filter((day) => day.count > 0).length;
