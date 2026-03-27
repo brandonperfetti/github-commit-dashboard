@@ -130,7 +130,7 @@ export function AnimatedHeadline({
               >
                 {wordChars.map((char, charIndex) => (
                   <span
-                    key={`${wordIndex}-${char}-${charIndex}`}
+                    key={`${wordIndex}-${charIndex}`}
                     data-char
                     className="inline-block will-change-[opacity]"
                   >
