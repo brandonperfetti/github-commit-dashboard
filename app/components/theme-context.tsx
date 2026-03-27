@@ -60,8 +60,12 @@ function readThemeFromCookie(cookieHeader: string): Theme | null {
 function getInitialTheme(): Theme | undefined {
   if (typeof window === "undefined") return undefined;
 
-  const stored = window.localStorage.getItem(STORAGE_KEY);
-  if (stored === "light" || stored === "dark") return stored;
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (stored === "light" || stored === "dark") return stored;
+  } catch {
+    // Storage can throw in privacy modes or locked-down contexts; fall through.
+  }
 
   const cookieTheme = readThemeFromCookie(document.cookie);
   if (cookieTheme) return cookieTheme;
@@ -71,15 +75,22 @@ function getInitialTheme(): Theme | undefined {
 
 export function AppThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(
+    // Intentional: we keep a concrete fallback instead of `Theme | undefined`.
+    // This avoids `set-state-in-effect` lint regressions from deferred init,
+    // while `app/layout.tsx` pre-seeds the root theme class before hydration.
     // SSR-safe lazy initializer: `getInitialTheme` exits early on the server
     // and only reads browser APIs on the client.
     () => getInitialTheme() ?? "dark",
   );
   const [userHasSetTheme, setUserHasSetTheme] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored === "light" || stored === "dark") {
-      return true;
+    try {
+      const stored = window.localStorage.getItem(STORAGE_KEY);
+      if (stored === "light" || stored === "dark") {
+        return true;
+      }
+    } catch {
+      // Ignore storage read failures and fall back to cookie/system logic.
     }
     return Boolean(readThemeFromCookie(document.cookie));
   });
@@ -132,7 +143,9 @@ export function AppThemeProvider({ children }: { children: React.ReactNode }) {
     setUserHasSetTheme(true);
     setThemeState(nextTheme);
     try {
-      window.localStorage.setItem(STORAGE_KEY, nextTheme);
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(STORAGE_KEY, nextTheme);
+      }
     } catch (error) {
       console.warn("[theme] Failed to persist theme preference", error);
     }
