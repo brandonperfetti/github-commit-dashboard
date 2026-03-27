@@ -17,6 +17,14 @@ type FreshnessTooltipProps = {
   payload?: Array<{ payload?: RepoFreshnessPoint }>;
 };
 
+type RepoFreshnessBarShapeProps = {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  payload?: { fill?: string; fillOpacity?: number };
+};
+
 const FRESH_THRESHOLD_DAYS = 3;
 const WARM_THRESHOLD_DAYS = 7;
 
@@ -39,6 +47,27 @@ function freshnessBand(days: number) {
     label: `Stale (${WARM_THRESHOLD_DAYS + 1}+ days)`,
     opacity: 0.4,
   };
+}
+
+function RepoFreshnessBarShape({
+  x = 0,
+  y = 0,
+  width = 0,
+  height = 0,
+  payload,
+}: RepoFreshnessBarShapeProps) {
+  return (
+    <rect
+      x={x}
+      y={y}
+      width={width}
+      height={height}
+      rx={5}
+      ry={5}
+      fill={payload?.fill ?? "var(--chart-primary)"}
+      fillOpacity={payload?.fillOpacity ?? 1}
+    />
+  );
 }
 
 function FreshnessTooltip({ active, payload }: FreshnessTooltipProps) {
@@ -155,27 +184,7 @@ export function RepoFreshnessChart({ data }: { data: RepoFreshnessPoint[] }) {
               barSize={12}
               radius={[0, 5, 5, 0]}
               isAnimationActive={false}
-              shape={(props: {
-                x?: number;
-                y?: number;
-                width?: number;
-                height?: number;
-                payload?: { fill?: string; fillOpacity?: number };
-              }) => {
-                const { x = 0, y = 0, width = 0, height = 0, payload } = props;
-                return (
-                  <rect
-                    x={x}
-                    y={y}
-                    width={width}
-                    height={height}
-                    rx={5}
-                    ry={5}
-                    fill={payload?.fill ?? chartColors.primary}
-                    fillOpacity={payload?.fillOpacity ?? 1}
-                  />
-                );
-              }}
+              shape={RepoFreshnessBarShape}
             />
           </BarChart>
         ) : (

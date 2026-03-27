@@ -133,7 +133,7 @@ export function LanguageShareChart({
         >
           {data.map((item, index) => (
             <div
-              key={`legend-${item.name}`}
+              key={`legend-${item.name}-${index}`}
               className={cn(
                 "flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--card)] text-xs",
                 legendItemPaddingClass,

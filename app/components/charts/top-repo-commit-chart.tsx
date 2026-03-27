@@ -47,6 +47,8 @@ function TopRepoCommitTooltip({
 export function TopRepoCommitChart({ data }: { data: TopRepoCommitPoint[] }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
   const chartColors = useResolvedChartColors();
+  // Keep this hook above the empty-data return to preserve stable hook order.
+  // (Moving the return above `useMemo` would violate React's Rules of Hooks.)
   const yAxisWidth = useMemo(() => {
     const longestNameLength = data.reduce(
       (longest, point) => Math.max(longest, point.name.length),

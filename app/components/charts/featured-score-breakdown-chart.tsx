@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
 import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
@@ -24,6 +25,9 @@ type FeaturedScoreTooltipProps = {
   label?: string | number;
   payload?: Array<{ payload?: FeaturedScorePoint }>;
 };
+
+const CHARACTER_PIXEL_WIDTH = 7;
+const LABEL_PADDING = 20;
 
 function FeaturedScoreTooltip({
   active,
@@ -61,6 +65,27 @@ export function FeaturedScoreBreakdownChart({
 }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
   const chartColors = useResolvedChartColors();
+  // Keep the top-ranked repo at full opacity so it reads as the primary item.
+  const chartData = useMemo(
+    () =>
+      data.map((point, index) => ({
+        ...point,
+        fill: point.pinned ? chartColors.pinned : chartColors.unpinned,
+        fillOpacity: index === 0 ? 1 : 0.9,
+      })),
+    [data, chartColors],
+  );
+  const yAxisWidth = useMemo(() => {
+    const longestNameLength = data.reduce(
+      (longest, point) => Math.max(longest, point.name.length),
+      0,
+    );
+    const estimatedWidth =
+      longestNameLength * CHARACTER_PIXEL_WIDTH + LABEL_PADDING;
+    const maxWidth = size.width > 0 ? size.width * 0.45 : 200;
+
+    return Math.max(120, Math.min(estimatedWidth, maxWidth));
+  }, [data, size.width]);
 
   if (!data.length) {
     return (
@@ -69,13 +94,6 @@ export function FeaturedScoreBreakdownChart({
       </div>
     );
   }
-
-  // Keep the top-ranked repo at full opacity so it reads as the primary item.
-  const chartData = data.map((point, index) => ({
-    ...point,
-    fill: point.pinned ? chartColors.pinned : chartColors.unpinned,
-    fillOpacity: index === 0 ? 1 : 0.9,
-  }));
 
   return (
     <div className="h-[320px] w-full min-w-0 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card-muted)] p-3 sm:p-4">
@@ -103,7 +121,7 @@ export function FeaturedScoreBreakdownChart({
             <YAxis
               type="category"
               dataKey="name"
-              width={120}
+              width={yAxisWidth}
               axisLine={false}
               tickLine={false}
               tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
