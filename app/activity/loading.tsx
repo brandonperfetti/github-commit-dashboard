@@ -2,13 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { SectionShell } from "@/app/components/section-shell";
+import { cn } from "@/lib/utils";
 
 const SKELETON_DELAY_MS = 450;
 
 function SkeletonBlock({ className }: { className?: string }) {
   return (
     <div
-      className={`animate-pulse rounded-xl bg-[var(--card-muted)] ${className ?? ""}`}
+      className={cn(
+        "animate-pulse rounded-xl bg-[var(--card-muted)]",
+        className,
+      )}
       aria-hidden
     />
   );
