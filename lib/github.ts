@@ -1136,9 +1136,6 @@ async function getPullRequestHealthUncached(
   username: string = USERNAME,
 ): Promise<PullRequestHealthPoint[]> {
   const windows = buildWeeklyWindows();
-  const oldestWindowStartMs = new Date(
-    `${windows[0]?.start}T00:00:00.000Z`,
-  ).getTime();
   const windowStartMs = new Date(
     `${windows[0]?.start}T00:00:00.000Z`,
   ).getTime();
@@ -1209,7 +1206,7 @@ async function getPullRequestHealthUncached(
             signal: controller.signal,
           },
           (page) => {
-            if (!Number.isFinite(oldestWindowStartMs) || page.length === 0) {
+            if (!Number.isFinite(windowStartMs) || page.length === 0) {
               return true;
             }
 
@@ -1228,7 +1225,7 @@ async function getPullRequestHealthUncached(
               }
             }
 
-            return oldestUpdatedMs < oldestWindowStartMs;
+            return oldestUpdatedMs < windowStartMs;
           },
         );
 
