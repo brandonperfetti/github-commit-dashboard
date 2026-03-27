@@ -63,20 +63,23 @@ export function AnimatedHeadline({
         );
 
         if (caretRef.current) {
-          // Keep caret visible during typing, then start blinking by fading to 0
-          // with yoyo back to 1 (via startAt) after the typewriter pass:
-          // chars * TYPEWRITER_CHAR_STAGGER + TYPEWRITER_CARET_START_BUFFER.
-          gsap.to(caretRef.current, {
-            autoAlpha: 0,
-            repeat: -1,
-            yoyo: true,
-            duration: TYPEWRITER_CARET_BLINK_DURATION,
-            ease: "none",
-            delay:
-              delay +
-              characterNodes.length * TYPEWRITER_CHAR_STAGGER +
-              TYPEWRITER_CARET_START_BUFFER,
-            startAt: { autoAlpha: 1 },
+          // Intentionally keep caret hidden during typing. Start blinking only
+          // after typewriter characters have finished revealing.
+          gsap.set(caretRef.current, { autoAlpha: 0 });
+          const blinkDelay =
+            delay +
+            characterNodes.length * TYPEWRITER_CHAR_STAGGER +
+            TYPEWRITER_CARET_START_BUFFER;
+          gsap.delayedCall(blinkDelay, () => {
+            if (!caretRef.current) return;
+            gsap.to(caretRef.current, {
+              autoAlpha: 0,
+              repeat: -1,
+              yoyo: true,
+              duration: TYPEWRITER_CARET_BLINK_DURATION,
+              ease: "none",
+              startAt: { autoAlpha: 1 },
+            });
           });
         }
 
