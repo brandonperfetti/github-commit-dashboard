@@ -16,9 +16,9 @@ const INTENSITY_OPACITY: Record<number, number> = {
   0: 0,
   // Keep non-zero intensities high enough for non-text contrast against
   // both light and dark card backgrounds.
-  1: 0.56,
-  2: 0.68,
-  3: 0.8,
+  1: 0.7,
+  2: 0.82,
+  3: 0.92,
   4: 0.92,
 };
 

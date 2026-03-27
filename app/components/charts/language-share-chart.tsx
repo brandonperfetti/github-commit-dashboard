@@ -122,7 +122,7 @@ export function LanguageShareChart({
         </div>
         <div
           className={cn(
-            "flex h-full min-w-0 flex-col justify-center pt-2 pb-3",
+            "flex h-full max-h-[16rem] min-w-0 flex-col justify-center overflow-y-auto pt-2 pb-3 sm:max-h-full",
             legendGapClass,
           )}
         >
