@@ -132,6 +132,7 @@ const SEARCH_RATE_LIMIT_INTERVAL_PUBLIC_MS = 1100;
 const GITHUB_FETCH_TIMEOUT_MS = 10_000;
 const ACTIVITY_AGGREGATE_CACHE_TTL_MS = 60_000;
 const MAX_CACHE_SIZE = 300;
+const MAX_GITHUB_PAGINATION_PAGES = 100;
 
 class GitHubApiError extends Error {
   status: number;
@@ -240,8 +241,16 @@ async function paginateGitHub<T>(
 ) {
   const results: T[] = [];
   let currentUrl: string | null = initialUrl;
+  let pageCount = 0;
 
   while (currentUrl) {
+    pageCount += 1;
+    if (pageCount > MAX_GITHUB_PAGINATION_PAGES) {
+      throw new Error(
+        `[paginateGitHub] Exceeded max page limit (${MAX_GITHUB_PAGINATION_PAGES}) for URL: ${initialUrl}`,
+      );
+    }
+
     const response = await fetch(currentUrl, options);
     if (!response.ok) {
       throw new GitHubApiError(response.status);
@@ -970,7 +979,11 @@ export async function buildRepoCommitActivitySummary(
         );
 
         return { repo, commits };
-      } catch {
+      } catch (error) {
+        console.error(
+          `[github/buildRepoCommitActivitySummary] Failed to fetch commits for ${repo.full_name}`,
+          error,
+        );
         return {
           repo,
           commits: [] as Array<{ commit?: { author?: { date?: string } } }>,
@@ -1207,8 +1220,9 @@ async function getPullRequestHealthUncached(
         fetchGithubSearchCount(buildQuery("created")),
         fetchGithubSearchCount(buildQuery("merged")),
         fetchGithubSearchCount(buildQuery("closed")),
-        // Intentional: this uses GitHub's issues search endpoint with `is:pr`,
-        // where `reopened:YYYY-MM-DD..YYYY-MM-DD` is accepted and returns PRs
+        // CodeRabbit false-positive note: this path intentionally uses GitHub's
+        // issues search endpoint with `is:pr`, where
+        // `reopened:YYYY-MM-DD..YYYY-MM-DD` is accepted and returns PRs
         // reopened in the window. We keep this server-side count to avoid a
         // heavier per-PR timeline crawl just for reopen events.
         fetchGithubSearchCount(buildQuery("reopened")),
