@@ -106,6 +106,10 @@ export type CommitTimingHeatmapData = {
   cells: CommitTimingHeatmapCell[];
 };
 
+type GitHubRequestOptions = {
+  signal?: AbortSignal;
+};
+
 const SEARCH_CACHE_TTL_MS = 5 * 60 * 1000;
 const SEARCH_MAX_RETRIES = 3;
 const SEARCH_RATE_LIMIT_INTERVAL_AUTH_MS = 350;
@@ -185,6 +189,12 @@ function wait(ms: number) {
   });
 }
 
+function throwIfAborted(signal?: AbortSignal) {
+  if (signal?.aborted) {
+    throw new DOMException("The operation was aborted.", "AbortError");
+  }
+}
+
 async function reserveSearchRequestSlot() {
   const intervalMs = hasGithubToken()
     ? SEARCH_RATE_LIMIT_INTERVAL_AUTH_MS
@@ -202,7 +212,11 @@ async function reserveSearchRequestSlot() {
   await searchRateLimiter;
 }
 
-async function fetchGithubSearchCount(encodedQuery: string) {
+async function fetchGithubSearchCount(
+  encodedQuery: string,
+  signal?: AbortSignal,
+) {
+  throwIfAborted(signal);
   const now = Date.now();
   const cacheEntry = githubSearchCountCache.get(encodedQuery);
   if (cacheEntry && cacheEntry.expiresAt > now) {
@@ -210,13 +224,16 @@ async function fetchGithubSearchCount(encodedQuery: string) {
   }
 
   for (let attempt = 0; attempt < SEARCH_MAX_RETRIES; attempt += 1) {
+    throwIfAborted(signal);
     await reserveSearchRequestSlot();
+    throwIfAborted(signal);
 
     const response = await fetch(
       `https://api.github.com/search/issues?q=${encodedQuery}&per_page=1`,
       {
         headers: githubHeaders(),
         next: { revalidate: GITHUB_REVALIDATE_SECONDS },
+        signal,
       },
     );
 
@@ -329,6 +346,7 @@ export function buildLast30Days() {
 
 export async function getContributionDays(
   username: string = USERNAME,
+  options?: GitHubRequestOptions,
 ): Promise<ContributionDay[]> {
   const dates = buildLast30Days();
   const from = dates[0];
@@ -341,6 +359,7 @@ export async function getContributionDays(
         "User-Agent": "Build Dashboard",
       },
       next: { revalidate: GITHUB_REVALIDATE_SECONDS },
+      signal: options?.signal,
     },
   );
 
@@ -396,12 +415,13 @@ export async function getContributionDays(
 
 export async function getRepos(
   username: string = USERNAME,
-  options?: { includeArchived?: boolean },
+  options?: { includeArchived?: boolean; signal?: AbortSignal },
 ): Promise<Repo[]> {
   const includeArchived = options?.includeArchived ?? false;
   const fetchOptions = {
     headers: githubHeaders(),
     next: { revalidate: GITHUB_REVALIDATE_SECONDS, tags: ["github:repos"] },
+    signal: options?.signal,
   } satisfies RequestInit & {
     next: { revalidate: number; tags: string[] };
   };
