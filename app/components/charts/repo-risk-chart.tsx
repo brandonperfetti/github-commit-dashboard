@@ -35,6 +35,28 @@ function RepoRiskTooltip({ active, payload }: RepoRiskTooltipProps) {
   );
 }
 
+function RiskBucketBarShape(props: {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  payload?: { fill?: string };
+}) {
+  const { x = 0, y = 0, width = 0, height = 0, payload } = props;
+
+  return (
+    <rect
+      x={x}
+      y={y}
+      width={width}
+      height={height}
+      rx={6}
+      ry={6}
+      fill={payload?.fill ?? "var(--chart-primary)"}
+    />
+  );
+}
+
 export function RepoRiskChart({ snapshot }: { snapshot: RepoRiskSnapshot }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
   const chartColors = useResolvedChartColors();
@@ -101,6 +123,7 @@ export function RepoRiskChart({ snapshot }: { snapshot: RepoRiskSnapshot }) {
               dataKey="count"
               radius={[6, 6, 0, 0]}
               isAnimationActive={false}
+              shape={RiskBucketBarShape}
             />
           </BarChart>
         ) : (
