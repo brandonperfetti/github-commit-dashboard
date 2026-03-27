@@ -1,17 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export function useChartSize<T extends HTMLElement>() {
-  const ref = useRef<T | null>(null);
+  const [element, setElement] = useState<T | null>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
+  const ref = useCallback((node: T | null) => {
+    setElement(node);
+  }, []);
 
   useEffect(() => {
-    if (!ref.current) {
+    if (!element) {
       return;
     }
 
-    const element = ref.current;
     const updateSize = () => {
       const next = element.getBoundingClientRect();
       const width = Math.max(0, Math.floor(next.width));
@@ -30,7 +32,7 @@ export function useChartSize<T extends HTMLElement>() {
     observer.observe(element);
 
     return () => observer.disconnect();
-  }, []);
+  }, [element]);
 
   return { ref, size, ready: size.width > 0 && size.height > 0 };
 }
