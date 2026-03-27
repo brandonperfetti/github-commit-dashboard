@@ -1,5 +1,4 @@
 import { ActivityOverview } from "@/app/components/activity-overview";
-import { headers } from "next/headers";
 import {
   type CommitTimingHeatmapData,
   type ContributionDay,
@@ -29,18 +28,14 @@ export default async function ActivityPage() {
     console.error(`[activity/page] Failed to load ${label}:`, reason);
   };
 
-  const requestHeaders = await headers();
-  const requestTimezone =
-    requestHeaders.get("x-time-zone") ??
-    requestHeaders.get("x-vercel-ip-timezone") ??
-    undefined;
-
   const [daysResult, prHealthResult, issueFlowResult, commitTimingResult] =
     await Promise.allSettled([
       getContributionDays(),
       getPullRequestHealth(),
       getIssueFlowHealth(),
-      getCommitTimingHeatmap(undefined, requestTimezone),
+      // Keep this page static so `revalidate` remains effective; timezone-aware
+      // refinement can happen client-side without forcing dynamic rendering.
+      getCommitTimingHeatmap(),
     ]);
 
   const days: ContributionDay[] =

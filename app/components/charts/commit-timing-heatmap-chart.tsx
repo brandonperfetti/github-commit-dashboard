@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
 import type { CommitTimingHeatmapData } from "@/lib/github";
 
@@ -43,6 +43,7 @@ export function CommitTimingHeatmapChart({
   data: CommitTimingHeatmapData;
 }) {
   const chartColors = useResolvedChartColors();
+  const chartRootRef = useRef<HTMLDivElement | null>(null);
   const [hoveredCellKey, setHoveredCellKey] = useState<CellKey | null>(null);
   const [focusedCellKey, setFocusedCellKey] = useState<CellKey | null>(null);
   const lookup = useMemo(
@@ -143,7 +144,10 @@ export function CommitTimingHeatmapChart({
   );
 
   return (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-muted)] p-3 sm:p-4">
+    <div
+      ref={chartRootRef}
+      className="rounded-2xl border border-[var(--border)] bg-[var(--card-muted)] p-3 sm:p-4"
+    >
       {activeWindowLabel ? (
         <p className="mb-2 text-xs text-[var(--muted-foreground)]">
           {activeWindowLabel}
@@ -254,9 +258,10 @@ export function CommitTimingHeatmapChart({
                       setHoveredCellKey(nextCellKey);
 
                       requestAnimationFrame(() => {
-                        const nextCell = document.querySelector<HTMLElement>(
-                          `[data-cell-key="${nextCellKey}"]`,
-                        );
+                        const nextCell =
+                          chartRootRef.current?.querySelector<HTMLElement>(
+                            `[data-cell-key="${nextCellKey}"]`,
+                          );
                         nextCell?.focus();
                       });
                     }}
