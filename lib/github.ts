@@ -111,6 +111,15 @@ const SEARCH_MAX_RETRIES = 3;
 const SEARCH_RATE_LIMIT_INTERVAL_MS = 2100;
 const GITHUB_FETCH_TIMEOUT_MS = 10_000;
 
+class GitHubApiError extends Error {
+  status: number;
+
+  constructor(status: number, message?: string) {
+    super(message ?? `GitHub API returned ${status}`);
+    this.status = status;
+  }
+}
+
 // Best-effort process-local cache/limiter for GitHub Search requests.
 // In serverless/multi-instance deployments this state is not shared and can reset
 // on cold starts, so rate limiting and cache hits are opportunistic.
@@ -135,6 +144,38 @@ function githubHeaders() {
     "User-Agent": "Build Dashboard",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
+}
+
+function parseNextLink(linkHeader: string | null) {
+  if (!linkHeader) {
+    return null;
+  }
+
+  const nextMatch = linkHeader.match(/<([^>]+)>;\s*rel="next"/);
+  return nextMatch?.[1] ?? null;
+}
+
+async function paginateGitHub<T>(
+  initialUrl: string,
+  options?: RequestInit & {
+    next?: { revalidate?: number; tags?: string[] };
+  },
+) {
+  const results: T[] = [];
+  let currentUrl: string | null = initialUrl;
+
+  while (currentUrl) {
+    const response = await fetch(currentUrl, options);
+    if (!response.ok) {
+      throw new GitHubApiError(response.status);
+    }
+
+    const page = (await response.json()) as T[];
+    results.push(...page);
+    currentUrl = parseNextLink(response.headers.get("link"));
+  }
+
+  return results;
 }
 
 function wait(ms: number) {
@@ -353,36 +394,32 @@ export async function getRepos(
   options?: { includeArchived?: boolean },
 ): Promise<Repo[]> {
   const includeArchived = options?.includeArchived ?? false;
-  const fetchRepos = async (url: string) => {
-    const response = await fetch(url, {
-      headers: githubHeaders(),
-      next: { revalidate: GITHUB_REVALIDATE_SECONDS, tags: ["github:repos"] },
-    });
-
-    return response;
+  const fetchOptions = {
+    headers: githubHeaders(),
+    next: { revalidate: GITHUB_REVALIDATE_SECONDS, tags: ["github:repos"] },
+  } satisfies RequestInit & {
+    next: { revalidate: number; tags: string[] };
   };
 
   const publicReposUrl = `https://api.github.com/users/${username}/repos?per_page=100&sort=updated`;
 
   if (!hasGithubToken()) {
-    const response = await fetchRepos(publicReposUrl);
-    if (!response.ok) {
-      if (response.status === 403) {
+    try {
+      const repos = await paginateGitHub<Repo>(publicReposUrl, fetchOptions);
+      return repos.filter((repo) => includeArchived || !repo.archived);
+    } catch (error) {
+      if (error instanceof GitHubApiError && error.status === 403) {
         return [];
       }
-      throw new Error(`GitHub API returned ${response.status}`);
+      throw error;
     }
-
-    const repos = (await response.json()) as Repo[];
-    return repos.filter((repo) => includeArchived || !repo.archived);
   }
 
-  const authResponse = await fetchRepos(
-    "https://api.github.com/user/repos?per_page=100&sort=updated&visibility=all&affiliation=owner,collaborator,organization_member",
-  );
+  const authReposUrl =
+    "https://api.github.com/user/repos?per_page=100&sort=updated&visibility=all&affiliation=owner,collaborator,organization_member";
 
-  if (authResponse.ok) {
-    const repos = (await authResponse.json()) as Repo[];
+  try {
+    const repos = await paginateGitHub<Repo>(authReposUrl, fetchOptions);
     return repos.filter((repo) => {
       if (!includeArchived && repo.archived) return false;
       const ownerLogin = repo.owner?.login;
@@ -390,24 +427,38 @@ export async function getRepos(
         ? ownerLogin === username
         : repo.full_name.startsWith(`${username}/`);
     });
-  }
+  } catch (authError) {
+    // If an authenticated call fails (expired token/rate issue), fall back to public repos.
+    try {
+      const fallbackRepos = await paginateGitHub<Repo>(
+        publicReposUrl,
+        fetchOptions,
+      );
+      return fallbackRepos.filter((repo) => includeArchived || !repo.archived);
+    } catch (fallbackError) {
+      const authStatus =
+        authError instanceof GitHubApiError ? authError.status : null;
+      const fallbackStatus =
+        fallbackError instanceof GitHubApiError ? fallbackError.status : null;
 
-  // If an authenticated call fails (expired token/rate issue), fall back to public repos.
-  const fallbackResponse = await fetchRepos(publicReposUrl);
-  if (!fallbackResponse.ok) {
-    if (fallbackResponse.status === 403 || authResponse.status === 403) {
-      return [];
+      if (authStatus === 403 || fallbackStatus === 403) {
+        return [];
+      }
+
+      throw fallbackError;
     }
-    throw new Error(`GitHub API returned ${fallbackResponse.status}`);
   }
-
-  const fallbackRepos = (await fallbackResponse.json()) as Repo[];
-  return fallbackRepos.filter((repo) => includeArchived || !repo.archived);
 }
 
 export async function getPinnedRepos(
   username: string = USERNAME,
 ): Promise<Repo[]> {
+  if (!isGithubAuthConfigured()) {
+    throw new Error(
+      "GitHub authentication is required to read pinned repositories.",
+    );
+  }
+
   const decodeGraphqlRepositoryId = (graphQlId: string): number | null => {
     try {
       const decoded = Buffer.from(graphQlId, "base64").toString("utf8");
@@ -477,7 +528,10 @@ export async function getPinnedRepos(
 
   if (!response.ok) {
     if (response.status === 401 || response.status === 403) {
-      return [];
+      throw new GitHubApiError(
+        response.status,
+        `GitHub authentication failed while fetching pinned repositories (${response.status}).`,
+      );
     }
     throw new Error(`GitHub API returned ${response.status}`);
   }
@@ -521,7 +575,7 @@ export async function getPinnedRepos(
         .filter(Boolean)
         .join(" | ") || payload.errors,
     );
-    return [];
+    throw new Error("GitHub GraphQL returned errors for pinned repositories.");
   }
 
   const nodes = payload.data?.user?.pinnedItems?.nodes ?? [];
@@ -652,6 +706,10 @@ export function buildSparklinePoints(days: ContributionDay[]) {
 }
 
 export function buildWeeklyTotals(days: ContributionDay[]) {
+  if (days.length === 0) {
+    return [];
+  }
+
   const calendarCells = buildCalendarCells(days);
   const weeks = chunkWeeks(calendarCells);
 
@@ -696,14 +754,24 @@ export async function buildRepoCommitCadence(
 export async function buildRepoCommitActivitySummary(
   repos: Repo[],
   topRepoLimit: number = 8,
+  options?: { forceIncludeFullNames?: string[] },
 ) {
-  const topRepos = [...repos]
-    .sort(
-      (a, b) =>
-        +new Date(b.pushed_at) - +new Date(a.pushed_at) ||
-        b.stargazers_count - a.stargazers_count,
-    )
-    .slice(0, topRepoLimit);
+  const sortedRepos = [...repos].sort(
+    (a, b) =>
+      +new Date(b.pushed_at) - +new Date(a.pushed_at) ||
+      b.stargazers_count - a.stargazers_count,
+  );
+  const forceInclude = new Set(options?.forceIncludeFullNames ?? []);
+  const forcedRepos = sortedRepos.filter((repo) =>
+    forceInclude.has(repo.full_name),
+  );
+  const remainder = sortedRepos.filter(
+    (repo) => !forceInclude.has(repo.full_name),
+  );
+  const topRepos = [
+    ...forcedRepos,
+    ...remainder.slice(Math.max(0, topRepoLimit - forcedRepos.length)),
+  ];
   const windows = buildWeeklyWindows();
   const buckets = windows.map((window) => ({ ...window, value: 0 }));
   const start = windows[0]?.start;
@@ -733,7 +801,9 @@ export async function buildRepoCommitActivitySummary(
       }, GITHUB_FETCH_TIMEOUT_MS);
 
       try {
-        const response = await fetch(
+        const commits = await paginateGitHub<{
+          commit?: { author?: { date?: string } };
+        }>(
           `https://api.github.com/repos/${repo.full_name}/commits?since=${start}T00:00:00Z&per_page=100`,
           {
             headers: githubHeaders(),
@@ -741,17 +811,6 @@ export async function buildRepoCommitActivitySummary(
             signal: controller.signal,
           },
         );
-
-        if (!response.ok) {
-          return {
-            repo,
-            commits: [] as Array<{ commit?: { author?: { date?: string } } }>,
-          };
-        }
-
-        const commits = (await response.json()) as Array<{
-          commit?: { author?: { date?: string } };
-        }>;
 
         return { repo, commits };
       } catch {
@@ -852,7 +911,9 @@ export async function getCommitTimingHeatmap(
       }, GITHUB_FETCH_TIMEOUT_MS);
 
       try {
-        const response = await fetch(
+        return await paginateGitHub<{
+          commit?: { author?: { date?: string } };
+        }>(
           `https://api.github.com/repos/${repo.full_name}/commits?since=${start}T00:00:00Z&per_page=100`,
           {
             headers: githubHeaders(),
@@ -860,14 +921,6 @@ export async function getCommitTimingHeatmap(
             signal: controller.signal,
           },
         );
-
-        if (!response.ok) {
-          return [] as Array<{ commit?: { author?: { date?: string } } }>;
-        }
-
-        return (await response.json()) as Array<{
-          commit?: { author?: { date?: string } };
-        }>;
       } catch {
         return [] as Array<{ commit?: { author?: { date?: string } } }>;
       } finally {
@@ -1005,7 +1058,11 @@ export async function getPullRequestHealth(
       }, GITHUB_FETCH_TIMEOUT_MS);
 
       try {
-        const response = await fetch(
+        const pulls = await paginateGitHub<{
+          created_at?: string;
+          merged_at?: string | null;
+          user?: { login?: string };
+        }>(
           `https://api.github.com/repos/${repo.full_name}/pulls?state=closed&sort=updated&direction=desc&per_page=100`,
           {
             headers: githubHeaders(),
@@ -1014,21 +1071,13 @@ export async function getPullRequestHealth(
           },
         );
 
-        if (!response.ok) {
-          return [] as Array<{
-            created_at?: string;
-            merged_at?: string | null;
-          }>;
-        }
-
-        const pulls = (await response.json()) as Array<{
-          created_at?: string;
-          merged_at?: string | null;
-        }>;
-
         return pulls;
       } catch {
-        return [] as Array<{ created_at?: string; merged_at?: string | null }>;
+        return [] as Array<{
+          created_at?: string;
+          merged_at?: string | null;
+          user?: { login?: string };
+        }>;
       } finally {
         clearTimeout(timeoutId);
       }
@@ -1038,6 +1087,9 @@ export async function getPullRequestHealth(
   for (const pulls of prResponses) {
     for (const pr of pulls) {
       if (!pr.created_at || !pr.merged_at) {
+        continue;
+      }
+      if (pr.user?.login !== username) {
         continue;
       }
 
@@ -1157,7 +1209,9 @@ export async function getReleaseCadence(
       }, GITHUB_FETCH_TIMEOUT_MS);
 
       try {
-        const response = await fetch(
+        return await paginateGitHub<{
+          published_at?: string | null;
+        }>(
           `https://api.github.com/repos/${repo.full_name}/releases?per_page=30`,
           {
             headers: githubHeaders(),
@@ -1165,14 +1219,6 @@ export async function getReleaseCadence(
             signal: controller.signal,
           },
         );
-
-        if (!response.ok) {
-          return [] as Array<{ published_at?: string | null }>;
-        }
-
-        return (await response.json()) as Array<{
-          published_at?: string | null;
-        }>;
       } catch {
         return [] as Array<{ published_at?: string | null }>;
       } finally {
@@ -1232,7 +1278,7 @@ export async function getRepoRiskSnapshot(
     return age >= 31 && age <= 90;
   }).length;
   const dormant = activeRepos.filter(
-    (repo) => daysSince(repo.pushed_at) > 90,
+    (repo) => daysSince(repo.pushed_at) >= 90,
   ).length;
 
   const buckets: RepoRiskBucket[] = [
