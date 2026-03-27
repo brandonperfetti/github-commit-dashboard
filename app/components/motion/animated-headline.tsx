@@ -1,7 +1,7 @@
 "use client";
 
 import { gsap } from "gsap";
-import { useEffect, useMemo, useRef } from "react";
+import { useMemo, useRef } from "react";
 import {
   HEADLINE_DEFAULT_DELAY,
   LINE_WORD_DURATION,
@@ -12,6 +12,7 @@ import {
   TYPEWRITER_CHAR_STAGGER,
 } from "@/lib/motion/headlineTiming";
 import { usePrefersReducedMotion } from "@/lib/motion/usePrefersReducedMotion";
+import { useIsomorphicLayoutEffect } from "@/lib/motion/useIsomorphicLayoutEffect";
 
 type HeadlineTag = "h1" | "h2" | "h3";
 
@@ -37,7 +38,7 @@ export function AnimatedHeadline({
     [words],
   );
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (prefersReducedMotion || !rootRef.current) {
       return;
     }
@@ -47,6 +48,7 @@ export function AnimatedHeadline({
         const characterNodes = Array.from(
           rootRef.current?.querySelectorAll("[data-char]") ?? [],
         );
+        gsap.set(characterNodes, { autoAlpha: 0 });
         const timeline = gsap.timeline();
         timeline.fromTo(
           characterNodes,
@@ -84,6 +86,7 @@ export function AnimatedHeadline({
       const wordNodes = Array.from(
         rootRef.current?.querySelectorAll("[data-word]") ?? [],
       );
+      gsap.set(wordNodes, { autoAlpha: 0 });
       gsap.fromTo(
         wordNodes,
         { autoAlpha: 0, y: 14 },
