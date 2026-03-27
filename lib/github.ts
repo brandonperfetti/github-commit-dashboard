@@ -890,27 +890,22 @@ export async function buildRepoCommitActivitySummary(
 }
 
 export async function getCommitTimingHeatmap(
+  timezone: string,
   username: string = USERNAME,
-  timezone?: string,
+  options?: GitHubRequestOptions,
 ): Promise<CommitTimingHeatmapData> {
   const dates = buildLast30Days();
   const start = dates[0];
-  const fallbackTimezone =
-    Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
   const resolvedTimezone = (() => {
-    if (!timezone) {
-      return fallbackTimezone;
-    }
-
     try {
       new Intl.DateTimeFormat("en-US", { timeZone: timezone });
       return timezone;
     } catch {
-      return fallbackTimezone;
+      return "UTC";
     }
   })();
 
-  const repos = await getRepos(username);
+  const repos = await getRepos(username, { signal: options?.signal });
   const topRepos = [...repos]
     .sort(
       (a, b) =>
@@ -939,11 +934,11 @@ export async function getCommitTimingHeatmap(
         return await paginateGitHub<{
           commit?: { author?: { date?: string } };
         }>(
-          `https://api.github.com/repos/${repo.full_name}/commits?since=${start}T00:00:00Z&per_page=100`,
+          `https://api.github.com/repos/${repo.full_name}/commits?since=${start}T00:00:00Z&author=${username}&per_page=100`,
           {
             headers: githubHeaders(),
             next: { revalidate: GITHUB_REVALIDATE_SECONDS },
-            signal: controller.signal,
+            signal: options?.signal ?? controller.signal,
           },
         );
       } catch {
