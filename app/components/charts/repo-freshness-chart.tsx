@@ -88,7 +88,7 @@ export function RepoFreshnessChart({ data }: { data: RepoFreshnessPoint[] }) {
     const estimatedWidth = longestNameLength * 7 + 20;
     const maxWidth = size.width > 0 ? size.width * 0.45 : 200;
 
-    return Math.max(110, Math.min(estimatedWidth, maxWidth, 200));
+    return Math.max(110, Math.min(estimatedWidth, maxWidth));
   }, [data, size.width]);
 
   if (!data.length) {

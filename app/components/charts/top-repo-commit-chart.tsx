@@ -61,7 +61,7 @@ export function TopRepoCommitChart({ data }: { data: TopRepoCommitPoint[] }) {
       longestNameLength * CHARACTER_PIXEL_WIDTH + LABEL_PADDING;
     const maxWidth = size.width > 0 ? size.width * 0.45 : 200;
 
-    return Math.max(110, Math.min(estimatedWidth, maxWidth, 200));
+    return Math.max(110, Math.min(estimatedWidth, maxWidth));
   }, [data, size.width]);
 
   if (!data.length) {
