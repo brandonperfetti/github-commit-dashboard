@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
 import type { CommitTimingHeatmapData } from "@/lib/github";
 
 // Intensity 1-4 classes are intentionally blank: those cells get their
@@ -15,10 +14,12 @@ const INTENSITY_CLASSES: Record<number, string> = {
 };
 const INTENSITY_OPACITY: Record<number, number> = {
   0: 0,
-  1: 0.3,
-  2: 0.45,
-  3: 0.6,
-  4: 0.8,
+  // Keep non-zero intensities high enough for non-text contrast against
+  // both light and dark card backgrounds.
+  1: 0.56,
+  2: 0.68,
+  3: 0.8,
+  4: 0.92,
 };
 
 const HOURS = Array.from({ length: 24 }, (_, index) => index);
@@ -42,7 +43,6 @@ export function CommitTimingHeatmapChart({
 }: {
   data: CommitTimingHeatmapData;
 }) {
-  const chartColors = useResolvedChartColors();
   const chartRootRef = useRef<HTMLDivElement | null>(null);
   const [hoveredCellKey, setHoveredCellKey] = useState<CellKey | null>(null);
   const [focusedCellKey, setFocusedCellKey] = useState<CellKey | null>(null);
@@ -135,12 +135,12 @@ export function CommitTimingHeatmapChart({
           return [
             intensity,
             {
-              backgroundColor: `color-mix(in srgb, ${chartColors.primary} ${opacity * 100}%, transparent)`,
+              backgroundColor: `color-mix(in srgb, var(--chart-primary) ${opacity * 100}%, transparent)`,
             },
           ];
         }),
       ) as Record<1 | 2 | 3 | 4, { backgroundColor: string }>,
-    [chartColors.primary],
+    [],
   );
 
   return (
