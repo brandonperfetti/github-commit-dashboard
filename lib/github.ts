@@ -1166,6 +1166,7 @@ export async function getPullRequestHealth(
 
 export async function getIssueFlowHealth(
   username: string = USERNAME,
+  options?: GitHubRequestOptions,
 ): Promise<IssueFlowHealthPoint[]> {
   const windows = buildWeeklyWindows();
 
@@ -1176,8 +1177,8 @@ export async function getIssueFlowHealth(
           `is:issue user:${username} ${qualifier}:${window.start}..${window.end}`,
         );
       const [opened, closed] = await Promise.all([
-        fetchGithubSearchCount(buildQuery("created")),
-        fetchGithubSearchCount(buildQuery("closed")),
+        fetchGithubSearchCount(buildQuery("created"), options?.signal),
+        fetchGithubSearchCount(buildQuery("closed"), options?.signal),
       ]);
 
       return {
