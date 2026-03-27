@@ -77,7 +77,6 @@ export function TopRepoCommitChart({ data }: { data: TopRepoCommitPoint[] }) {
       <div ref={ref} className="h-full w-full min-w-0 overflow-hidden">
         {ready ? (
           <BarChart
-            accessibilityLayer={false}
             width={size.width}
             height={size.height}
             data={data}

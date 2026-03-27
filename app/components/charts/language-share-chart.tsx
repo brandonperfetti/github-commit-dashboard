@@ -99,11 +99,7 @@ export function LanguageShareChart({
       <div className="grid gap-3 sm:h-full sm:grid-cols-[1fr_0.95fr] sm:gap-4">
         <div ref={ref} className="h-[150px] min-w-0 overflow-hidden sm:h-full">
           {ready ? (
-            <PieChart
-              accessibilityLayer={false}
-              width={size.width}
-              height={size.height}
-            >
+            <PieChart width={size.width} height={size.height}>
               <Pie
                 data={chartData}
                 dataKey="value"

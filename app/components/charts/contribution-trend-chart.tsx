@@ -68,7 +68,6 @@ export function ContributionTrendChart({
       <div ref={ref} className="h-full w-full min-w-0 overflow-hidden">
         {ready ? (
           <AreaChart
-            accessibilityLayer={false}
             width={size.width}
             height={size.height}
             data={data}

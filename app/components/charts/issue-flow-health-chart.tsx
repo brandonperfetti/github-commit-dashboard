@@ -64,7 +64,6 @@ export function IssueFlowHealthChart({
       <div ref={ref} className="h-full w-full min-w-0 overflow-hidden">
         {ready ? (
           <ComposedChart
-            accessibilityLayer={false}
             width={size.width}
             height={size.height}
             data={data}
