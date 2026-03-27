@@ -1123,7 +1123,22 @@ export async function getPullRequestHealth(
   username: string = USERNAME,
   options?: GitHubRequestOptions,
 ): Promise<PullRequestHealthPoint[]> {
+  return resolveWithProcessCache(
+    username,
+    pullRequestHealthCache,
+    pullRequestHealthInFlight,
+    () => getPullRequestHealthUncached(username),
+    options?.signal,
+  );
+}
+
+async function getPullRequestHealthUncached(
+  username: string = USERNAME,
+): Promise<PullRequestHealthPoint[]> {
   const windows = buildWeeklyWindows();
+  const oldestWindowStartMs = new Date(
+    `${windows[0]?.start}T00:00:00.000Z`,
+  ).getTime();
   const windowStartMs = new Date(
     `${windows[0]?.start}T00:00:00.000Z`,
   ).getTime();
@@ -1142,12 +1157,12 @@ export async function getPullRequestHealth(
           `is:pr author:${username} ${qualifier}:${window.start}..${window.end}`,
         );
       const [opened, merged, closed, reopened] = await Promise.all([
-        fetchGithubSearchCount(buildQuery("created"), options?.signal),
-        fetchGithubSearchCount(buildQuery("merged"), options?.signal),
-        fetchGithubSearchCount(buildQuery("closed"), options?.signal),
+        fetchGithubSearchCount(buildQuery("created")),
+        fetchGithubSearchCount(buildQuery("merged")),
+        fetchGithubSearchCount(buildQuery("closed")),
         // Verified against GitHub Search API in this project: `reopened:YYYY-MM-DD..YYYY-MM-DD`
         // returns expected counts for authored PRs, so we keep this metric in flow health.
-        fetchGithubSearchCount(buildQuery("reopened"), options?.signal),
+        fetchGithubSearchCount(buildQuery("reopened")),
       ]);
 
       return {
@@ -1161,7 +1176,7 @@ export async function getPullRequestHealth(
     }),
   );
 
-  const repos = await getRepos(username, { signal: options?.signal });
+  const repos = await getRepos(username);
   const topRepos = [...repos]
     .sort(
       (a, b) =>
@@ -1178,8 +1193,9 @@ export async function getPullRequestHealth(
       }, GITHUB_FETCH_TIMEOUT_MS);
 
       try {
-        const pulls = await paginateGitHub<{
+        const pulls = await paginateGitHubUntil<{
           created_at?: string;
+          updated_at?: string;
           merged_at?: string | null;
           user?: { login?: string };
         }>(
@@ -1190,7 +1206,29 @@ export async function getPullRequestHealth(
           {
             headers: githubHeaders(),
             next: { revalidate: GITHUB_REVALIDATE_SECONDS },
-            signal: options?.signal ?? controller.signal,
+            signal: controller.signal,
+          },
+          (page) => {
+            if (!Number.isFinite(oldestWindowStartMs) || page.length === 0) {
+              return true;
+            }
+
+            // API is sorted by updated desc; once a page is fully older than the
+            // oldest window start, following pages will only get older.
+            let oldestUpdatedMs = Number.POSITIVE_INFINITY;
+            for (const pull of page) {
+              const updatedMs = pull.updated_at
+                ? new Date(pull.updated_at).getTime()
+                : Number.NaN;
+              if (!Number.isFinite(updatedMs)) {
+                continue;
+              }
+              if (updatedMs < oldestUpdatedMs) {
+                oldestUpdatedMs = updatedMs;
+              }
+            }
+
+            return oldestUpdatedMs < oldestWindowStartMs;
           },
         );
 
@@ -1198,6 +1236,7 @@ export async function getPullRequestHealth(
       } catch {
         return [] as Array<{
           created_at?: string;
+          updated_at?: string;
           merged_at?: string | null;
           user?: { login?: string };
         }>;
