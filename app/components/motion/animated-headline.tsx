@@ -70,17 +70,22 @@ export function AnimatedHeadline({
             delay +
             characterNodes.length * TYPEWRITER_CHAR_STAGGER +
             TYPEWRITER_CARET_START_BUFFER;
-          gsap.delayedCall(blinkDelay, () => {
-            if (!caretRef.current) return;
-            gsap.to(caretRef.current, {
-              autoAlpha: 0,
-              repeat: -1,
-              yoyo: true,
-              duration: TYPEWRITER_CARET_BLINK_DURATION,
-              ease: "none",
-              startAt: { autoAlpha: 1 },
-            });
+          const caretBlinkTween = gsap.to(caretRef.current, {
+            autoAlpha: 0,
+            repeat: -1,
+            yoyo: true,
+            duration: TYPEWRITER_CARET_BLINK_DURATION,
+            ease: "none",
+            startAt: { autoAlpha: 1 },
+            paused: true,
           });
+          timeline.call(
+            () => {
+              caretBlinkTween.play();
+            },
+            undefined,
+            blinkDelay,
+          );
         }
 
         return;
