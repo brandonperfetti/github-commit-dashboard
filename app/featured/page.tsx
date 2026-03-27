@@ -1,6 +1,7 @@
 import { Badge } from "@/app/components/ui/badge";
 import { ButtonLink } from "@/app/components/ui/button";
 import type { Metadata } from "next";
+import { cacheLife, cacheTag } from "next/cache";
 import { FeaturedScoreBreakdownChart } from "@/app/components/charts/featured-score-breakdown-chart";
 import { ReleaseCadenceChart } from "@/app/components/charts/release-cadence-chart";
 import { AnimatedHeadline } from "@/app/components/motion/animated-headline";
@@ -54,9 +55,13 @@ export const metadata: Metadata = {
   },
 };
 
-export const revalidate = 300;
-
 export default async function FeaturedPage() {
+  "use cache";
+  cacheLife({ revalidate: 300 });
+  cacheTag("route:featured");
+  cacheTag("dashboard:featured");
+  cacheTag("github:repos");
+
   const reportRejected = (label: string, reason: unknown) => {
     console.error(`[featured/page] Failed to load ${label}:`, reason);
   };

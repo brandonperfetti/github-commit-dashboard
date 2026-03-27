@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cacheLife, cacheTag } from "next/cache";
 import { Badge } from "@/app/components/ui/badge";
 import { ButtonLink } from "@/app/components/ui/button";
 import {
@@ -23,7 +24,6 @@ import {
 } from "@/lib/github";
 import { getPublicSiteUrl } from "@/lib/site-config";
 
-export const revalidate = 300;
 const siteUrl = getPublicSiteUrl();
 const homePath = "/";
 const homeUrl = `${siteUrl}${homePath}`;
@@ -84,6 +84,13 @@ function getFeaturedRepos<T extends { full_name: string }>(
 }
 
 export default async function Home() {
+  "use cache";
+  cacheLife({ revalidate: 300 });
+  cacheTag("route:home");
+  cacheTag("dashboard:home");
+  cacheTag("github:repos");
+  cacheTag("github:activity");
+
   const reportRejected = (label: string, reason: unknown) => {
     console.error(
       `[home] Failed to fetch ${label}:`,

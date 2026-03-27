@@ -1,5 +1,6 @@
 import { Badge } from "@/app/components/ui/badge";
 import type { Metadata } from "next";
+import { cacheLife, cacheTag } from "next/cache";
 import { RepoPushCadenceChart } from "@/app/components/charts/repo-push-cadence-chart";
 import { RepoRiskChart } from "@/app/components/charts/repo-risk-chart";
 import { ReposMomentumChart } from "@/app/components/charts/repos-momentum-chart";
@@ -49,8 +50,6 @@ export const metadata: Metadata = {
   },
 };
 
-export const revalidate = 300;
-
 const FALLBACK_REPO_RISK_SNAPSHOT: RepoRiskSnapshot = {
   totalRepos: 0,
   archivedRepos: 0,
@@ -65,6 +64,12 @@ const FALLBACK_REPO_RISK_SNAPSHOT: RepoRiskSnapshot = {
 };
 
 export default async function ReposPage() {
+  "use cache";
+  cacheLife({ revalidate: 300 });
+  cacheTag("route:repos");
+  cacheTag("dashboard:repos");
+  cacheTag("github:repos");
+
   const reportRejected = (label: string, reason: unknown) => {
     console.error(`[repos/page] Failed to load ${label}:`, reason);
   };

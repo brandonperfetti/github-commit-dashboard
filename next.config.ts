@@ -7,6 +7,7 @@ const allowedDevOrigins =
 
 const nextConfig: NextConfig = {
   allowedDevOrigins,
+  cacheComponents: true,
 };
 
 export default nextConfig;
