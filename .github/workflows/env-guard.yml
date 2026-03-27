@@ -22,4 +22,6 @@ jobs:
         env:
           NODE_ENV: production
           NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
-        run: npm run validate:env
+        # Intentionally no `npm ci`: this guard runs a standalone Node script and
+        # does not rely on installed packages or npm lifecycle hooks.
+        run: node scripts/validate-env.mjs --mode=production
