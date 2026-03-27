@@ -1016,6 +1016,7 @@ export async function getPullRequestThroughput(
 
 export async function getPullRequestHealth(
   username: string = USERNAME,
+  options?: GitHubRequestOptions,
 ): Promise<PullRequestHealthPoint[]> {
   const windows = buildWeeklyWindows();
   const windowStartMs = new Date(
@@ -1036,12 +1037,12 @@ export async function getPullRequestHealth(
           `is:pr author:${username} ${qualifier}:${window.start}..${window.end}`,
         );
       const [opened, merged, closed, reopened] = await Promise.all([
-        fetchGithubSearchCount(buildQuery("created")),
-        fetchGithubSearchCount(buildQuery("merged")),
-        fetchGithubSearchCount(buildQuery("closed")),
+        fetchGithubSearchCount(buildQuery("created"), options?.signal),
+        fetchGithubSearchCount(buildQuery("merged"), options?.signal),
+        fetchGithubSearchCount(buildQuery("closed"), options?.signal),
         // Verified against GitHub Search API in this project: `reopened:YYYY-MM-DD..YYYY-MM-DD`
         // returns expected counts for authored PRs, so we keep this metric in flow health.
-        fetchGithubSearchCount(buildQuery("reopened")),
+        fetchGithubSearchCount(buildQuery("reopened"), options?.signal),
       ]);
 
       return {
@@ -1055,7 +1056,7 @@ export async function getPullRequestHealth(
     }),
   );
 
-  const repos = await getRepos(username);
+  const repos = await getRepos(username, { signal: options?.signal });
   const topRepos = [...repos]
     .sort(
       (a, b) =>
@@ -1077,11 +1078,14 @@ export async function getPullRequestHealth(
           merged_at?: string | null;
           user?: { login?: string };
         }>(
+          // GitHub's list-pulls REST endpoint does not support a `since` filter.
+          // We rely on `sort=updated`, bounded top repos, timeout, and downstream
+          // date-window filtering to keep this query practical.
           `https://api.github.com/repos/${repo.full_name}/pulls?state=closed&sort=updated&direction=desc&per_page=100`,
           {
             headers: githubHeaders(),
             next: { revalidate: GITHUB_REVALIDATE_SECONDS },
-            signal: controller.signal,
+            signal: options?.signal ?? controller.signal,
           },
         );
 
