@@ -48,6 +48,11 @@ export default function ContributionHeatmap({
   );
   const selectedDay = useMemo(
     () =>
+      // Intentionally derive selection from current `days` so a stale
+      // `selectedDayDate` (after data refresh) cannot leak into UI. We avoid a
+      // syncing effect here because this codebase enforces
+      // `react-hooks/set-state-in-effect`, and the fallback keeps render output
+      // correct without an extra state write.
       (selectedDayDate
         ? days.find((day) => day.date === selectedDayDate)
         : null) ??

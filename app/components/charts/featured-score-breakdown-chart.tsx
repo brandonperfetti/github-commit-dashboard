@@ -121,7 +121,6 @@ export function FeaturedScoreBreakdownChart({
               dataKey="relevanceScore"
               name="Relevance"
               fill={chartColors.primary}
-              radius={[0, 6, 6, 0]}
               isAnimationActive={false}
               shape={(props: {
                 x?: number;

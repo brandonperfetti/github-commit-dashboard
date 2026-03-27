@@ -3,15 +3,7 @@
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
 import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
-
-type RepoMomentumPoint = {
-  name: string;
-  fullName: string;
-  commits30d: number;
-  daysSincePush: number;
-  sourceLabel: "Pinned" | "Non-pinned";
-  pinned: boolean;
-};
+import type { RepoMomentumPoint } from "@/lib/github";
 
 type MomentumTooltipProps = {
   active?: boolean;

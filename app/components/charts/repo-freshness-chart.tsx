@@ -91,6 +91,19 @@ export function RepoFreshnessChart({ data }: { data: RepoFreshnessPoint[] }) {
     return Math.max(110, Math.min(estimatedWidth, maxWidth));
   }, [data, size.width]);
 
+  const chartData = useMemo(
+    () =>
+      data.map((row) => {
+        const band = freshnessBand(row.daysSincePush);
+        return {
+          ...row,
+          fill: chartColors.primary,
+          fillOpacity: band.opacity,
+        };
+      }),
+    [data, chartColors],
+  );
+
   if (!data.length) {
     return (
       <div className="flex h-[220px] items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--card-muted)] text-sm text-[var(--muted-foreground)]">
@@ -98,15 +111,6 @@ export function RepoFreshnessChart({ data }: { data: RepoFreshnessPoint[] }) {
       </div>
     );
   }
-
-  const chartData = data.map((row) => {
-    const band = freshnessBand(row.daysSincePush);
-    return {
-      ...row,
-      fill: chartColors.primary,
-      fillOpacity: band.opacity,
-    };
-  });
 
   return (
     <div className="h-[220px] w-full min-w-0 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card-muted)] p-3 sm:p-4">

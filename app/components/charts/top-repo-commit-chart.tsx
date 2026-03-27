@@ -4,12 +4,7 @@ import { useMemo } from "react";
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
 import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
-
-type TopRepoCommitPoint = {
-  name: string;
-  fullName: string;
-  commits: number;
-};
+import type { TopRepoCommitPoint } from "@/lib/github";
 
 const CHARACTER_PIXEL_WIDTH = 7;
 const LABEL_PADDING = 20;

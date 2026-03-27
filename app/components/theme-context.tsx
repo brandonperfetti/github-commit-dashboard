@@ -149,10 +149,12 @@ export function AppThemeProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.warn("[theme] Failed to persist theme preference", error);
     }
-    // Use `secure` on HTTPS, but keep HTTP localhost development working.
-    const secureAttribute =
-      window.location.protocol === "https:" ? "; secure" : "";
-    document.cookie = `${STORAGE_KEY}=${nextTheme}; path=/; max-age=31536000; samesite=lax${secureAttribute}`;
+    if (typeof window !== "undefined") {
+      // Use `secure` on HTTPS, but keep HTTP localhost development working.
+      const secureAttribute =
+        window.location.protocol === "https:" ? "; secure" : "";
+      document.cookie = `${STORAGE_KEY}=${nextTheme}; path=/; max-age=31536000; samesite=lax${secureAttribute}`;
+    }
     applyTheme(nextTheme);
   }, []);
 

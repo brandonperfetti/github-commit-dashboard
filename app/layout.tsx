@@ -41,6 +41,9 @@ export default function RootLayout({
       return null;
     }
   })();
+  // document.cookie is a semicolon-separated name=value list only; cookie
+  // attributes such as Path/SameSite are not present here, so this matcher
+  // safely extracts build-theme when set and returns null when absent/invalid.
   const fromCookie = document.cookie.match(/(?:^|;\\s*)build-theme=(light|dark)(?:;|$)/)?.[1] ?? null;
   const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   const theme = fromStorage ?? fromCookie ?? systemTheme;
