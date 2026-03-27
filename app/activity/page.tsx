@@ -17,6 +17,12 @@ export const metadata = {
 export const revalidate = 300;
 
 const ACTIVITY_FETCH_TIMEOUT_MS = 12_000;
+const FALLBACK_COMMIT_TIMING_HEATMAP: CommitTimingHeatmapData = {
+  timezone: "UTC",
+  totalCommits: 0,
+  maxCellCount: 0,
+  cells: [],
+};
 
 class ActivityFetchTimeoutError extends Error {
   constructor(label: string, timeoutMs: number) {
@@ -70,13 +76,6 @@ async function withActivityTiming<T>(
 }
 
 export default async function ActivityPage() {
-  const fallbackCommitTimingHeatmap: CommitTimingHeatmapData = {
-    timezone: "UTC",
-    totalCommits: 0,
-    maxCellCount: 0,
-    cells: [],
-  };
-
   const [daysResult, prHealthResult, issueFlowResult, commitTimingResult] =
     await Promise.allSettled([
       withActivityTiming("contribution days", (signal) =>
@@ -107,7 +106,7 @@ export default async function ActivityPage() {
   const commitTimingHeatmap: CommitTimingHeatmapData =
     commitTimingResult.status === "fulfilled"
       ? commitTimingResult.value
-      : fallbackCommitTimingHeatmap;
+      : FALLBACK_COMMIT_TIMING_HEATMAP;
 
   return (
     <ActivityOverview
