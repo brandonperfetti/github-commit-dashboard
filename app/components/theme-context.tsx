@@ -71,6 +71,8 @@ function getInitialTheme(): Theme | undefined {
 
 export function AppThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(
+    // SSR-safe lazy initializer: `getInitialTheme` exits early on the server
+    // and only reads browser APIs on the client.
     () => getInitialTheme() ?? "dark",
   );
   const [userHasSetTheme, setUserHasSetTheme] = useState<boolean>(() => {
@@ -134,7 +136,10 @@ export function AppThemeProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.warn("[theme] Failed to persist theme preference", error);
     }
-    document.cookie = `${STORAGE_KEY}=${nextTheme}; path=/; max-age=31536000; samesite=lax`;
+    // Use `secure` on HTTPS, but keep HTTP localhost development working.
+    const secureAttribute =
+      window.location.protocol === "https:" ? "; secure" : "";
+    document.cookie = `${STORAGE_KEY}=${nextTheme}; path=/; max-age=31536000; samesite=lax${secureAttribute}`;
     applyTheme(nextTheme);
   }, []);
 
