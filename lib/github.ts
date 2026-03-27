@@ -977,6 +977,20 @@ export async function getCommitTimingHeatmap(
   username: string = USERNAME,
   options?: GitHubRequestOptions,
 ): Promise<CommitTimingHeatmapData> {
+  const cacheKey = `${username}:${timezone}`;
+  return resolveWithProcessCache(
+    cacheKey,
+    commitTimingHeatmapCache,
+    commitTimingHeatmapInFlight,
+    () => getCommitTimingHeatmapUncached(timezone, username),
+    options?.signal,
+  );
+}
+
+async function getCommitTimingHeatmapUncached(
+  timezone: string,
+  username: string = USERNAME,
+): Promise<CommitTimingHeatmapData> {
   const dates = buildLast30Days();
   const start = dates[0];
   const resolvedTimezone = (() => {
@@ -988,7 +1002,7 @@ export async function getCommitTimingHeatmap(
     }
   })();
 
-  const repos = await getRepos(username, { signal: options?.signal });
+  const repos = await getRepos(username);
   const topRepos = [...repos]
     .sort(
       (a, b) =>
@@ -1021,7 +1035,7 @@ export async function getCommitTimingHeatmap(
           {
             headers: githubHeaders(),
             next: { revalidate: GITHUB_REVALIDATE_SECONDS },
-            signal: options?.signal ?? controller.signal,
+            signal: controller.signal,
           },
         );
       } catch {
