@@ -89,9 +89,6 @@ export default async function Home() {
     reportRejected("pinned repos", pinnedReposResult.reason);
   }
   const totalContributions = days.reduce((sum, day) => sum + day.count, 0);
-  const topLanguages = [
-    ...new Set(repos.map((repo) => repo.language).filter(Boolean)),
-  ].slice(0, 4);
   const fallbackFeaturedRepos = [...repos]
     .sort(
       (a, b) =>
@@ -150,6 +147,11 @@ export default async function Home() {
     acc[repo.language] = (acc[repo.language] ?? 0) + 1;
     return acc;
   }, {});
+  const languageCount = Object.keys(languageCounts).length;
+  const topLanguages = Object.entries(languageCounts)
+    .sort(([, countA], [, countB]) => countB - countA)
+    .slice(0, 4)
+    .map(([language]) => language);
   const languageShareData = Object.entries(languageCounts)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 6)
@@ -228,7 +230,7 @@ export default async function Home() {
                     Languages
                   </div>
                   <div className="mt-2 text-2xl font-semibold">
-                    {topLanguages.length}
+                    {languageCount}
                   </div>
                 </div>
               </div>
