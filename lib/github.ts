@@ -55,6 +55,21 @@ export type RepoPushCadencePoint = {
   index: number;
 };
 
+export type RepoMomentumPoint = {
+  name: string;
+  fullName: string;
+  commits30d: number;
+  daysSincePush: number;
+  sourceLabel: "Pinned" | "Non-pinned";
+  pinned: boolean;
+};
+
+export type TopRepoCommitPoint = {
+  name: string;
+  fullName: string;
+  commits: number;
+};
+
 export type PullRequestHealthPoint = PullRequestThroughputPoint & {
   reopened: number;
   mergeRate: number;
@@ -116,6 +131,7 @@ const SEARCH_RATE_LIMIT_INTERVAL_AUTH_MS = 350;
 const SEARCH_RATE_LIMIT_INTERVAL_PUBLIC_MS = 1100;
 const GITHUB_FETCH_TIMEOUT_MS = 10_000;
 const ACTIVITY_AGGREGATE_CACHE_TTL_MS = 60_000;
+const MAX_CACHE_SIZE = 300;
 
 class GitHubApiError extends Error {
   status: number;
@@ -162,6 +178,37 @@ const commitTimingHeatmapInFlight = new Map<
   string,
   Promise<CommitTimingHeatmapData>
 >();
+
+function setWithEviction<K, V>(
+  map: Map<K, V>,
+  key: K,
+  value: V,
+  maxSize: number = MAX_CACHE_SIZE,
+) {
+  if (map.has(key)) {
+    map.delete(key);
+  }
+  map.set(key, value);
+
+  while (map.size > maxSize) {
+    const oldestKey = map.keys().next().value as K | undefined;
+    if (oldestKey === undefined) {
+      break;
+    }
+    map.delete(oldestKey);
+  }
+}
+
+function pruneExpiredEntries<T>(
+  cache: Map<string, { value: T; expiresAt: number }>,
+  now: number,
+) {
+  for (const [key, entry] of cache) {
+    if (entry.expiresAt <= now) {
+      cache.delete(key);
+    }
+  }
+}
 
 function formatDate(date: Date) {
   return date.toISOString().slice(0, 10);
@@ -258,6 +305,7 @@ async function resolveWithProcessCache<T>(
   throwIfAborted(signal);
 
   const now = Date.now();
+  pruneExpiredEntries(cache, now);
   const cached = cache.get(key);
   if (cached && cached.expiresAt > now) {
     return cached.value;
@@ -270,7 +318,7 @@ async function resolveWithProcessCache<T>(
 
   const request = load()
     .then((value) => {
-      cache.set(key, {
+      setWithEviction(cache, key, {
         value,
         expiresAt: Date.now() + ACTIVITY_AGGREGATE_CACHE_TTL_MS,
       });
@@ -282,7 +330,7 @@ async function resolveWithProcessCache<T>(
       throw error;
     });
 
-  inFlight.set(key, request);
+  setWithEviction(inFlight, key, request);
   return request;
 }
 
@@ -309,6 +357,7 @@ async function fetchGithubSearchCount(
 ) {
   throwIfAborted(signal);
   const now = Date.now();
+  pruneExpiredEntries(githubSearchCountCache, now);
   const cacheEntry = githubSearchCountCache.get(encodedQuery);
   if (cacheEntry && cacheEntry.expiresAt > now) {
     return cacheEntry.value;
@@ -331,7 +380,7 @@ async function fetchGithubSearchCount(
     if (response.ok) {
       const payload = (await response.json()) as { total_count?: number };
       const count = payload.total_count ?? 0;
-      githubSearchCountCache.set(encodedQuery, {
+      setWithEviction(githubSearchCountCache, encodedQuery, {
         value: count,
         expiresAt: Date.now() + SEARCH_CACHE_TTL_MS,
       });
@@ -1135,6 +1184,7 @@ export async function getPullRequestHealth(
 async function getPullRequestHealthUncached(
   username: string = USERNAME,
 ): Promise<PullRequestHealthPoint[]> {
+  const normalizedUsername = username.toLowerCase();
   const windows = buildWeeklyWindows();
   const windowStartMs = new Date(
     `${windows[0]?.start}T00:00:00.000Z`,
@@ -1157,8 +1207,10 @@ async function getPullRequestHealthUncached(
         fetchGithubSearchCount(buildQuery("created")),
         fetchGithubSearchCount(buildQuery("merged")),
         fetchGithubSearchCount(buildQuery("closed")),
-        // Verified against GitHub Search API in this project: `reopened:YYYY-MM-DD..YYYY-MM-DD`
-        // returns expected counts for authored PRs, so we keep this metric in flow health.
+        // Intentional: this uses GitHub's issues search endpoint with `is:pr`,
+        // where `reopened:YYYY-MM-DD..YYYY-MM-DD` is accepted and returns PRs
+        // reopened in the window. We keep this server-side count to avoid a
+        // heavier per-PR timeline crawl just for reopen events.
         fetchGithubSearchCount(buildQuery("reopened")),
       ]);
 
@@ -1180,7 +1232,10 @@ async function getPullRequestHealthUncached(
         +new Date(b.pushed_at) - +new Date(a.pushed_at) ||
         b.stargazers_count - a.stargazers_count,
     )
-    .slice(0, 8);
+    // PR flow metrics are computed account-wide. Sampling only 8 repos can
+    // undercount cycle-time data and collapse medians to zero; use a wider
+    // bounded set to stay representative without unbounded crawling.
+    .slice(0, 30);
 
   const prResponses = await Promise.all(
     topRepos.map(async (repo) => {
@@ -1248,7 +1303,7 @@ async function getPullRequestHealthUncached(
       if (!pr.created_at || !pr.merged_at) {
         continue;
       }
-      if (pr.user?.login !== username) {
+      if (pr.user?.login?.toLowerCase() !== normalizedUsername) {
         continue;
       }
 
