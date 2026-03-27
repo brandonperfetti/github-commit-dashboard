@@ -19,7 +19,7 @@ const INTENSITY_OPACITY: Record<number, number> = {
   1: 0.7,
   2: 0.82,
   3: 0.92,
-  4: 0.92,
+  4: 1,
 };
 
 const HOURS = Array.from({ length: 24 }, (_, index) => index);
