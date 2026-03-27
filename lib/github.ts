@@ -1312,6 +1312,18 @@ export async function getIssueFlowHealth(
   username: string = USERNAME,
   options?: GitHubRequestOptions,
 ): Promise<IssueFlowHealthPoint[]> {
+  return resolveWithProcessCache(
+    username,
+    issueFlowHealthCache,
+    issueFlowHealthInFlight,
+    () => getIssueFlowHealthUncached(username),
+    options?.signal,
+  );
+}
+
+async function getIssueFlowHealthUncached(
+  username: string = USERNAME,
+): Promise<IssueFlowHealthPoint[]> {
   const windows = buildWeeklyWindows();
 
   const windowCounts = await Promise.all(
@@ -1321,8 +1333,8 @@ export async function getIssueFlowHealth(
           `is:issue user:${username} ${qualifier}:${window.start}..${window.end}`,
         );
       const [opened, closed] = await Promise.all([
-        fetchGithubSearchCount(buildQuery("created"), options?.signal),
-        fetchGithubSearchCount(buildQuery("closed"), options?.signal),
+        fetchGithubSearchCount(buildQuery("created")),
+        fetchGithubSearchCount(buildQuery("closed")),
       ]);
 
       return {
