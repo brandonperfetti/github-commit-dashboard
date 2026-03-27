@@ -9,6 +9,9 @@ on:
 jobs:
   validate-production-env:
     runs-on: ubuntu-latest
+    # Required for environment-scoped variables like NEXT_PUBLIC_SITE_URL.
+    # PRs use Preview, pushes to main use Production.
+    environment: ${{ github.event_name == 'pull_request' && 'Preview' || 'Production' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,7 +24,8 @@ jobs:
       - name: Validate required production env vars
         env:
           NODE_ENV: production
-          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+          # Prefer environment/repo variable, fall back to secret if needed.
+          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || secrets.NEXT_PUBLIC_SITE_URL }}
         # Intentionally no `npm ci`: this guard runs a standalone Node script and
         # does not rely on installed packages or npm lifecycle hooks.
         run: node scripts/validate-env.mjs --mode=production
