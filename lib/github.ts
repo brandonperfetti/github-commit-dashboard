@@ -1386,7 +1386,7 @@ export async function getReleaseCadence(
       }, GITHUB_FETCH_TIMEOUT_MS);
 
       try {
-        return await paginateGitHub<{
+        return await paginateGitHubUntil<{
           published_at?: string | null;
         }>(
           // GitHub's list-releases REST endpoint does not expose a `published_at`
@@ -1397,6 +1397,36 @@ export async function getReleaseCadence(
             headers: githubHeaders(),
             next: { revalidate: GITHUB_REVALIDATE_SECONDS },
             signal: controller.signal,
+          },
+          (page) => {
+            if (page.length === 0) {
+              return true;
+            }
+
+            // Releases are returned newest-first by creation time. Stop once this
+            // page crosses the earliest month window because following pages are older.
+            let oldestPublishedMs = Number.POSITIVE_INFINITY;
+            for (const release of page) {
+              if (!release.published_at) {
+                continue;
+              }
+
+              const publishedMs = new Date(release.published_at).getTime();
+              if (!Number.isFinite(publishedMs)) {
+                continue;
+              }
+
+              if (publishedMs < oldestPublishedMs) {
+                oldestPublishedMs = publishedMs;
+              }
+            }
+
+            if (!Number.isFinite(oldestPublishedMs)) {
+              return false;
+            }
+
+            const earliestWindowMs = new Date(earliestStartIso).getTime();
+            return oldestPublishedMs < earliestWindowMs;
           },
         );
       } catch {
