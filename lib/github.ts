@@ -115,6 +115,7 @@ const SEARCH_MAX_RETRIES = 3;
 const SEARCH_RATE_LIMIT_INTERVAL_AUTH_MS = 350;
 const SEARCH_RATE_LIMIT_INTERVAL_PUBLIC_MS = 1100;
 const GITHUB_FETCH_TIMEOUT_MS = 10_000;
+const ACTIVITY_AGGREGATE_CACHE_TTL_MS = 60_000;
 
 class GitHubApiError extends Error {
   status: number;
@@ -137,6 +138,30 @@ const githubSearchCountCache = new Map<
 >();
 let nextSearchAtMs = 0;
 let searchRateLimiter: Promise<void> = Promise.resolve();
+const pullRequestHealthCache = new Map<
+  string,
+  { value: PullRequestHealthPoint[]; expiresAt: number }
+>();
+const issueFlowHealthCache = new Map<
+  string,
+  { value: IssueFlowHealthPoint[]; expiresAt: number }
+>();
+const commitTimingHeatmapCache = new Map<
+  string,
+  { value: CommitTimingHeatmapData; expiresAt: number }
+>();
+const pullRequestHealthInFlight = new Map<
+  string,
+  Promise<PullRequestHealthPoint[]>
+>();
+const issueFlowHealthInFlight = new Map<
+  string,
+  Promise<IssueFlowHealthPoint[]>
+>();
+const commitTimingHeatmapInFlight = new Map<
+  string,
+  Promise<CommitTimingHeatmapData>
+>();
 
 function formatDate(date: Date) {
   return date.toISOString().slice(0, 10);
