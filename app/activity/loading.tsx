@@ -1,4 +1,9 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { SectionShell } from "@/app/components/section-shell";
+
+const SKELETON_DELAY_MS = 450;
 
 function SkeletonBlock({ className }: { className?: string }) {
   return (
@@ -10,6 +15,20 @@ function SkeletonBlock({ className }: { className?: string }) {
 }
 
 export default function ActivityLoading() {
+  const [showSkeleton, setShowSkeleton] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSkeleton(true);
+    }, SKELETON_DELAY_MS);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!showSkeleton) {
+    return null;
+  }
+
   return (
     <div className="flex flex-col gap-4 sm:gap-6">
       <SectionShell className="overflow-hidden p-0">
