@@ -208,6 +208,34 @@ async function paginateGitHub<T>(
   return results;
 }
 
+async function paginateGitHubUntil<T>(
+  initialUrl: string,
+  options: RequestInit & {
+    next?: { revalidate?: number; tags?: string[] };
+  },
+  shouldStop: (page: T[]) => boolean,
+) {
+  const results: T[] = [];
+  let currentUrl: string | null = initialUrl;
+
+  while (currentUrl) {
+    const response = await fetch(currentUrl, options);
+    if (!response.ok) {
+      throw new GitHubApiError(response.status);
+    }
+
+    const page = (await response.json()) as T[];
+    results.push(...page);
+    if (shouldStop(page)) {
+      break;
+    }
+
+    currentUrl = parseNextLink(response.headers.get("link"));
+  }
+
+  return results;
+}
+
 function wait(ms: number) {
   return new Promise<void>((resolve) => {
     setTimeout(resolve, ms);
