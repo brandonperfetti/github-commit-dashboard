@@ -125,14 +125,12 @@ export function AppThemeProvider({ children }: { children: React.ReactNode }) {
       if (event.newValue === "light" || event.newValue === "dark") {
         setUserHasSetTheme(true);
         setThemeState(event.newValue);
-        applyTheme(event.newValue);
         return;
       }
 
       setUserHasSetTheme(false);
       const fallbackTheme = getInitialTheme() ?? getSystemTheme();
       setThemeState(fallbackTheme);
-      applyTheme(fallbackTheme);
     };
 
     window.addEventListener("storage", onStorage);
