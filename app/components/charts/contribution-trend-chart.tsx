@@ -21,7 +21,7 @@ type ContributionTrendTooltipProps = {
 
 function ContributionTrendTooltip(props: ContributionTrendTooltipProps) {
   const { active, label, payload } = props;
-  const point = payload?.[0]?.payload as ContributionTrendPoint | undefined;
+  const point = payload?.[0]?.payload;
 
   if (!active || !point) {
     return null;
