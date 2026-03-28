@@ -1236,12 +1236,11 @@ async function getPullRequestHealthUncached(
         fetchGithubSearchCount(buildQuery("created")),
         fetchGithubSearchCount(buildQuery("merged")),
         fetchGithubSearchCount(buildQuery("closed")),
-        // CodeRabbit false-positive note: this path intentionally uses GitHub's
-        // issues search endpoint with `is:pr`, where
-        // `reopened:YYYY-MM-DD..YYYY-MM-DD` is accepted and returns PRs
-        // reopened in the window. We keep this server-side count to avoid a
-        // heavier per-PR timeline crawl just for reopen events.
-        fetchGithubSearchCount(buildQuery("reopened")),
+        // GitHub issue search does not support a `reopened:` date qualifier.
+        // Exact weekly reopened counts require per-PR timeline event crawling,
+        // which is intentionally deferred because it is materially heavier for
+        // this route. Keep a stable fallback so reopen rate remains defined.
+        Promise.resolve(0),
       ]);
 
       return {
