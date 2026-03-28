@@ -3,7 +3,10 @@
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
 import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
-import type { ReleaseCadencePoint } from "@/lib/github";
+import {
+  DEFAULT_RELEASE_CADENCE_MONTHS,
+  type ReleaseCadencePoint,
+} from "@/lib/github";
 
 type ReleaseCadenceTooltipProps = {
   active?: boolean;
@@ -32,7 +35,13 @@ function ReleaseCadenceTooltip({
   );
 }
 
-export function ReleaseCadenceChart({ data }: { data: ReleaseCadencePoint[] }) {
+export function ReleaseCadenceChart({
+  data,
+  windowMonths = DEFAULT_RELEASE_CADENCE_MONTHS,
+}: {
+  data: ReleaseCadencePoint[];
+  windowMonths?: number;
+}) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
   const chartColors = useResolvedChartColors();
   const totalReleases = data.reduce((sum, point) => sum + point.releases, 0);
@@ -48,7 +57,7 @@ export function ReleaseCadenceChart({ data }: { data: ReleaseCadencePoint[] }) {
     return (
       <div className="flex h-[260px] flex-col items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--card-muted)] px-4 text-center">
         <p className="text-sm font-medium text-[var(--foreground)]">
-          No published releases in the current 6-month window.
+          No published releases in the current {windowMonths}-month window.
         </p>
         <p className="mt-1 text-xs text-[var(--muted-foreground)]">
           The chart will populate automatically once repos publish GitHub

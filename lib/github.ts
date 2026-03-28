@@ -1,6 +1,7 @@
 export const USERNAME = "brandonperfetti";
 export const DAYS = 30;
 export const GITHUB_REVALIDATE_SECONDS = 300;
+export const DEFAULT_RELEASE_CADENCE_MONTHS = 6;
 
 export type ContributionDay = {
   date: string;
@@ -1433,7 +1434,7 @@ async function getIssueFlowHealthUncached(
 
 export async function getReleaseCadence(
   username: string = USERNAME,
-  months: number = 6,
+  months: number = DEFAULT_RELEASE_CADENCE_MONTHS,
 ): Promise<ReleaseCadencePoint[]> {
   const windows = buildMonthWindows(months);
   const counters = new Map(windows.map((window) => [window.monthKey, 0]));
