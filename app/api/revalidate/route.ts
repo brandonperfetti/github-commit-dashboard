@@ -126,7 +126,8 @@ export async function POST(request: Request) {
   }
 
   for (const tag of tags) {
-    revalidateTag(tag);
+    // Next.js 16 requires an explicit cache-life profile for revalidateTag.
+    revalidateTag(tag, "max");
   }
 
   for (const path of paths) {
