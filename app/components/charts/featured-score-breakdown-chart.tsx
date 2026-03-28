@@ -65,6 +65,10 @@ export function FeaturedScoreBreakdownChart({
 }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
   const chartColors = useResolvedChartColors();
+  // CodeRabbit note: We intentionally keep hook-based derived values above the
+  // empty-data return. Moving the early return above `useMemo` would make hook
+  // execution conditional when `data.length` flips between 0/non-0, violating
+  // React's Rules of Hooks.
   // Keep the top-ranked repo at full opacity so it reads as the primary item.
   const chartData = useMemo(
     () =>

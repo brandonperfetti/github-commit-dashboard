@@ -70,6 +70,13 @@ export type TopRepoCommitPoint = {
   commits: number;
 };
 
+export type RepoFreshnessPoint = {
+  name: string;
+  fullName: string;
+  daysSincePush: number;
+  lastPushLabel: string;
+};
+
 export type PullRequestHealthPoint = PullRequestThroughputPoint & {
   reopened: number;
   mergeRate: number;

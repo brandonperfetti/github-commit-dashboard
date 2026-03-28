@@ -47,8 +47,8 @@ export function IssueFlowHealthChart({
 }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
   const chartColors = useResolvedChartColors();
-  const openedColor = chartColors.primarySoft;
-  const closedColor = chartColors.primary;
+  const openedColor = chartColors.opened;
+  const closedColor = chartColors.closed;
   const backlogColor = chartColors.accent;
 
   if (!data.length) {

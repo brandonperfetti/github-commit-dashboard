@@ -4,13 +4,7 @@ import { useMemo } from "react";
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
 import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
-
-type RepoFreshnessPoint = {
-  name: string;
-  fullName: string;
-  daysSincePush: number;
-  lastPushLabel: string;
-};
+import type { RepoFreshnessPoint } from "@/lib/github";
 
 type FreshnessTooltipProps = {
   active?: boolean;

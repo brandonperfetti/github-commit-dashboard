@@ -6,6 +6,9 @@ import { useChartSize } from "@/app/components/charts/use-chart-size";
 import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
 import type { TopRepoCommitPoint } from "@/lib/github";
 
+// Approximate average character width (px) for label-size estimation at typical
+// chart tick sizes (~12px sans/mono). Tune if chart typography changes.
+// LABEL_PADDING adds extra horizontal breathing room for y-axis labels.
 const CHARACTER_PIXEL_WIDTH = 7;
 const LABEL_PADDING = 20;
 
