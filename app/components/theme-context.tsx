@@ -51,7 +51,7 @@ function getSystemTheme(): Theme {
 function readThemeFromCookie(cookieHeader: string): Theme | null {
   const escapedStorageKey = STORAGE_KEY.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const matches = cookieHeader.match(
-    new RegExp(`(?:^|;\\s*)${escapedStorageKey}=(light|dark)(?:;|$)`),
+    new RegExp(`(?:^|;\\s*)${escapedStorageKey}=(light|dark)\\s*(?:;|$)`),
   );
   const value = matches?.[1];
   return value === "light" || value === "dark" ? value : null;
