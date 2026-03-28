@@ -8,7 +8,8 @@ export function normalizeHttpUrl(value: string | null | undefined) {
     return null;
   }
 
-  const candidate = trimmed.startsWith("www.") ? `https://${trimmed}` : trimmed;
+  const hasScheme = /^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(trimmed);
+  const candidate = hasScheme ? trimmed : `https://${trimmed}`;
 
   try {
     const parsed = new URL(candidate);
