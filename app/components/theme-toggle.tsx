@@ -15,7 +15,7 @@ export function ThemeToggle() {
       <Button
         variant="secondary"
         aria-label="Toggle theme"
-        className="rounded-full border-(--border) shadow-none"
+        className="rounded-full border-[var(--border)] shadow-none"
         style={{
           width: TOGGLE_SIZE_PX,
           height: TOGGLE_SIZE_PX,
@@ -44,7 +44,7 @@ export function ThemeToggle() {
       variant="secondary"
       aria-label="Toggle theme"
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="rounded-full border-(--border) shadow-none hover:cursor-pointer"
+      className="rounded-full border-[var(--border)] shadow-none hover:cursor-pointer"
       style={{
         width: TOGGLE_SIZE_PX,
         height: TOGGLE_SIZE_PX,
