@@ -75,7 +75,20 @@ jobs:
           fi
 
           echo "POST $TARGET_URL/api/revalidate"
-          curl -fsS -X POST "$TARGET_URL/api/revalidate" \
+          response=$(curl -sS -X POST "$TARGET_URL/api/revalidate" \
             -H "content-type: application/json" \
             -H "x-revalidate-secret: $REVALIDATE_SECRET" \
-            --data "$PAYLOAD"
+            --data "$PAYLOAD" \
+            -w "\n%{http_code}")
+
+          status=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+
+          echo "HTTP status: $status"
+          echo "Response body:"
+          echo "$body"
+
+          if [[ ! "$status" =~ ^2[0-9][0-9]$ ]]; then
+            echo "Revalidation request failed with status $status."
+            exit 1
+          fi
