@@ -47,11 +47,18 @@ function isValidTag(tag: string) {
 }
 
 function isValidPath(path: string) {
+  let decodedPath: string;
+  try {
+    decodedPath = decodeURIComponent(path);
+  } catch {
+    return false;
+  }
+
   return (
-    path.startsWith("/") &&
-    !path.includes("..") &&
-    !path.includes("\0") &&
-    !path.includes("\\")
+    decodedPath.startsWith("/") &&
+    !decodedPath.includes("..") &&
+    !decodedPath.includes("\0") &&
+    !decodedPath.includes("\\")
   );
 }
 
