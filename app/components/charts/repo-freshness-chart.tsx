@@ -189,21 +189,21 @@ export function RepoFreshnessChart({ data }: { data: RepoFreshnessPoint[] }) {
         <span className="inline-flex items-center gap-1.5">
           <span
             className="h-2 w-2 rounded-full"
-            style={{ backgroundColor: chartColors.primary, opacity: 0.9 }}
+            style={{ backgroundColor: "var(--chart-primary)", opacity: 0.9 }}
           />
           {`Fresh (0-${FRESH_THRESHOLD_DAYS}d)`}
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span
             className="h-2 w-2 rounded-full"
-            style={{ backgroundColor: chartColors.primary, opacity: 0.6 }}
+            style={{ backgroundColor: "var(--chart-primary)", opacity: 0.6 }}
           />
           {`Warm (${FRESH_THRESHOLD_DAYS + 1}-${WARM_THRESHOLD_DAYS}d)`}
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span
             className="h-2 w-2 rounded-full"
-            style={{ backgroundColor: chartColors.primary, opacity: 0.4 }}
+            style={{ backgroundColor: "var(--chart-primary)", opacity: 0.4 }}
           />
           {`Stale (${WARM_THRESHOLD_DAYS + 1}+d)`}
         </span>
