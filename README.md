@@ -156,6 +156,16 @@ Use the `Revalidate Cache` workflow (`.github/workflows/revalidate-cache.yml`) t
 
 The workflow calls `POST /api/revalidate` with `REVALIDATE_SECRET`.
 
+### Scheduled Cache Warm-Up
+
+The `Warm Route Cache` workflow (`.github/workflows/warm-route-cache.yml`) runs every 15 minutes and pings key routes (`/`, `/activity`, `/repos`, `/featured`) to reduce cold-cache first-load latency.
+
+You can also run it manually from Actions and override:
+
+- `target_environment` (`Preview` or `Production`)
+- `base_url`
+- `routes_csv`
+
 ### Linting
 
 ```bash
