@@ -92,7 +92,9 @@ export function useResolvedChartColors(): ChartColors {
 
   return useMemo(() => {
     const fallback = resolvedTheme === "light" ? LIGHT_FALLBACK : DARK_FALLBACK;
-    if (!rootSignature && typeof window === "undefined") {
+    // Touch rootSignature so theme class/style mutations trigger recomputation.
+    void rootSignature;
+    if (typeof window === "undefined") {
       return fallback;
     }
     return readResolvedColors(fallback);
