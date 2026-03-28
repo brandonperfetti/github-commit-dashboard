@@ -58,7 +58,7 @@ const FALLBACK_REPO_RISK_SNAPSHOT: RepoRiskSnapshot = {
   buckets: [
     { label: "Hot (0-7d)", count: 0 },
     { label: "Active (8-30d)", count: 0 },
-    { label: "Stale (31-90d)", count: 0 },
+    { label: "Stale (31-89d)", count: 0 },
     { label: "Dormant (90d+)", count: 0 },
   ],
 };
