@@ -1,5 +1,7 @@
 export const USERNAME = "brandonperfetti";
 export const DAYS = 30;
+export const GITHUB_REVALIDATE_SECONDS = 300;
+export const DEFAULT_RELEASE_CADENCE_MONTHS = 6;
 
 export type ContributionDay = {
   date: string;
@@ -18,13 +20,472 @@ export type Repo = {
   stargazers_count: number;
   forks_count: number;
   archived: boolean;
+  private?: boolean;
+  owner?: {
+    login?: string;
+  };
   pushed_at: string;
   updated_at: string;
   topics?: string[];
 };
 
+type WeeklyWindow = {
+  start: string;
+  end: string;
+  label: string;
+  range: string;
+};
+
+export type PullRequestThroughputPoint = {
+  label: string;
+  range: string;
+  opened: number;
+  merged: number;
+  closed: number;
+};
+
+export type ContributionTrendPoint = {
+  date: string;
+  count: number;
+};
+
+export type RepoPushCadencePoint = {
+  label: string;
+  value: number;
+  range: string;
+  index: number;
+};
+
+export type RepoMomentumPoint = {
+  name: string;
+  fullName: string;
+  commits30d: number;
+  daysSincePush: number;
+  sourceLabel: "Pinned" | "Non-pinned";
+  pinned: boolean;
+};
+
+export type TopRepoCommitPoint = {
+  name: string;
+  fullName: string;
+  commits: number;
+};
+
+export type RepoFreshnessPoint = {
+  name: string;
+  fullName: string;
+  daysSincePush: number;
+  lastPushLabel: string;
+};
+
+export type PullRequestHealthPoint = PullRequestThroughputPoint & {
+  reopened: number;
+  mergeRate: number;
+  reopenRate: number;
+  medianCycleHours: number;
+  cycleSampleSize: number;
+};
+
+export type ReleaseCadencePoint = {
+  label: string;
+  monthKey: string;
+  releases: number;
+};
+
+export type IssueFlowHealthPoint = {
+  label: string;
+  range: string;
+  opened: number;
+  closed: number;
+  backlogDelta: number;
+};
+
+export type RepoRiskBucket = {
+  label: string;
+  count: number;
+};
+
+export type RepoRiskSnapshot = {
+  totalRepos: number;
+  archivedRepos: number;
+  privateRepos: number;
+  atRiskRepos: number;
+  buckets: RepoRiskBucket[];
+};
+
+export type CommitTimingHeatmapCell = {
+  dayIndex: number;
+  dayLabel: string;
+  hour: number;
+  hourLabel: string;
+  count: number;
+  intensity: 0 | 1 | 2 | 3 | 4;
+};
+
+export type CommitTimingHeatmapData = {
+  timezone: string;
+  totalCommits: number;
+  maxCellCount: number;
+  cells: CommitTimingHeatmapCell[];
+};
+
+type GitHubRequestOptions = {
+  signal?: AbortSignal;
+};
+
+const SEARCH_CACHE_TTL_MS = 5 * 60 * 1000;
+const SEARCH_MAX_RETRIES = 3;
+const SEARCH_RATE_LIMIT_INTERVAL_AUTH_MS = 350;
+const SEARCH_RATE_LIMIT_INTERVAL_PUBLIC_MS = 1100;
+const GITHUB_FETCH_TIMEOUT_MS = 10_000;
+const ACTIVITY_AGGREGATE_CACHE_TTL_MS = 60_000;
+const MAX_CACHE_SIZE = 300;
+const MAX_GITHUB_PAGINATION_PAGES = 100;
+
+class GitHubApiError extends Error {
+  status: number;
+
+  constructor(status: number, message?: string) {
+    super(message ?? `GitHub API returned ${status}`);
+    this.status = status;
+  }
+}
+
+// Best-effort process-local cache/limiter for GitHub Search requests.
+// In serverless/multi-instance deployments this state is not shared and can reset
+// on cold starts, so rate limiting and cache hits are opportunistic.
+// NOTE: We intentionally defer a Redis/KV-backed shared limiter/cache for now to
+// keep this project dependency-light; if this app moves to multi-instance prod
+// scale, this is the first place to externalize.
+const githubSearchCountCache = new Map<
+  string,
+  { value: number; expiresAt: number }
+>();
+let nextSearchAtMs = 0;
+let searchRateLimiter: Promise<void> = Promise.resolve();
+const pullRequestHealthCache = new Map<
+  string,
+  { value: PullRequestHealthPoint[]; expiresAt: number }
+>();
+const issueFlowHealthCache = new Map<
+  string,
+  { value: IssueFlowHealthPoint[]; expiresAt: number }
+>();
+const commitTimingHeatmapCache = new Map<
+  string,
+  { value: CommitTimingHeatmapData; expiresAt: number }
+>();
+const pullRequestHealthInFlight = new Map<
+  string,
+  Promise<PullRequestHealthPoint[]>
+>();
+const issueFlowHealthInFlight = new Map<
+  string,
+  Promise<IssueFlowHealthPoint[]>
+>();
+const commitTimingHeatmapInFlight = new Map<
+  string,
+  Promise<CommitTimingHeatmapData>
+>();
+
+function setWithEviction<K, V>(
+  map: Map<K, V>,
+  key: K,
+  value: V,
+  maxSize: number = MAX_CACHE_SIZE,
+) {
+  if (map.has(key)) {
+    map.delete(key);
+  }
+  map.set(key, value);
+
+  while (map.size > maxSize) {
+    const oldestKey = map.keys().next().value as K | undefined;
+    if (oldestKey === undefined) {
+      break;
+    }
+    map.delete(oldestKey);
+  }
+}
+
+function pruneExpiredEntries<T>(
+  cache: Map<string, { value: T; expiresAt: number }>,
+  now: number,
+) {
+  for (const [key, entry] of cache) {
+    if (entry.expiresAt <= now) {
+      cache.delete(key);
+    }
+  }
+}
+
 function formatDate(date: Date) {
   return date.toISOString().slice(0, 10);
+}
+
+function githubHeaders() {
+  const token = process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN;
+  return {
+    Accept: "application/vnd.github+json",
+    "User-Agent": "Build Dashboard",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
+
+function parseNextLink(linkHeader: string | null) {
+  if (!linkHeader) {
+    return null;
+  }
+
+  const nextMatch = linkHeader.match(/<([^>]+)>;\s*rel="next"/);
+  return nextMatch?.[1] ?? null;
+}
+
+async function paginateGitHub<T>(
+  initialUrl: string,
+  options?: RequestInit & {
+    next?: { revalidate?: number; tags?: string[] };
+  },
+) {
+  const results: T[] = [];
+  let currentUrl: string | null = initialUrl;
+  let pageCount = 0;
+
+  while (currentUrl) {
+    pageCount += 1;
+    if (pageCount > MAX_GITHUB_PAGINATION_PAGES) {
+      throw new Error(
+        `[paginateGitHub] Exceeded max page limit (${MAX_GITHUB_PAGINATION_PAGES}) for URL: ${initialUrl}`,
+      );
+    }
+
+    const response = await fetch(currentUrl, options);
+    if (!response.ok) {
+      throw new GitHubApiError(response.status);
+    }
+
+    const page = (await response.json()) as T[];
+    results.push(...page);
+    currentUrl = parseNextLink(response.headers.get("link"));
+  }
+
+  return results;
+}
+
+async function paginateGitHubUntil<T>(
+  initialUrl: string,
+  options: RequestInit & {
+    next?: { revalidate?: number; tags?: string[] };
+  },
+  shouldStop: (page: T[]) => boolean,
+) {
+  const results: T[] = [];
+  let currentUrl: string | null = initialUrl;
+  let pageCount = 0;
+
+  while (currentUrl) {
+    pageCount += 1;
+    if (pageCount > MAX_GITHUB_PAGINATION_PAGES) {
+      throw new Error(
+        `[paginateGitHubUntil] Exceeded max page limit (${MAX_GITHUB_PAGINATION_PAGES}) for URL: ${initialUrl}`,
+      );
+    }
+
+    const response = await fetch(currentUrl, options);
+    if (!response.ok) {
+      throw new GitHubApiError(response.status);
+    }
+
+    const page = (await response.json()) as T[];
+    results.push(...page);
+    if (shouldStop(page)) {
+      break;
+    }
+
+    currentUrl = parseNextLink(response.headers.get("link"));
+  }
+
+  return results;
+}
+
+function wait(ms: number) {
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function throwIfAborted(signal?: AbortSignal) {
+  if (signal?.aborted) {
+    throw new DOMException("The operation was aborted.", "AbortError");
+  }
+}
+
+async function resolveWithProcessCache<T>(
+  key: string,
+  cache: Map<string, { value: T; expiresAt: number }>,
+  inFlight: Map<string, Promise<T>>,
+  load: () => Promise<T>,
+  signal?: AbortSignal,
+): Promise<T> {
+  throwIfAborted(signal);
+
+  const now = Date.now();
+  pruneExpiredEntries(cache, now);
+  const cached = cache.get(key);
+  if (cached && cached.expiresAt > now) {
+    return cached.value;
+  }
+
+  const pending = inFlight.get(key);
+  if (pending) {
+    return pending;
+  }
+
+  const request = load()
+    .then((value) => {
+      setWithEviction(cache, key, {
+        value,
+        expiresAt: Date.now() + ACTIVITY_AGGREGATE_CACHE_TTL_MS,
+      });
+      inFlight.delete(key);
+      return value;
+    })
+    .catch((error) => {
+      inFlight.delete(key);
+      throw error;
+    });
+
+  setWithEviction(inFlight, key, request);
+  return request;
+}
+
+async function reserveSearchRequestSlot() {
+  const intervalMs = hasGithubToken()
+    ? SEARCH_RATE_LIMIT_INTERVAL_AUTH_MS
+    : SEARCH_RATE_LIMIT_INTERVAL_PUBLIC_MS;
+
+  searchRateLimiter = searchRateLimiter.then(async () => {
+    const now = Date.now();
+    const waitFor = Math.max(0, nextSearchAtMs - now);
+    if (waitFor > 0) {
+      await wait(waitFor);
+    }
+    nextSearchAtMs = Date.now() + intervalMs;
+  });
+
+  await searchRateLimiter;
+}
+
+async function fetchGithubSearchCount(
+  encodedQuery: string,
+  signal?: AbortSignal,
+) {
+  throwIfAborted(signal);
+  const now = Date.now();
+  pruneExpiredEntries(githubSearchCountCache, now);
+  const cacheEntry = githubSearchCountCache.get(encodedQuery);
+  if (cacheEntry && cacheEntry.expiresAt > now) {
+    return cacheEntry.value;
+  }
+
+  for (let attempt = 0; attempt < SEARCH_MAX_RETRIES; attempt += 1) {
+    throwIfAborted(signal);
+    await reserveSearchRequestSlot();
+    throwIfAborted(signal);
+
+    const response = await fetch(
+      `https://api.github.com/search/issues?q=${encodedQuery}&per_page=1`,
+      {
+        headers: githubHeaders(),
+        next: { revalidate: GITHUB_REVALIDATE_SECONDS },
+        signal,
+      },
+    );
+
+    if (response.ok) {
+      const payload = (await response.json()) as { total_count?: number };
+      const count = payload.total_count ?? 0;
+      setWithEviction(githubSearchCountCache, encodedQuery, {
+        value: count,
+        expiresAt: Date.now() + SEARCH_CACHE_TTL_MS,
+      });
+      return count;
+    }
+
+    if (response.status !== 403 && response.status !== 429) {
+      break;
+    }
+
+    const baseDelay = 500 * 2 ** attempt;
+    const jitter = Math.floor(Math.random() * 250);
+    await wait(baseDelay + jitter);
+  }
+
+  if (cacheEntry) {
+    return cacheEntry.value;
+  }
+
+  return 0;
+}
+
+function hasGithubToken() {
+  return Boolean(process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN);
+}
+
+export function isGithubAuthConfigured() {
+  return hasGithubToken();
+}
+
+function buildMonthWindows(months: number) {
+  const now = new Date();
+  const windows: Array<{
+    label: string;
+    monthKey: string;
+    start: Date;
+    end: Date;
+  }> = [];
+
+  for (let offset = months - 1; offset >= 0; offset -= 1) {
+    const start = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+    const end = new Date(now.getFullYear(), now.getMonth() - offset + 1, 0);
+    const monthKey = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}`;
+    const label = start.toLocaleDateString("en-US", { month: "short" });
+    windows.push({ label, monthKey, start, end });
+  }
+
+  return windows;
+}
+
+function buildWeeklyWindows() {
+  const dates = buildLast30Days();
+  const windows: WeeklyWindow[] = [];
+
+  for (let index = 0; index < dates.length; index += 7) {
+    const start = dates[index];
+    const end = dates[Math.min(index + 6, dates.length - 1)];
+    windows.push({
+      start,
+      end,
+      label: prettyDay(start),
+      range: `${prettyDay(start)} – ${prettyDay(end)}`,
+    });
+  }
+
+  return windows;
+}
+
+function median(values: number[]) {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  if (sorted.length % 2 === 0) {
+    return (sorted[mid - 1] + sorted[mid]) / 2;
+  }
+  return sorted[mid];
+}
+
+function roundToOneDecimal(value: number) {
+  return Math.round(value * 10) / 10;
 }
 
 export function levelForCount(count: number): ContributionDay["level"] {
@@ -48,7 +509,10 @@ export function buildLast30Days() {
   return dates;
 }
 
-export async function getContributionDays(username: string = USERNAME): Promise<ContributionDay[]> {
+export async function getContributionDays(
+  username: string = USERNAME,
+  options?: GitHubRequestOptions,
+): Promise<ContributionDay[]> {
   const dates = buildLast30Days();
   const from = dates[0];
   const to = dates[dates.length - 1];
@@ -59,11 +523,19 @@ export async function getContributionDays(username: string = USERNAME): Promise<
       headers: {
         "User-Agent": "Build Dashboard",
       },
-      cache: "no-store",
+      next: { revalidate: GITHUB_REVALIDATE_SECONDS },
+      signal: options?.signal,
     },
   );
 
   if (!response.ok) {
+    if (response.status === 403) {
+      return dates.map((date) => ({
+        date,
+        count: 0,
+        level: 0,
+      }));
+    }
     throw new Error(`GitHub returned ${response.status}`);
   }
 
@@ -82,6 +554,20 @@ export async function getContributionDays(username: string = USERNAME): Promise<
     counts.set(date, count);
   }
 
+  if (counts.size === 0) {
+    const htmlSample = html.replace(/\s+/g, " ").slice(0, 220);
+    console.warn(
+      "[github/getContributionDays] Parsed zero contribution cells; GitHub markup may have changed.",
+      {
+        username,
+        from,
+        to,
+        htmlLength: html.length,
+        htmlSample,
+      },
+    );
+  }
+
   return dates.map((date) => {
     const count = counts.get(date) ?? 0;
     return {
@@ -92,21 +578,213 @@ export async function getContributionDays(username: string = USERNAME): Promise<
   });
 }
 
-export async function getRepos(username: string = USERNAME): Promise<Repo[]> {
-  const response = await fetch(`https://api.github.com/users/${username}/repos?per_page=100&sort=updated`, {
+export async function getRepos(
+  username: string = USERNAME,
+  options?: { includeArchived?: boolean; signal?: AbortSignal },
+): Promise<Repo[]> {
+  const includeArchived = options?.includeArchived ?? false;
+  const fetchOptions = {
+    headers: githubHeaders(),
+    next: { revalidate: GITHUB_REVALIDATE_SECONDS, tags: ["github:repos"] },
+    signal: options?.signal,
+  } satisfies RequestInit & {
+    next: { revalidate: number; tags: string[] };
+  };
+
+  const publicReposUrl = `https://api.github.com/users/${username}/repos?per_page=100&sort=updated`;
+
+  if (!hasGithubToken()) {
+    try {
+      const repos = await paginateGitHub<Repo>(publicReposUrl, fetchOptions);
+      return repos.filter((repo) => includeArchived || !repo.archived);
+    } catch (error) {
+      if (error instanceof GitHubApiError && error.status === 403) {
+        return [];
+      }
+      throw error;
+    }
+  }
+
+  const authReposUrl =
+    "https://api.github.com/user/repos?per_page=100&sort=updated&visibility=all&affiliation=owner,collaborator,organization_member";
+
+  try {
+    const repos = await paginateGitHub<Repo>(authReposUrl, fetchOptions);
+    return repos.filter((repo) => {
+      if (!includeArchived && repo.archived) return false;
+      const ownerLogin = repo.owner?.login;
+      return ownerLogin
+        ? ownerLogin === username
+        : repo.full_name.startsWith(`${username}/`);
+    });
+  } catch (authError) {
+    // If an authenticated call fails (expired token/rate issue), fall back to public repos.
+    try {
+      const fallbackRepos = await paginateGitHub<Repo>(
+        publicReposUrl,
+        fetchOptions,
+      );
+      return fallbackRepos.filter((repo) => includeArchived || !repo.archived);
+    } catch (fallbackError) {
+      const authStatus =
+        authError instanceof GitHubApiError ? authError.status : null;
+      const fallbackStatus =
+        fallbackError instanceof GitHubApiError ? fallbackError.status : null;
+
+      if (authStatus === 403 || fallbackStatus === 403) {
+        return [];
+      }
+
+      throw fallbackError;
+    }
+  }
+}
+
+export async function getPinnedRepos(
+  username: string = USERNAME,
+): Promise<Repo[]> {
+  if (!isGithubAuthConfigured()) {
+    throw new Error(
+      "GitHub authentication is required to read pinned repositories.",
+    );
+  }
+
+  const query = `
+    query PinnedRepos($login: String!) {
+      user(login: $login) {
+        pinnedItems(first: 6, types: REPOSITORY) {
+          nodes {
+            ... on Repository {
+              id
+              databaseId
+              name
+              nameWithOwner
+              description
+              url
+              homepageUrl
+              primaryLanguage { name }
+              stargazerCount
+              forkCount
+              isArchived
+              isPrivate
+              pushedAt
+              updatedAt
+              repositoryTopics(first: 12) {
+                nodes {
+                  topic {
+                    name
+                  }
+                }
+              }
+              owner {
+                login
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  const response = await fetch("https://api.github.com/graphql", {
+    method: "POST",
     headers: {
-      Accept: "application/vnd.github+json",
-      "User-Agent": "Build Dashboard",
+      ...githubHeaders(),
+      "Content-Type": "application/json",
     },
-    cache: "no-store",
+    body: JSON.stringify({
+      query,
+      variables: { login: username },
+    }),
+    next: {
+      revalidate: GITHUB_REVALIDATE_SECONDS,
+      tags: ["github:repos", "github:pinned"],
+    },
   });
 
   if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      throw new GitHubApiError(
+        response.status,
+        `GitHub authentication failed while fetching pinned repositories (${response.status}).`,
+      );
+    }
     throw new Error(`GitHub API returned ${response.status}`);
   }
 
-  const repos = (await response.json()) as Repo[];
-  return repos.filter((repo) => !repo.archived);
+  const payload = (await response.json()) as {
+    data?: {
+      user?: {
+        pinnedItems?: {
+          nodes?: Array<{
+            id: string;
+            databaseId?: number | null;
+            name: string;
+            nameWithOwner: string;
+            description: string | null;
+            url: string;
+            homepageUrl: string | null;
+            primaryLanguage: { name: string } | null;
+            stargazerCount: number;
+            forkCount: number;
+            isArchived: boolean;
+            isPrivate: boolean;
+            pushedAt: string;
+            updatedAt: string;
+            repositoryTopics?: {
+              nodes?: Array<{ topic?: { name?: string } }>;
+            };
+            owner?: {
+              login?: string;
+            };
+          }>;
+        };
+      };
+    };
+    errors?: Array<{ message?: string }>;
+  };
+
+  if (payload.errors?.length) {
+    console.error(
+      "[github:getPinnedRepos] GraphQL errors:",
+      payload.errors
+        .map((error) => error.message)
+        .filter(Boolean)
+        .join(" | ") || payload.errors,
+    );
+    throw new Error("GitHub GraphQL returned errors for pinned repositories.");
+  }
+
+  const nodes = payload.data?.user?.pinnedItems?.nodes ?? [];
+  return nodes
+    .filter(
+      (node): node is NonNullable<typeof node> & { databaseId: number } =>
+        Boolean(node) &&
+        !node.isArchived &&
+        typeof node.databaseId === "number",
+    )
+    .map((node) => ({
+      id: node.databaseId,
+      name: node.name,
+      full_name: node.nameWithOwner,
+      description: node.description,
+      html_url: node.url,
+      homepage: node.homepageUrl,
+      language: node.primaryLanguage?.name ?? null,
+      stargazers_count: node.stargazerCount,
+      forks_count: node.forkCount,
+      archived: node.isArchived,
+      private: node.isPrivate,
+      owner: {
+        login: node.owner?.login,
+      },
+      pushed_at: node.pushedAt,
+      updated_at: node.updatedAt,
+      topics:
+        node.repositoryTopics?.nodes
+          ?.map((topicNode) => topicNode.topic?.name)
+          .filter((topicName): topicName is string => Boolean(topicName)) ?? [],
+    }));
 }
 
 export function longestStreak(days: ContributionDay[]) {
@@ -146,12 +824,38 @@ export function prettyDay(date: string) {
   });
 }
 
-export function buildCalendarCells(days: ContributionDay[]) {
-  const firstDayIndex = new Date(`${days[0].date}T00:00:00`).getDay();
-  const lastDayIndex = new Date(`${days[days.length - 1].date}T00:00:00`).getDay();
+export function prettyLongDay(date: string) {
+  return new Date(`${date}T00:00:00`).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
 
-  const leading = Array.from({ length: firstDayIndex }, () => null as ContributionDay | null);
-  const trailing = Array.from({ length: 6 - lastDayIndex }, () => null as ContributionDay | null);
+export function daysSince(isoDate: string) {
+  const fromMs = new Date(isoDate).getTime();
+  if (!Number.isFinite(fromMs)) return 0;
+  return Math.max(0, Math.floor((Date.now() - fromMs) / 86_400_000));
+}
+
+export function buildCalendarCells(days: ContributionDay[]) {
+  if (days.length === 0) {
+    return [];
+  }
+
+  const firstDayIndex = new Date(`${days[0].date}T00:00:00`).getDay();
+  const lastDayIndex = new Date(
+    `${days[days.length - 1].date}T00:00:00`,
+  ).getDay();
+
+  const leading = Array.from(
+    { length: firstDayIndex },
+    () => null as ContributionDay | null,
+  );
+  const trailing = Array.from(
+    { length: 6 - lastDayIndex },
+    () => null as ContributionDay | null,
+  );
 
   return [...leading, ...days, ...trailing];
 }
@@ -174,7 +878,9 @@ export function buildSparklinePoints(days: ContributionDay[]) {
 
   return days
     .map((day, index) => {
-      const x = padding + (index / Math.max(days.length - 1, 1)) * (width - padding * 2);
+      const x =
+        padding +
+        (index / Math.max(days.length - 1, 1)) * (width - padding * 2);
       const y = height - padding - (day.count / max) * (height - padding * 2);
       return `${x},${y}`;
     })
@@ -182,6 +888,10 @@ export function buildSparklinePoints(days: ContributionDay[]) {
 }
 
 export function buildWeeklyTotals(days: ContributionDay[]) {
+  if (days.length === 0) {
+    return [];
+  }
+
   const calendarCells = buildCalendarCells(days);
   const weeks = chunkWeeks(calendarCells);
 
@@ -189,9 +899,699 @@ export function buildWeeklyTotals(days: ContributionDay[]) {
     label: `Week ${index + 1}`,
     total: week.reduce((sum, day) => sum + (day?.count ?? 0), 0),
     range: `${prettyDay(week.find((day) => day)?.date ?? days[0].date)} – ${prettyDay(
-      [...week].reverse().find((day) => day)?.date ?? days[days.length - 1].date,
+      [...week].reverse().find((day) => day)?.date ??
+        days[days.length - 1].date,
     )}`,
   }));
+}
+
+export function buildRepoPushCadence(repos: Repo[]) {
+  const windows = buildWeeklyWindows();
+
+  return windows.map(({ start, end, label, range }, index) => {
+    const startMs = new Date(`${start}T00:00:00.000Z`).getTime();
+    const endMs = new Date(`${end}T23:59:59.999Z`).getTime();
+    const value = repos.filter((repo) => {
+      const pushedMs = new Date(repo.pushed_at).getTime();
+      return pushedMs >= startMs && pushedMs <= endMs;
+    }).length;
+
+    return {
+      label,
+      value,
+      range,
+      index: index + 1,
+    };
+  });
+}
+
+export async function buildRepoCommitCadence(
+  repos: Repo[],
+  topRepoLimit: number = 8,
+) {
+  const summary = await buildRepoCommitActivitySummary(repos, topRepoLimit);
+  return summary.weekly;
+}
+
+export async function buildRepoCommitActivitySummary(
+  repos: Repo[],
+  topRepoLimit: number = 8,
+  options?: { forceIncludeFullNames?: string[] },
+) {
+  const sortedRepos = [...repos].sort(
+    (a, b) =>
+      +new Date(b.pushed_at) - +new Date(a.pushed_at) ||
+      b.stargazers_count - a.stargazers_count,
+  );
+  const forceInclude = new Set(options?.forceIncludeFullNames ?? []);
+  const forcedRepos = sortedRepos.filter((repo) =>
+    forceInclude.has(repo.full_name),
+  );
+  const remainder = sortedRepos.filter(
+    (repo) => !forceInclude.has(repo.full_name),
+  );
+  const topRepos = [
+    ...forcedRepos,
+    ...remainder.slice(0, Math.max(0, topRepoLimit - forcedRepos.length)),
+  ];
+  const windows = buildWeeklyWindows();
+  const buckets = windows.map((window) => ({ ...window, value: 0 }));
+  const start = windows[0]?.start;
+
+  if (!start || topRepos.length === 0) {
+    return {
+      weekly: buckets.map((bucket, index) => ({
+        label: bucket.label,
+        range: bucket.range,
+        value: bucket.value,
+        index: index + 1,
+      })),
+      perRepo: [] as Array<{
+        name: string;
+        fullName: string;
+        commits: number;
+        pushedAt: string;
+      }>,
+    };
+  }
+
+  const commitResponses = await Promise.all(
+    topRepos.map(async (repo) => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, GITHUB_FETCH_TIMEOUT_MS);
+
+      try {
+        const commits = await paginateGitHub<{
+          commit?: { author?: { date?: string } };
+        }>(
+          `https://api.github.com/repos/${repo.full_name}/commits?since=${start}T00:00:00Z&per_page=100`,
+          {
+            headers: githubHeaders(),
+            next: { revalidate: GITHUB_REVALIDATE_SECONDS },
+            signal: controller.signal,
+          },
+        );
+
+        return { repo, commits };
+      } catch (error) {
+        console.error(
+          `[github/buildRepoCommitActivitySummary] Failed to fetch commits for ${repo.full_name}`,
+          error,
+        );
+        return {
+          repo,
+          commits: [] as Array<{ commit?: { author?: { date?: string } } }>,
+        };
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    }),
+  );
+
+  const perRepo = commitResponses
+    .map(({ repo, commits }) => ({
+      name: repo.name.length > 14 ? `${repo.name.slice(0, 14)}…` : repo.name,
+      fullName: repo.full_name,
+      commits: commits.length,
+      pushedAt: repo.pushed_at,
+    }))
+    .sort((a, b) => b.commits - a.commits);
+
+  for (const { commits } of commitResponses) {
+    for (const commit of commits) {
+      const isoDate = commit.commit?.author?.date;
+      if (!isoDate) {
+        continue;
+      }
+
+      const commitMs = new Date(isoDate).getTime();
+      const weekIndex = windows.findIndex((window) => {
+        const startMs = new Date(`${window.start}T00:00:00.000Z`).getTime();
+        const endMs = new Date(`${window.end}T23:59:59.999Z`).getTime();
+        return commitMs >= startMs && commitMs <= endMs;
+      });
+
+      if (weekIndex !== -1) {
+        buckets[weekIndex].value += 1;
+      }
+    }
+  }
+
+  return {
+    weekly: buckets.map((bucket, index) => ({
+      label: bucket.label,
+      range: bucket.range,
+      value: bucket.value,
+      index: index + 1,
+    })),
+    perRepo,
+  };
+}
+
+export async function getCommitTimingHeatmap(
+  timezone: string,
+  username: string = USERNAME,
+  options?: GitHubRequestOptions,
+): Promise<CommitTimingHeatmapData> {
+  const cacheKey = `${username}:${timezone}`;
+  return resolveWithProcessCache(
+    cacheKey,
+    commitTimingHeatmapCache,
+    commitTimingHeatmapInFlight,
+    () => getCommitTimingHeatmapUncached(timezone, username),
+    options?.signal,
+  );
+}
+
+async function getCommitTimingHeatmapUncached(
+  timezone: string,
+  username: string = USERNAME,
+): Promise<CommitTimingHeatmapData> {
+  const dates = buildLast30Days();
+  const start = dates[0];
+  // Intentionally validate timezone defensively at this boundary even though
+  // most callers sanitize earlier. This function is exported via
+  // getCommitTimingHeatmap(...) and may be called from new paths over time.
+  // Fallback to UTC keeps behavior deterministic instead of throwing.
+  const resolvedTimezone = (() => {
+    try {
+      new Intl.DateTimeFormat("en-US", { timeZone: timezone });
+      return timezone;
+    } catch {
+      return "UTC";
+    }
+  })();
+
+  const repos = await getRepos(username);
+  const topRepos = [...repos]
+    .sort(
+      (a, b) =>
+        +new Date(b.pushed_at) - +new Date(a.pushed_at) ||
+        b.stargazers_count - a.stargazers_count,
+    )
+    .slice(0, 10);
+
+  const hourBuckets = Array.from({ length: 7 }, () => Array(24).fill(0));
+  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const zonedDateFormatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: resolvedTimezone,
+    weekday: "short",
+    hour: "2-digit",
+    hourCycle: "h23",
+  });
+
+  const commitResponses = await Promise.all(
+    topRepos.map(async (repo) => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, GITHUB_FETCH_TIMEOUT_MS);
+
+      try {
+        return await paginateGitHub<{
+          commit?: { author?: { date?: string } };
+        }>(
+          `https://api.github.com/repos/${repo.full_name}/commits?since=${start}T00:00:00Z&author=${username}&per_page=100`,
+          {
+            headers: githubHeaders(),
+            next: { revalidate: GITHUB_REVALIDATE_SECONDS },
+            signal: controller.signal,
+          },
+        );
+      } catch {
+        return [] as Array<{ commit?: { author?: { date?: string } } }>;
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    }),
+  );
+
+  for (const commits of commitResponses) {
+    for (const commit of commits) {
+      const isoDate = commit.commit?.author?.date;
+      if (!isoDate) continue;
+
+      const parsed = new Date(isoDate);
+      const timestamp = parsed.getTime();
+      if (!Number.isFinite(timestamp)) continue;
+
+      const zonedParts = zonedDateFormatter.formatToParts(parsed);
+      const weekday = zonedParts.find((part) => part.type === "weekday")?.value;
+      const hour = Number.parseInt(
+        zonedParts.find((part) => part.type === "hour")?.value ?? "",
+        10,
+      );
+      const dayIndex = weekday ? dayLabels.indexOf(weekday) : -1;
+      if (dayIndex === -1 || Number.isNaN(hour)) {
+        continue;
+      }
+
+      hourBuckets[dayIndex][hour] += 1;
+    }
+  }
+
+  const flatCounts = hourBuckets.flat();
+  const maxCellCount = Math.max(...flatCounts, 0);
+  const totalCommits = flatCounts.reduce((sum, value) => sum + value, 0);
+
+  const toIntensity = (count: number): CommitTimingHeatmapCell["intensity"] => {
+    if (count === 0 || maxCellCount === 0) return 0;
+    const ratio = count / maxCellCount;
+    if (ratio <= 0.25) return 1;
+    if (ratio <= 0.5) return 2;
+    if (ratio <= 0.75) return 3;
+    return 4;
+  };
+
+  const cells: CommitTimingHeatmapCell[] = [];
+  for (let dayIndex = 0; dayIndex < 7; dayIndex += 1) {
+    for (let hour = 0; hour < 24; hour += 1) {
+      const count = hourBuckets[dayIndex][hour];
+      cells.push({
+        dayIndex,
+        dayLabel: dayLabels[dayIndex],
+        hour,
+        hourLabel: `${hour.toString().padStart(2, "0")}:00`,
+        count,
+        intensity: toIntensity(count),
+      });
+    }
+  }
+
+  return {
+    timezone: resolvedTimezone,
+    totalCommits,
+    maxCellCount,
+    cells,
+  };
+}
+
+export async function getPullRequestThroughput(
+  username: string = USERNAME,
+): Promise<PullRequestThroughputPoint[]> {
+  const weeklyHealth = await getPullRequestHealth(username);
+  return weeklyHealth.map(({ label, range, opened, merged, closed }) => ({
+    label,
+    range,
+    opened,
+    merged,
+    closed,
+  }));
+}
+
+export async function getPullRequestHealth(
+  username: string = USERNAME,
+  options?: GitHubRequestOptions,
+): Promise<PullRequestHealthPoint[]> {
+  return resolveWithProcessCache(
+    username,
+    pullRequestHealthCache,
+    pullRequestHealthInFlight,
+    () => getPullRequestHealthUncached(username),
+    options?.signal,
+  );
+}
+
+async function getPullRequestHealthUncached(
+  username: string = USERNAME,
+): Promise<PullRequestHealthPoint[]> {
+  const normalizedUsername = username.toLowerCase();
+  const windows = buildWeeklyWindows();
+  const windowStartMs = new Date(
+    `${windows[0]?.start}T00:00:00.000Z`,
+  ).getTime();
+  const windowEndMs = new Date(
+    `${windows[windows.length - 1]?.end}T23:59:59.999Z`,
+  ).getTime();
+
+  const cycleDurationsByWeek = windows.map(() => [] as number[]);
+
+  const weeklyCounts = await Promise.all(
+    windows.map(async (window) => {
+      const buildQuery = (
+        qualifier: "created" | "merged" | "closed" | "reopened",
+      ) =>
+        encodeURIComponent(
+          `is:pr author:${username} ${qualifier}:${window.start}..${window.end}`,
+        );
+      const [opened, merged, closed, reopened] = await Promise.all([
+        fetchGithubSearchCount(buildQuery("created")),
+        fetchGithubSearchCount(buildQuery("merged")),
+        fetchGithubSearchCount(buildQuery("closed")),
+        // GitHub issue search does not support a `reopened:` date qualifier.
+        // Exact weekly reopened counts require per-PR timeline event crawling,
+        // which is intentionally deferred because it is materially heavier for
+        // this route. Keep a stable numeric fallback so reopen rate remains
+        // defined and chart contracts stay `number`-typed (avoids introducing
+        // nullable reopen fields across UI/data models right now).
+        Promise.resolve(0),
+      ]);
+
+      return {
+        label: window.label,
+        range: window.range,
+        opened,
+        merged,
+        closed,
+        reopened,
+      };
+    }),
+  );
+
+  const repos = await getRepos(username);
+  const topRepos = [...repos]
+    .sort(
+      (a, b) =>
+        +new Date(b.pushed_at) - +new Date(a.pushed_at) ||
+        b.stargazers_count - a.stargazers_count,
+    )
+    // PR flow metrics are computed account-wide. Sampling only 8 repos can
+    // undercount cycle-time data and collapse medians to zero; use a wider
+    // bounded set to stay representative without unbounded crawling.
+    .slice(0, 30);
+
+  const prResponses = await Promise.all(
+    topRepos.map(async (repo) => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, GITHUB_FETCH_TIMEOUT_MS);
+
+      try {
+        const pulls = await paginateGitHubUntil<{
+          created_at?: string;
+          updated_at?: string;
+          merged_at?: string | null;
+          user?: { login?: string };
+        }>(
+          // GitHub's list-pulls REST endpoint does not support a `since` filter.
+          // We rely on `sort=updated`, bounded top repos, timeout, and downstream
+          // date-window filtering to keep this query practical.
+          `https://api.github.com/repos/${repo.full_name}/pulls?state=closed&sort=updated&direction=desc&per_page=100`,
+          {
+            headers: githubHeaders(),
+            next: { revalidate: GITHUB_REVALIDATE_SECONDS },
+            signal: controller.signal,
+          },
+          (page) => {
+            if (!Number.isFinite(windowStartMs) || page.length === 0) {
+              return true;
+            }
+
+            // API is sorted by updated desc; once a page is fully older than the
+            // oldest window start, following pages will only get older.
+            let oldestUpdatedMs = Number.POSITIVE_INFINITY;
+            for (const pull of page) {
+              const updatedMs = pull.updated_at
+                ? new Date(pull.updated_at).getTime()
+                : Number.NaN;
+              if (!Number.isFinite(updatedMs)) {
+                continue;
+              }
+              if (updatedMs < oldestUpdatedMs) {
+                oldestUpdatedMs = updatedMs;
+              }
+            }
+
+            return oldestUpdatedMs < windowStartMs;
+          },
+        );
+
+        return pulls;
+      } catch {
+        return [] as Array<{
+          created_at?: string;
+          updated_at?: string;
+          merged_at?: string | null;
+          user?: { login?: string };
+        }>;
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    }),
+  );
+
+  for (const pulls of prResponses) {
+    for (const pr of pulls) {
+      if (!pr.created_at || !pr.merged_at) {
+        continue;
+      }
+      if (pr.user?.login?.toLowerCase() !== normalizedUsername) {
+        continue;
+      }
+
+      const mergedAtMs = new Date(pr.merged_at).getTime();
+      if (
+        !Number.isFinite(mergedAtMs) ||
+        mergedAtMs < windowStartMs ||
+        mergedAtMs > windowEndMs
+      ) {
+        continue;
+      }
+
+      const createdAtMs = new Date(pr.created_at).getTime();
+      if (!Number.isFinite(createdAtMs)) {
+        continue;
+      }
+
+      const durationHours = (mergedAtMs - createdAtMs) / 3_600_000;
+      if (durationHours < 0) {
+        continue;
+      }
+
+      const weekIndex = windows.findIndex((window) => {
+        const startMs = new Date(`${window.start}T00:00:00.000Z`).getTime();
+        const endMs = new Date(`${window.end}T23:59:59.999Z`).getTime();
+        return mergedAtMs >= startMs && mergedAtMs <= endMs;
+      });
+
+      if (weekIndex !== -1) {
+        cycleDurationsByWeek[weekIndex].push(durationHours);
+      }
+    }
+  }
+
+  return weeklyCounts.map((week, index) => {
+    const cycleDurations = cycleDurationsByWeek[index];
+    const medianCycleHours = median(cycleDurations);
+    const mergeRate =
+      week.closed > 0
+        ? roundToOneDecimal((week.merged / week.closed) * 100)
+        : 0;
+    const reopenRate =
+      week.closed > 0
+        ? roundToOneDecimal((week.reopened / week.closed) * 100)
+        : 0;
+
+    return {
+      ...week,
+      mergeRate,
+      reopenRate,
+      medianCycleHours: roundToOneDecimal(medianCycleHours),
+      cycleSampleSize: cycleDurations.length,
+    };
+  });
+}
+
+export async function getIssueFlowHealth(
+  username: string = USERNAME,
+  options?: GitHubRequestOptions,
+): Promise<IssueFlowHealthPoint[]> {
+  return resolveWithProcessCache(
+    username,
+    issueFlowHealthCache,
+    issueFlowHealthInFlight,
+    () => getIssueFlowHealthUncached(username),
+    options?.signal,
+  );
+}
+
+async function getIssueFlowHealthUncached(
+  username: string = USERNAME,
+): Promise<IssueFlowHealthPoint[]> {
+  const windows = buildWeeklyWindows();
+
+  const windowCounts = await Promise.all(
+    windows.map(async (window) => {
+      const buildQuery = (qualifier: "created" | "closed") =>
+        encodeURIComponent(
+          `is:issue user:${username} ${qualifier}:${window.start}..${window.end}`,
+        );
+      const [opened, closed] = await Promise.all([
+        fetchGithubSearchCount(buildQuery("created")),
+        fetchGithubSearchCount(buildQuery("closed")),
+      ]);
+
+      return {
+        label: window.label,
+        range: window.range,
+        opened,
+        closed,
+      };
+    }),
+  );
+
+  let runningBacklogDelta = 0;
+  const weeklyCounts = windowCounts.map((window) => {
+    runningBacklogDelta += window.opened - window.closed;
+    return {
+      ...window,
+      backlogDelta: runningBacklogDelta,
+    };
+  });
+
+  return weeklyCounts;
+}
+
+export async function getReleaseCadence(
+  username: string = USERNAME,
+  months: number = DEFAULT_RELEASE_CADENCE_MONTHS,
+): Promise<ReleaseCadencePoint[]> {
+  const windows = buildMonthWindows(months);
+  const counters = new Map(windows.map((window) => [window.monthKey, 0]));
+  const earliestStartIso = windows[0]?.start.toISOString();
+  if (!earliestStartIso) {
+    return [];
+  }
+
+  const repos = await getRepos(username);
+  const topRepos = [...repos]
+    .sort(
+      (a, b) =>
+        b.stargazers_count - a.stargazers_count ||
+        +new Date(b.pushed_at) - +new Date(a.pushed_at),
+    )
+    .slice(0, 12);
+
+  const releaseResponses = await Promise.all(
+    topRepos.map(async (repo) => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, GITHUB_FETCH_TIMEOUT_MS);
+
+      try {
+        return await paginateGitHubUntil<{
+          published_at?: string | null;
+        }>(
+          // GitHub's list-releases REST endpoint does not expose a `published_at`
+          // query filter. We keep an upstream repo limit + timeout and enforce the
+          // date window (`earliestStartIso`) immediately after fetch.
+          `https://api.github.com/repos/${repo.full_name}/releases?per_page=30`,
+          {
+            headers: githubHeaders(),
+            next: { revalidate: GITHUB_REVALIDATE_SECONDS },
+            signal: controller.signal,
+          },
+          (page) => {
+            if (page.length === 0) {
+              return true;
+            }
+
+            // Releases are returned newest-first by creation time. Stop once this
+            // page crosses the earliest month window because following pages are older.
+            let oldestPublishedMs = Number.POSITIVE_INFINITY;
+            for (const release of page) {
+              if (!release.published_at) {
+                continue;
+              }
+
+              const publishedMs = new Date(release.published_at).getTime();
+              if (!Number.isFinite(publishedMs)) {
+                continue;
+              }
+
+              if (publishedMs < oldestPublishedMs) {
+                oldestPublishedMs = publishedMs;
+              }
+            }
+
+            if (!Number.isFinite(oldestPublishedMs)) {
+              return false;
+            }
+
+            const earliestWindowMs = new Date(earliestStartIso).getTime();
+            return oldestPublishedMs < earliestWindowMs;
+          },
+        );
+      } catch {
+        return [] as Array<{ published_at?: string | null }>;
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    }),
+  );
+
+  for (const releases of releaseResponses) {
+    for (const release of releases) {
+      if (!release.published_at) {
+        continue;
+      }
+
+      if (release.published_at < earliestStartIso) {
+        continue;
+      }
+
+      const publishedDate = new Date(release.published_at);
+      const monthKey = `${publishedDate.getFullYear()}-${String(
+        publishedDate.getMonth() + 1,
+      ).padStart(2, "0")}`;
+
+      if (counters.has(monthKey)) {
+        counters.set(monthKey, (counters.get(monthKey) ?? 0) + 1);
+      }
+    }
+  }
+
+  return windows.map((window) => ({
+    label: window.label,
+    monthKey: window.monthKey,
+    releases: counters.get(window.monthKey) ?? 0,
+  }));
+}
+
+export async function getRepoRiskSnapshot(
+  username: string = USERNAME,
+): Promise<RepoRiskSnapshot> {
+  // UI-facing repo counts intentionally exclude archived repos so summary badges
+  // and risk totals stay aligned with "active" inventory across the dashboard.
+  const repos = await getRepos(username, { includeArchived: true });
+  const activeRepos = repos.filter((repo) => !repo.archived);
+
+  const archivedRepos = repos.filter((repo) => repo.archived).length;
+  const privateRepos = activeRepos.filter((repo) => repo.private).length;
+
+  const hot = activeRepos.filter(
+    (repo) => daysSince(repo.pushed_at) <= 7,
+  ).length;
+  const active = activeRepos.filter((repo) => {
+    const age = daysSince(repo.pushed_at);
+    return age >= 8 && age <= 30;
+  }).length;
+  const stale = activeRepos.filter((repo) => {
+    const age = daysSince(repo.pushed_at);
+    return age >= 31 && age < 90;
+  }).length;
+  const dormant = activeRepos.filter(
+    (repo) => daysSince(repo.pushed_at) >= 90,
+  ).length;
+
+  const buckets: RepoRiskBucket[] = [
+    { label: "Hot (0-7d)", count: hot },
+    { label: "Active (8-30d)", count: active },
+    { label: "Stale (31-89d)", count: stale },
+    { label: "Dormant (90d+)", count: dormant },
+  ];
+
+  return {
+    totalRepos: activeRepos.length,
+    archivedRepos,
+    privateRepos,
+    atRiskRepos: stale + dormant,
+    buckets,
+  };
 }
 
 export function formatRepoDate(value: string) {

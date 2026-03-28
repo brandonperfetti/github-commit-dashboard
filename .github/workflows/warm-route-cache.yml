@@ -1,0 +1,93 @@
+name: Warm Route Cache
+
+on:
+  schedule:
+    # Keep key route caches warm so first-user navigations are faster.
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+    inputs:
+      target_environment:
+        description: "Environment-scoped vars/secrets to use"
+        required: true
+        default: "Production"
+        type: choice
+        options:
+          - Preview
+          - Production
+      base_url:
+        description: "Optional site URL override (e.g. https://your-app.vercel.app)"
+        required: false
+        default: ""
+        type: string
+      routes_csv:
+        description: "Comma-separated route paths to warm"
+        required: true
+        default: "/,/activity,/repos,/featured"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  warm-routes:
+    runs-on: ubuntu-latest
+    # Scheduled runs default to Production env vars/secrets.
+    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.target_environment || 'Production' }}
+    steps:
+      - name: Resolve target URL
+        id: resolve
+        env:
+          INPUT_BASE_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.base_url || '' }}
+          ENV_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || secrets.NEXT_PUBLIC_SITE_URL }}
+        run: |
+          TARGET_URL="${INPUT_BASE_URL:-$ENV_SITE_URL}"
+          TARGET_URL="$(echo "$TARGET_URL" | xargs)"
+          TARGET_URL="${TARGET_URL%/}"
+
+          if [ -z "$TARGET_URL" ]; then
+            echo "Unable to resolve target URL. Set inputs.base_url or NEXT_PUBLIC_SITE_URL in the selected environment."
+            exit 1
+          fi
+
+          echo "target_url=$TARGET_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Warm selected routes
+        env:
+          TARGET_URL: ${{ steps.resolve.outputs.target_url }}
+          INPUT_ROUTES: ${{ github.event_name == 'workflow_dispatch' && inputs.routes_csv || '' }}
+          DEFAULT_ROUTES: "/,/activity,/repos,/featured"
+        run: |
+          ROUTES_CSV="${INPUT_ROUTES:-$DEFAULT_ROUTES}"
+
+          IFS=',' read -r -a routes <<< "$ROUTES_CSV"
+
+          for raw_route in "${routes[@]}"; do
+            route="$(echo "$raw_route" | xargs)"
+            if [ -z "$route" ]; then
+              continue
+            fi
+
+            if [[ "${route:0:1}" != "/" ]]; then
+              route="/$route"
+            fi
+
+            url="$TARGET_URL$route"
+            echo "GET $url"
+
+            response=$(curl -sSL "$url" -w "\n%{http_code} %{time_total}")
+            status_and_time=$(echo "$response" | tail -n1)
+            status=$(echo "$status_and_time" | awk '{print $1}')
+            time_total=$(echo "$status_and_time" | awk '{print $2}')
+            body=$(echo "$response" | sed '$d')
+
+            echo "Status: $status"
+            echo "Duration: ${time_total}s"
+            echo "Body preview:"
+            echo "$body" | head -c 300
+            echo
+
+            if [[ ! "$status" =~ ^2[0-9][0-9]$ ]]; then
+              echo "Route warm-up failed for $route (status $status)."
+              exit 1
+            fi
+          done

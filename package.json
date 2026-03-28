@@ -4,16 +4,22 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "npm run validate:env -- --mode=production",
     "build": "next build",
+    "prestart": "npm run validate:env -- --mode=production",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "validate:env": "node scripts/validate-env.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
+    "gsap": "^3.14.2",
     "lucide-react": "^0.577.0",
     "next": "16.2.1",
-    "next-themes": "^0.4.6",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "recharts": "^3.8.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -22,6 +28,9 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.1",
+    "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

@@ -12,10 +12,23 @@
   --border-strong: rgba(226, 232, 240, 0.16);
   --shadow-card: 0 28px 80px rgba(0, 0, 0, 0.42);
   --shadow-nav: 0 20px 60px rgba(0, 0, 0, 0.28);
-  --hero: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(59, 130, 246, 0.08) 54%, rgba(255, 255, 255, 0));
+  --hero: linear-gradient(
+    135deg,
+    rgba(16, 185, 129, 0.16),
+    rgba(59, 130, 246, 0.08) 54%,
+    rgba(255, 255, 255, 0)
+  );
   --page-gradient:
-    radial-gradient(circle at top left, rgba(16, 185, 129, 0.18), transparent 28%),
-    radial-gradient(circle at top right, rgba(59, 130, 246, 0.14), transparent 24%),
+    radial-gradient(
+      circle at top left,
+      rgba(16, 185, 129, 0.18),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at top right,
+      rgba(59, 130, 246, 0.14),
+      transparent 24%
+    ),
     linear-gradient(180deg, #07110f 0%, #0a0f18 42%, #050814 100%);
   --nav-surface: rgba(7, 13, 22, 0.72);
   --nav-active-bg: rgba(255, 255, 255, 0.1);
@@ -23,6 +36,16 @@
   --button-accent: #10b981;
   --button-accent-hover: #34d399;
   --button-accent-foreground: #03110c;
+  --chart-primary: #10b981;
+  --chart-primary-soft: #34d399;
+  --chart-primary-muted: #6ee7b7;
+  --chart-accent: #14b8a6;
+  --chart-warning: #f59e0b;
+  --chart-pinned: #059669;
+  --chart-unpinned: #34d399;
+  --chart-opened: #34d399;
+  --chart-closed: #10b981;
+  --chart-net-backlog: #a7f3d0;
   --heat-0: rgba(255, 255, 255, 0.06);
   --heat-0-border: rgba(255, 255, 255, 0.05);
   --heat-1: rgba(6, 78, 59, 0.82);
@@ -47,10 +70,23 @@
   --border-strong: rgba(15, 23, 42, 0.13);
   --shadow-card: 0 20px 60px rgba(15, 23, 42, 0.08);
   --shadow-nav: 0 16px 40px rgba(15, 23, 42, 0.08);
-  --hero: linear-gradient(145deg, rgba(16, 185, 129, 0.14), rgba(59, 130, 246, 0.06) 46%, rgba(255, 255, 255, 0) 78%);
+  --hero: linear-gradient(
+    145deg,
+    rgba(16, 185, 129, 0.14),
+    rgba(59, 130, 246, 0.06) 46%,
+    rgba(255, 255, 255, 0) 78%
+  );
   --page-gradient:
-    radial-gradient(circle at top left, rgba(16, 185, 129, 0.1), transparent 28%),
-    radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 24%),
+    radial-gradient(
+      circle at top left,
+      rgba(16, 185, 129, 0.1),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at top right,
+      rgba(59, 130, 246, 0.08),
+      transparent 24%
+    ),
     linear-gradient(180deg, #fcfdff 0%, #f4f7fb 44%, #ecf2f8 100%);
   --nav-surface: rgba(252, 253, 255, 0.78);
   --nav-active-bg: #059669;
@@ -58,6 +94,16 @@
   --button-accent: #059669;
   --button-accent-hover: #047857;
   --button-accent-foreground: #f8fafc;
+  --chart-primary: #059669;
+  --chart-primary-soft: #10b981;
+  --chart-primary-muted: #6ee7b7;
+  --chart-accent: #0f766e;
+  --chart-warning: #d97706;
+  --chart-pinned: #047857;
+  --chart-unpinned: #10b981;
+  --chart-opened: #10b981;
+  --chart-closed: #059669;
+  --chart-net-backlog: #047857;
   --heat-0: rgba(15, 23, 42, 0.06);
   --heat-0-border: rgba(15, 23, 42, 0.05);
   --heat-1: rgba(16, 185, 129, 0.25);

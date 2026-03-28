@@ -7,7 +7,8 @@ const styles = {
 
   secondary:
     "border border-[var(--border-strong)] bg-[var(--card-muted)] text-[var(--foreground)] hover:bg-[var(--accent-soft-strong)]",
-  ghost: "border border-transparent bg-transparent text-[var(--foreground)] hover:bg-[var(--accent-soft)]",
+  ghost:
+    "border border-transparent bg-transparent text-[var(--foreground)] hover:bg-[var(--accent-soft)]",
 };
 
 const shared =
@@ -18,7 +19,9 @@ export function Button({
   variant = "primary",
   ...props
 }: React.ComponentProps<"button"> & { variant?: keyof typeof styles }) {
-  return <button className={cn(shared, styles[variant], className)} {...props} />;
+  return (
+    <button className={cn(shared, styles[variant], className)} {...props} />
+  );
 }
 
 export function ButtonLink({
