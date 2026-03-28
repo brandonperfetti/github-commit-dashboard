@@ -180,7 +180,9 @@ async function CommitTimingSectionSlot({
     FALLBACK_COMMIT_TIMING_HEATMAP,
   );
 
-  return <ActivityCommitTimingSection commitTimingHeatmap={commitTimingHeatmap} />;
+  return (
+    <ActivityCommitTimingSection commitTimingHeatmap={commitTimingHeatmap} />
+  );
 }
 
 async function TrendBreakdownSectionSlot({
@@ -195,7 +197,9 @@ async function TrendBreakdownSectionSlot({
     resolveWithFallback("trend section PR health", prHealthPromise, []),
   ]);
 
-  return <ActivityTrendBreakdownSection days={days} prHealthData={prHealthData} />;
+  return (
+    <ActivityTrendBreakdownSection days={days} prHealthData={prHealthData} />
+  );
 }
 
 export default async function ActivityPage() {

@@ -10,7 +10,13 @@ import { PrThroughputChart } from "@/app/components/charts/pr-throughput-chart";
 import { AnimatedHeadline } from "@/app/components/motion/animated-headline";
 import { ScrollReveal } from "@/app/components/motion/scroll-reveal";
 import { SectionShell } from "@/app/components/section-shell";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/app/components/ui/card";
 import {
   buildWeeklyTotals,
   currentStreak,
@@ -38,6 +44,8 @@ function SkeletonBlock({ className }: { className: string }) {
   );
 }
 
+// Intentionally kept module-local until another route/module needs it.
+// Avoid exporting helpers that currently have a single-file call site.
 function computeActivityStats(days: ContributionDay[]) {
   const total = days.reduce((sum, day) => sum + day.count, 0);
   const activeDays = days.filter((day) => day.count > 0).length;
@@ -115,7 +123,9 @@ export function ActivityHeatmapSection({ days }: { days: ContributionDay[] }) {
     <SectionShell>
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight">30-day heatmap</h2>
+          <h2 className="text-2xl font-semibold tracking-tight">
+            30-day heatmap
+          </h2>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
             Daily contribution intensity across the last 30 days.
           </p>
@@ -163,7 +173,9 @@ export function ActivityHeatmapSection({ days }: { days: ContributionDay[] }) {
               {week.label}
             </p>
             <p className="mt-2 text-2xl font-semibold">{week.total}</p>
-            <p className="mt-1 text-xs text-[var(--muted-foreground)]">{week.range}</p>
+            <p className="mt-1 text-xs text-[var(--muted-foreground)]">
+              {week.range}
+            </p>
           </Card>
         ))}
       </div>
@@ -188,7 +200,9 @@ export function ActivityFlowHealthSection({
 
       <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <div className="min-w-0">
-          <h3 className="text-base font-semibold tracking-tight">PR cycle time</h3>
+          <h3 className="text-base font-semibold tracking-tight">
+            PR cycle time
+          </h3>
           <p className="mt-1 text-xs text-[var(--muted-foreground)]">
             Median open-to-merge time by week (hours).
           </p>
@@ -198,7 +212,9 @@ export function ActivityFlowHealthSection({
         </div>
 
         <div className="min-w-0">
-          <h3 className="text-base font-semibold tracking-tight">PR flow health</h3>
+          <h3 className="text-base font-semibold tracking-tight">
+            PR flow health
+          </h3>
           <p className="mt-1 text-xs text-[var(--muted-foreground)]">
             Weekly merge and reopen rates for authored pull requests.
           </p>
@@ -208,7 +224,9 @@ export function ActivityFlowHealthSection({
         </div>
 
         <div className="min-w-0">
-          <h3 className="text-base font-semibold tracking-tight">Issue flow health</h3>
+          <h3 className="text-base font-semibold tracking-tight">
+            Issue flow health
+          </h3>
           <p className="mt-1 text-xs text-[var(--muted-foreground)]">
             Weekly opened vs closed issues and net backlog delta.
           </p>
@@ -284,7 +302,9 @@ export function ActivityTrendBreakdownSection({
         </div>
 
         <div className="mt-6">
-          <h3 className="text-base font-semibold tracking-tight">PR throughput</h3>
+          <h3 className="text-base font-semibold tracking-tight">
+            PR throughput
+          </h3>
           <p className="mt-1 text-xs text-[var(--muted-foreground)]">
             Weekly pull requests opened, merged, and closed.
           </p>
