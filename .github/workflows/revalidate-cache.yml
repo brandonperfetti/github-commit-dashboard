@@ -76,6 +76,8 @@ jobs:
 
           echo "POST $TARGET_URL/api/revalidate"
           response=$(curl -sS -X POST "$TARGET_URL/api/revalidate" \
+            --connect-timeout 10 \
+            --max-time 30 \
             -H "content-type: application/json" \
             -H "x-revalidate-secret: $REVALIDATE_SECRET" \
             --data "$PAYLOAD" \
