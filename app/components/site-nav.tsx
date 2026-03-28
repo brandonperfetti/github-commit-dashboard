@@ -18,6 +18,12 @@ export function SiteNav({
   githubAuthConfigured?: boolean;
 }) {
   const pathname = usePathname();
+  // `usePathname()` can transiently be null during initial hydration in some
+  // environments (notably mobile Safari), which would leave all tabs inactive.
+  // Fall back to "/" so Overview is highlighted on first paint.
+  const currentPath = pathname ?? "/";
+  const normalizedPath =
+    currentPath === "/" ? "/" : currentPath.replace(/\/+$/, "");
 
   return (
     <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--nav-surface)] backdrop-blur-xl">
@@ -58,7 +64,11 @@ export function SiteNav({
 
         <nav className="-mx-1 flex items-center gap-1 overflow-x-auto px-1 pb-1 sm:mx-0 sm:flex-wrap sm:gap-2 sm:overflow-visible sm:px-0 sm:pb-0.5">
           {links.map((link) => {
-            const active = pathname === link.href;
+            const active =
+              link.href === "/"
+                ? normalizedPath === "/"
+                : normalizedPath === link.href ||
+                  normalizedPath.startsWith(`${link.href}/`);
 
             return (
               <Link
