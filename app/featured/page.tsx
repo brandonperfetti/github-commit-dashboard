@@ -28,6 +28,14 @@ const featuredPath = "/featured";
 const featuredUrl = `${siteUrl}${featuredPath}`;
 const featuredDescription =
   "Pinned priorities and standout repositories ranked by relevance, with release cadence and shipping context.";
+const FEATURED_SCORE_WEIGHTS = {
+  stars: 35,
+  recency: 35,
+  commits: 20,
+  pinnedBoost: 10,
+} as const;
+const FEATURED_RECENCY_WINDOW_DAYS = 60;
+const FEATURED_SCORE_MAX = 100;
 
 export const metadata: Metadata = {
   title: "Featured",
@@ -165,13 +173,23 @@ export default async function FeaturedPage() {
           (1000 * 60 * 60 * 24),
       ),
     );
-    const starsScore = Math.round((repo.stargazers_count / maxStars) * 35);
-    const recencyScore = Math.round(Math.max(0, (1 - daysSincePush / 60) * 35));
-    const commitScore = Math.round((commits30d / maxCommits) * 20);
-    const pinnedBoost = isPinned ? 10 : 0;
+    const starsScore = Math.round(
+      (repo.stargazers_count / maxStars) * FEATURED_SCORE_WEIGHTS.stars,
+    );
+    const recencyScore = Math.round(
+      Math.max(0, 1 - daysSincePush / FEATURED_RECENCY_WINDOW_DAYS) *
+        FEATURED_SCORE_WEIGHTS.recency,
+    );
+    const commitScore = Math.round(
+      (commits30d / maxCommits) * FEATURED_SCORE_WEIGHTS.commits,
+    );
+    const pinnedBoost = isPinned ? FEATURED_SCORE_WEIGHTS.pinnedBoost : 0;
     const relevanceScore = Math.max(
       0,
-      Math.min(100, pinnedBoost + starsScore + recencyScore + commitScore),
+      Math.min(
+        FEATURED_SCORE_MAX,
+        pinnedBoost + starsScore + recencyScore + commitScore,
+      ),
     );
 
     return {
