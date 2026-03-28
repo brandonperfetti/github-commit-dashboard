@@ -47,7 +47,12 @@ function isValidTag(tag: string) {
 }
 
 function isValidPath(path: string) {
-  return path.startsWith("/");
+  return (
+    path.startsWith("/") &&
+    !path.includes("..") &&
+    !path.includes("\0") &&
+    !path.includes("\\")
+  );
 }
 
 function isAuthorizedRequest(
