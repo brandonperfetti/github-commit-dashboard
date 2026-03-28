@@ -281,8 +281,16 @@ async function paginateGitHubUntil<T>(
 ) {
   const results: T[] = [];
   let currentUrl: string | null = initialUrl;
+  let pageCount = 0;
 
   while (currentUrl) {
+    pageCount += 1;
+    if (pageCount > MAX_GITHUB_PAGINATION_PAGES) {
+      throw new Error(
+        `[paginateGitHubUntil] Exceeded max page limit (${MAX_GITHUB_PAGINATION_PAGES}) for URL: ${initialUrl}`,
+      );
+    }
+
     const response = await fetch(currentUrl, options);
     if (!response.ok) {
       throw new GitHubApiError(response.status);
