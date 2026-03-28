@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
 import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
@@ -8,6 +9,15 @@ import type { RepoMomentumPoint } from "@/lib/github";
 type MomentumTooltipProps = {
   active?: boolean;
   payload?: Array<{ payload?: RepoMomentumPoint }>;
+};
+
+type MomentumBarShapeProps = {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  payload?: { fill?: string };
+  fallbackFill: string;
 };
 
 function MomentumTooltip({ active, payload }: MomentumTooltipProps) {
@@ -39,9 +49,36 @@ function MomentumTooltip({ active, payload }: MomentumTooltipProps) {
   );
 }
 
+function MomentumBarShape({
+  x = 0,
+  y = 0,
+  width = 0,
+  height = 0,
+  payload,
+  fallbackFill,
+}: MomentumBarShapeProps) {
+  return (
+    <rect
+      x={x}
+      y={y}
+      width={width}
+      height={height}
+      rx={5}
+      ry={5}
+      fill={payload?.fill ?? fallbackFill}
+    />
+  );
+}
+
 export function ReposMomentumChart({ data }: { data: RepoMomentumPoint[] }) {
   const { ref, size, ready } = useChartSize<HTMLDivElement>();
   const chartColors = useResolvedChartColors();
+  const renderMomentumBarShape = useCallback(
+    (props: Omit<MomentumBarShapeProps, "fallbackFill">) => (
+      <MomentumBarShape {...props} fallbackFill={chartColors.primary} />
+    ),
+    [chartColors.primary],
+  );
 
   if (!data.length) {
     return (
@@ -103,32 +140,7 @@ export function ReposMomentumChart({ data }: { data: RepoMomentumPoint[] }) {
                 barSize={16}
                 radius={[0, 5, 5, 0]}
                 isAnimationActive={false}
-                shape={(props: {
-                  x?: number;
-                  y?: number;
-                  width?: number;
-                  height?: number;
-                  payload?: { fill?: string };
-                }) => {
-                  const {
-                    x = 0,
-                    y = 0,
-                    width = 0,
-                    height = 0,
-                    payload,
-                  } = props;
-                  return (
-                    <rect
-                      x={x}
-                      y={y}
-                      width={width}
-                      height={height}
-                      rx={5}
-                      ry={5}
-                      fill={payload?.fill ?? chartColors.primary}
-                    />
-                  );
-                }}
+                shape={renderMomentumBarShape}
               />
             </BarChart>
             <div className="pointer-events-none absolute inset-x-0 bottom-2 flex items-center justify-center gap-4 text-xs text-[var(--muted-foreground)]">
