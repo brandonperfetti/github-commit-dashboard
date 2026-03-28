@@ -1071,6 +1071,10 @@ async function getCommitTimingHeatmapUncached(
 ): Promise<CommitTimingHeatmapData> {
   const dates = buildLast30Days();
   const start = dates[0];
+  // Intentionally validate timezone defensively at this boundary even though
+  // most callers sanitize earlier. This function is exported via
+  // getCommitTimingHeatmap(...) and may be called from new paths over time.
+  // Fallback to UTC keeps behavior deterministic instead of throwing.
   const resolvedTimezone = (() => {
     try {
       new Intl.DateTimeFormat("en-US", { timeZone: timezone });
@@ -1239,7 +1243,9 @@ async function getPullRequestHealthUncached(
         // GitHub issue search does not support a `reopened:` date qualifier.
         // Exact weekly reopened counts require per-PR timeline event crawling,
         // which is intentionally deferred because it is materially heavier for
-        // this route. Keep a stable fallback so reopen rate remains defined.
+        // this route. Keep a stable numeric fallback so reopen rate remains
+        // defined and chart contracts stay `number`-typed (avoids introducing
+        // nullable reopen fields across UI/data models right now).
         Promise.resolve(0),
       ]);
 
