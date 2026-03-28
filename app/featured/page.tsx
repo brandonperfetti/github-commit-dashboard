@@ -126,6 +126,10 @@ export default async function FeaturedPage() {
       new Date(repo.updated_at).getTime(),
     ])
     .filter(Number.isFinite);
+  // Reference-time priority for scoring recency:
+  // 1) contribution data horizon (`days` last date) when available,
+  // 2) latest repo push/update timestamp as an activity-based fallback,
+  // 3) latest generated 30-day window day as a final deterministic fallback.
   const latestWindowDay = buildLast30Days().at(-1);
   const todayReferenceTime = latestWindowDay
     ? new Date(`${latestWindowDay}T00:00:00`).getTime()
