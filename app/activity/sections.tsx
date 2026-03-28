@@ -248,9 +248,10 @@ export function ActivityCommitTimingSection({
 }: {
   commitTimingHeatmap: CommitTimingHeatmapData;
 }) {
-  const heatmapIdentityKey = `${commitTimingHeatmap.timezone}:${commitTimingHeatmap.totalCommits}:${commitTimingHeatmap.maxCellCount}:${commitTimingHeatmap.cells
-    .map((cell) => cell.count)
-    .join(",")}`;
+  const countsChecksum = commitTimingHeatmap.cells.reduce((hash, cell) => {
+    return (hash * 31 + cell.count) >>> 0;
+  }, 0);
+  const heatmapIdentityKey = `${commitTimingHeatmap.timezone}:${commitTimingHeatmap.totalCommits}:${commitTimingHeatmap.maxCellCount}:${commitTimingHeatmap.cells.length}:${countsChecksum.toString(36)}`;
 
   return (
     <SectionShell>
