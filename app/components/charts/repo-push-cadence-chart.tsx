@@ -8,9 +8,10 @@ import type { RepoPushCadencePoint } from "@/lib/github";
 type CadenceTooltipProps = {
   active?: boolean;
   payload?: Array<{ payload?: RepoPushCadencePoint }>;
+  color?: string;
 };
 
-function CadenceTooltip({ active, payload }: CadenceTooltipProps) {
+function CadenceTooltip({ active, payload, color }: CadenceTooltipProps) {
   if (!active || !payload?.length) return null;
 
   const point = payload[0]?.payload;
@@ -20,7 +21,13 @@ function CadenceTooltip({ active, payload }: CadenceTooltipProps) {
     <div className="max-w-[220px] rounded-xl border border-[var(--border-strong)] bg-[var(--background)] p-2.5 text-xs shadow-md">
       <p className="font-medium text-[var(--foreground)]">{point.range}</p>
       <div className="mt-2 inline-flex items-center gap-1.5 text-[var(--foreground)]">
-        <span className="h-2 w-2 rounded-full bg-[var(--chart-primary)]/90" />
+        <span
+          className="h-2 w-2 rounded-full"
+          style={{
+            backgroundColor: color ?? "var(--chart-primary)",
+            opacity: 0.9,
+          }}
+        />
         Weekly commits: {point.value}
       </div>
     </div>
@@ -74,7 +81,7 @@ export function RepoPushCadenceChart({
             />
             <Tooltip
               cursor={{ fill: "var(--accent-soft)" }}
-              content={<CadenceTooltip />}
+              content={<CadenceTooltip color={chartColors.primary} />}
               wrapperStyle={{ outline: "none", zIndex: 20 }}
               allowEscapeViewBox={{ x: false, y: false }}
             />
