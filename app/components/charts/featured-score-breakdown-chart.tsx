@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { useChartSize } from "@/app/components/charts/use-chart-size";
 import { useResolvedChartColors } from "@/app/components/charts/use-resolved-chart-colors";
@@ -24,6 +24,15 @@ type FeaturedScoreTooltipProps = {
   active?: boolean;
   label?: string | number;
   payload?: Array<{ payload?: FeaturedScorePoint }>;
+};
+
+type FeaturedScoreBarShapeProps = {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  payload?: { fill?: string; fillOpacity?: number };
+  fallbackFill: string;
 };
 
 const CHARACTER_PIXEL_WIDTH = 7;
@@ -55,6 +64,28 @@ function FeaturedScoreTooltip({
         {point.daysSincePush}d since push
       </p>
     </div>
+  );
+}
+
+function FeaturedScoreBarShape({
+  x = 0,
+  y = 0,
+  width = 0,
+  height = 0,
+  payload,
+  fallbackFill,
+}: FeaturedScoreBarShapeProps) {
+  return (
+    <rect
+      x={x}
+      y={y}
+      width={width}
+      height={height}
+      rx={6}
+      ry={6}
+      fill={payload?.fill ?? fallbackFill}
+      fillOpacity={payload?.fillOpacity ?? 1}
+    />
   );
 }
 
@@ -90,6 +121,12 @@ export function FeaturedScoreBreakdownChart({
 
     return Math.max(120, Math.min(estimatedWidth, maxWidth));
   }, [data, size.width]);
+  const renderBarShape = useCallback(
+    (props: Omit<FeaturedScoreBarShapeProps, "fallbackFill">) => (
+      <FeaturedScoreBarShape {...props} fallbackFill={chartColors.primary} />
+    ),
+    [chartColors.primary],
+  );
 
   if (!data.length) {
     return (
@@ -144,27 +181,7 @@ export function FeaturedScoreBreakdownChart({
               name="Relevance"
               fill={chartColors.primary}
               isAnimationActive={false}
-              shape={(props: {
-                x?: number;
-                y?: number;
-                width?: number;
-                height?: number;
-                payload?: { fill?: string; fillOpacity?: number };
-              }) => {
-                const { x = 0, y = 0, width = 0, height = 0, payload } = props;
-                return (
-                  <rect
-                    x={x}
-                    y={y}
-                    width={width}
-                    height={height}
-                    rx={6}
-                    ry={6}
-                    fill={payload?.fill ?? chartColors.primary}
-                    fillOpacity={payload?.fillOpacity ?? 1}
-                  />
-                );
-              }}
+              shape={renderBarShape}
             />
           </BarChart>
         ) : (
