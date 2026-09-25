@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: `${siteUrl}/globe.svg`,
+        url: `${siteUrl}/og-image.png`,
         alt: "Build GitHub activity dashboard overview",
       },
     ],
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Build · GitHub Activity Dashboard",
     description: homeDescription,
-    images: [`${siteUrl}/globe.svg`],
+    images: [`${siteUrl}/og-image.png`],
     creator: "@brandonperfetti",
   },
 };

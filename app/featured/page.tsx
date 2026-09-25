@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: `${siteUrl}/globe.svg`,
+        url: `${siteUrl}/og-image.png`,
         alt: "Build featured project overview",
       },
     ],
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Featured · Build",
     description: featuredDescription,
-    images: [`${siteUrl}/globe.svg`],
+    images: [`${siteUrl}/og-image.png`],
   },
 };
 
