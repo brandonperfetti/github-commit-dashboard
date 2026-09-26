@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: `${siteUrl}/globe.svg`,
+        url: `${siteUrl}/og-image.png`,
         alt: "Build repository surface area overview",
       },
     ],
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Repos · Build",
     description: reposDescription,
-    images: [`${siteUrl}/globe.svg`],
+    images: [`${siteUrl}/og-image.png`],
   },
 };
 
