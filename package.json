@@ -9,6 +9,8 @@
     "prestart": "npm run validate:env -- --mode=production",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "validate:env": "node scripts/validate-env.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
@@ -32,6 +34,7 @@
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.11"
   }
 }
